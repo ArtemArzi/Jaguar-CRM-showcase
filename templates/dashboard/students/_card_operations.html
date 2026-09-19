@@ -1,0 +1,23 @@
+{% load money %}
+<div data-student-operations>
+  {% for card in operation_cards %}{% include 'dashboard/students/_operation_subscription.html' %}{% empty %}<p class="mb-4 text-[13px]">Нет действующего абонемента.</p>{% endfor %}
+  {% if archived_operation_cards %}<details class="mb-5"><summary class="cursor-pointer py-3 text-[13px] font-semibold">Архив абонементов ({{ archived_operation_cards|length }})</summary>
+    {% for card in archived_operation_cards %}{% include 'dashboard/students/_operation_subscription.html' %}{% endfor %}
+  </details>{% endif %}
+  <section class="mb-5">
+    <div class="flex items-center justify-between gap-3 mb-2"><h3 class="font-semibold text-[13px]">ПОСЕЩЕНИЯ</h3><button hx-get="{% url 'student-operation-history' student.id %}?kind=attendance" hx-target="#slide-over" class="py-3 text-[12px]">Вся история</button></div>
+    {% for checkin in recent_checkins %}<div class="flex items-center justify-between gap-3 py-2 text-[13px]" style="border-top: 1px solid var(--branding-border);">
+      <span>{{ checkin.date|date:'d.m.Y' }} · {{ checkin.schedule.start_time|time:'H:i' }} · Был</span>
+      <button hx-get="{% url 'student-attendance-cancel' student.id checkin.id %}" hx-target="#slide-over" class="px-2 py-3 text-[12px]">Отменить отметку</button>
+    </div>{% empty %}<p class="text-[13px]">Посещений пока нет.</p>{% endfor %}
+  </section>
+  <section class="mb-5">
+    <div class="flex items-center justify-between gap-3"><h3 class="font-semibold text-[13px]">ОПЛАТЫ</h3><button hx-get="{% url 'student-operation-history' student.id %}?kind=payments" hx-target="#slide-over" class="py-3 text-[12px]">История оплат</button></div>
+    {% for payment in recent_payments %}<p class="py-2 text-[13px]" style="border-top: 1px solid var(--branding-border);">{{ payment.recognition_on|date:'d.m.Y'|default:'Дата после проверки' }} · {{ payment.amount|money }} ₽ · {% if payment.origin == 'opening' %}Перенесена{% else %}{{ payment.get_status_display }}{% endif %}</p>{% if payment.status == 'confirmed' and payment.subscription_id and payment.payment_method != 'online' %}<button hx-get="{% url 'student-payment-refund' student.id payment.id %}" hx-target="#slide-over" class="py-3 text-[13px]">Возвраты</button>{% endif %}{% empty %}<p class="text-[13px]">Оплат пока нет.</p>{% endfor %}
+  </section>
+  <details class="mb-4"><summary class="cursor-pointer py-3 text-[13px] font-semibold">Группа и ответственный тренер</summary>
+    {% for membership in operation_memberships %}<p class="py-2 text-[13px]">{{ membership.training_group.name }} · {{ membership.training_group.responsible_trainer|default:'Тренер не назначен' }} · {{ membership.get_status_display }}</p>{% empty %}<p class="text-[13px]">Действующая группа не назначена.</p>{% endfor %}
+    <a href="{% url 'schedule-view' %}" class="inline-block py-3 text-[13px]">Открыть расписание и группы</a>
+  </details>
+  <button hx-get="{% url 'student-operation-history' student.id %}?kind=corrections" hx-target="#slide-over" class="mb-4 py-3 text-[13px] font-semibold">История изменений</button>
+</div>

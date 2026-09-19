@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Retention Tasks - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<div class="flex items-end justify-between mb-5">
+  <h1 class="text-[28px] font-bold tracking-[1px]" style="color: var(--branding-text);">RETENTION TASKS</h1>
+</div>
+
+<!-- Filter row: tabs + trainer dropdown -->
+<div class="flex items-center justify-between mb-5">
+<div class="flex gap-2">
+  {% for value, label in status_choices %}
+  <a hx-get="/dashboard/retention/?status={{ value }}&trainer_id={{ current_trainer_id }}"
+     hx-target="#task-table" hx-select="#task-table" hx-swap="outerHTML"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if current_status == value %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% elif value == 'new' %}border: 1.5px solid var(--branding-primary); color: var(--branding-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    {{ label|upper }}
+  </a>
+  {% endfor %}
+</div>
+<div>
+  <select name="trainer_id"
+          hx-get="/dashboard/retention/" hx-trigger="change"
+          hx-target="#task-table" hx-select="#task-table" hx-swap="outerHTML"
+          hx-include="[name='status']"
+          class="h-9 px-3 text-[12px] outline-none"
+          style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+    <option value="">Все тренеры</option>
+    {% for trainer in trainers %}
+    <option value="{{ trainer.id }}" {% if current_trainer_id == trainer.id|stringformat:"d" %}selected{% endif %}>
+      {{ trainer.first_name }} {{ trainer.last_name }}
+    </option>
+    {% endfor %}
+  </select>
+</div>
+</div>
+
+<div id="task-table">
+  <div class="overflow-hidden border-2" style="border-color: var(--branding-dark);">
+    <table class="w-full">
+      <thead>
+        <tr style="background-color: var(--branding-dark); height: 44px;">
+          <th class="w-[180px] px-5 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">УЧЕНИК</th>
+          <th class="w-[120px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">СТАТУС</th>
+          <th class="w-[140px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ПРИЧИНА</th>
+          <th class="w-[140px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ТРЕНЕР</th>
+          <th class="w-[100px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ДЕДЛАЙН</th>
+          <th class="w-[100px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">СТАТУС</th>
+          <th class="w-[160px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ПОСЛЕДНЕЕ</th>
+          <th class="text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ДЕЙСТВИЕ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in page_obj %}
+        <tr style="height: 60px; border-bottom: 1px solid var(--branding-border);
+                   {% if task.level == 'red' %}background-color: #FDF2EF;{% endif %}"
+            class="transition-colors"
+            data-hover-color="{% if task.level == 'red' %}#FBEAE5{% else %}rgba(255,255,255,0.5){% endif %}"
+            data-default-color="{% if task.level == 'red' %}#FDF2EF{% else %}transparent{% endif %}"
+            onmouseover="this.style.backgroundColor=this.dataset.hoverColor"
+            onmouseout="this.style.backgroundColor=this.dataset.defaultColor">
+          <td class="px-5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold flex-shrink-0"
+                   style="background-color: {% if task.level == 'red' %}var(--branding-primary){% else %}#3B5AC4{% endif %}; color: var(--branding-on-primary);">
+                {{ task.student.first_name|truncatechars:1 }}{{ task.student.last_name|truncatechars:1 }}
+              </div>
+              <span class="text-[13px] font-medium" style="color: var(--branding-text);">{{ task.student.first_name }} {{ task.student.last_name }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="px-2.5 py-1 text-[11px] font-semibold"
+                  style="{% if task.level == 'red' %}background-color: #FFE0B2; color: #E65100;{% elif task.level == 'yellow' %}background-color: #FFF8E1; color: #F57F17;{% else %}background-color: #C8E6C9; color: #2E7D32;{% endif %}">
+              {{ task.get_level_display|default:task.level }}
+            </span>
+          </td>
+          <td class="text-[12px]" style="color: var(--branding-text);">{{ task.reason|default:"—" }}</td>
+          <td class="text-[12px]" style="color: var(--branding-text);">{{ task.trainer.first_name }} {{ task.trainer.last_name }}</td>
+          <td class="text-[12px] font-semibold" style="color: {% if task.is_overdue %}var(--branding-primary){% else %}var(--branding-text-secondary){% endif %};">
+            {{ task.due_date|date:"d M"|default:"—" }}
+          </td>
+          <td>
+            <span class="px-2.5 py-1 text-[11px] font-semibold {{ task.status_color }}">
+              {{ task.status_label }}
+            </span>
+            {% if task.inactive_days >= 2 and task.status != "closed" %}
+            <span class="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-red-50 text-red-600">{{ task.inactive_days }}д</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if task.last_comment_text %}
+            <span class="text-[12px] cursor-pointer underline decoration-dotted"
+                  style="color: var(--branding-text-secondary);"
+                  hx-get="/dashboard/retention/{{ task.id }}/comments/"
+                  hx-target="#comments-{{ task.id }}"
+                  hx-swap="innerHTML">
+              {{ task.last_comment_text }}
+            </span>
+            {% else %}
+            <span class="text-[12px]" style="color: var(--branding-text-secondary);">—</span>
+            {% endif %}
+            <div id="comments-{{ task.id }}"></div>
+          </td>
+          <td>
+            {% if task.resolved_at %}
+            <span class="px-3 py-1.5 text-[11px] font-medium" style="background-color: #C8E6C9; color: #2E7D32;">Выполнено</span>
+            {% else %}
+            <button class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+                    style="border: 1px solid var(--branding-dark); color: var(--branding-text);">
+              Связаться
+            </button>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="px-5 py-8 text-center text-[13px]" style="color: var(--branding-text-secondary);">Задач нет</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <div class="flex items-center justify-between mt-4">
+    <span class="text-[12px]" style="color: var(--branding-text-secondary);">Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}
+      <a hx-get="/dashboard/retention/?page={{ page_obj.previous_page_number }}&status={{ current_status }}&trainer_id={{ current_trainer_id }}"
+         hx-target="#task-table" hx-select="#task-table" hx-swap="outerHTML"
+         class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+         style="border: 1px solid var(--branding-border); color: var(--branding-text);">Назад</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a hx-get="/dashboard/retention/?page={{ page_obj.next_page_number }}&status={{ current_status }}&trainer_id={{ current_trainer_id }}"
+         hx-target="#task-table" hx-select="#task-table" hx-swap="outerHTML"
+         class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+         style="border: 1px solid var(--branding-border); color: var(--branding-text);">Далее</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endpartialdef %}
+{% endblock %}

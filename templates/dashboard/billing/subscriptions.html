@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% load partials money %}
+
+{% block title %}Абонементы - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+{% include "dashboard/billing/_nav_tabs.html" %}
+
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
+  <h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px]" style="color: var(--branding-text);">Абонементы</h1>
+  <button onclick="document.getElementById('create-sub-form').classList.toggle('hidden')"
+          class="flex items-center gap-2 h-10 px-5 text-[11px] font-semibold tracking-[1px] self-start"
+          style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    Новый абонемент
+  </button>
+</div>
+
+<!-- Status filter (mobile: native select) -->
+<div class="sm:hidden mb-5">
+  <select name="status"
+          hx-get="/dashboard/billing/subscriptions/"
+          hx-trigger="change"
+          hx-target="#content"
+          hx-push-url="true"
+          class="soft-input soft-select w-full font-semibold">
+    <option value="" {% if not current_status %}selected{% endif %}>Все ({{ page_obj.paginator.count }})</option>
+    <option value="active" {% if current_status == 'active' %}selected{% endif %}>Активные</option>
+    <option value="expiring" {% if current_status == 'expiring' %}selected{% endif %}>Истекают</option>
+    <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>Просрочены</option>
+    <option value="cancelled" {% if current_status == 'cancelled' %}selected{% endif %}>Отменены после возврата</option>
+  </select>
+</div>
+
+<!-- Status filter tabs (desktop) -->
+<div class="hidden sm:flex sm:flex-wrap gap-2 mb-5">
+  <a hx-get="/dashboard/billing/subscriptions/" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if not current_status %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    ВСЕ {{ page_obj.paginator.count }}
+  </a>
+  <a hx-get="/dashboard/billing/subscriptions/?status=active" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if current_status == 'active' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1.5px solid #6B8E5E; color: #6B8E5E;{% endif %}">
+    АКТИВНЫЕ
+  </a>
+  <a hx-get="/dashboard/billing/subscriptions/?status=expiring" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if current_status == 'expiring' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-primary);{% endif %}">
+    ИСТЕКАЮТ
+  </a>
+  <a hx-get="/dashboard/billing/subscriptions/?status=expired" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if current_status == 'expired' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text-secondary);{% endif %}">
+    ПРОСРОЧЕНЫ
+  </a>
+  <a hx-get="/dashboard/billing/subscriptions/?status=cancelled" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if current_status == 'cancelled' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid #C62828; color: #C62828;{% endif %}">
+    ОТМЕНЕНЫ
+  </a>
+</div>
+
+  <!-- Create form (hidden) -->
+  <form id="create-sub-form"
+      x-data="{ packageOwnerKind: '', sellerTrainerId: '', paymentMethod: '' }"
+      class="{% if not show_create_form %}hidden {% endif %}mb-5 p-4 sm:p-5 flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3 sm:gap-4"
+      style="background-color: var(--branding-surface); border: 2px solid var(--branding-dark);"
+      hx-post="/dashboard/billing/subscriptions/create/"
+      hx-swap="none">
+  {% csrf_token %}
+  <div class="flex flex-col gap-1.5">
+    <label for="new-subscription-student" class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Ученик</label>
+    <select id="new-subscription-student" name="student_id" required class="h-10 px-3 text-[13px] w-full sm:w-[200px] outline-none"
+            style="border: 1.5px solid var(--branding-border);">
+      <option value="">Выберите</option>
+      {% for student in students %}
+      <option value="{{ student.id }}" {% if current_student_id == student.id|stringformat:"s" %}selected{% endif %}>{{ student }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="flex flex-col gap-1.5">
+    <label for="new-subscription-tariff" class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Тариф</label>
+    <select id="new-subscription-tariff" name="tariff_id" required
+            x-on:change="packageOwnerKind = $event.target.selectedOptions[0]?.dataset.packageOwnerKind || ''"
+            class="h-10 px-3 text-[13px] w-full sm:w-[220px] outline-none"
+            style="border: 1.5px solid var(--branding-border);">
+      <option value="">Выберите</option>
+      {% for tariff in tariffs %}
+      <option value="{{ tariff.id }}" data-package-owner-kind="{{ tariff.package_owner_kind }}">{{ tariff.name }} ({{ tariff.price }}₽)</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="flex flex-col gap-1.5">
+    <label for="new-subscription-payment-method" class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Способ оплаты</label>
+    <select id="new-subscription-payment-method" name="payment_method" required
+            x-model="paymentMethod"
+            class="h-10 px-3 text-[13px] w-full sm:w-[170px] outline-none"
+            style="border: 1.5px solid var(--branding-border);">
+      <option value="">Выберите</option>
+      <option value="cash">Наличные</option>
+      <option value="transfer">Перевод</option>
+      <option value="online" {% if not online_payment_creation_available %}disabled{% endif %}>СБП — создать ссылку</option>
+    </select>
+    {% if not online_payment_creation_available %}
+    <span class="text-[10px]" style="color: #8A5A00;">СБП сейчас недоступна. Проверьте настройки платежей и готовность торговой точки.</span>
+    {% endif %}
+  </div>
+  <div class="flex flex-col gap-1.5">
+    <label for="new-subscription-seller" class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Тренер-продавец</label>
+    <select id="new-subscription-seller" name="seller_trainer_id"
+            x-model="sellerTrainerId"
+            class="h-10 px-3 text-[13px] w-full sm:w-[200px] outline-none"
+            style="border: 1.5px solid var(--branding-border);">
+      <option value="">Не указан</option>
+      {% for trainer in active_trainers %}
+      <option value="{{ trainer.id }}">{{ trainer }}</option>
+      {% endfor %}
+    </select>
+  </div>
+	  <div x-show="packageOwnerKind === 'personal' || packageOwnerKind === 'mini_group'"
+	       x-cloak
+	       class="flex flex-col gap-1.5">
+    <label for="new-subscription-package-owner" class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Владелец пакета</label>
+    <select id="new-subscription-package-owner" name="package_owner_trainer_id"
+            x-bind:disabled="!(packageOwnerKind === 'personal' || packageOwnerKind === 'mini_group')"
+            x-bind:required="(packageOwnerKind === 'personal' || packageOwnerKind === 'mini_group') && !sellerTrainerId"
+            class="h-10 px-3 text-[13px] w-full sm:w-[220px] outline-none"
+            style="border: 1.5px solid var(--branding-border);">
+      <option value="">Как тренер-продавец</option>
+      {% for trainer in active_trainers %}
+      <option value="{{ trainer.id }}">{{ trainer }}</option>
+      {% endfor %}
+	    </select>
+	    <span class="text-[10px]" style="color: var(--branding-text-secondary);">Если продавец не указан, выберите владельца пакета.</span>
+	  </div>
+	  <div class="basis-full text-[11px]" style="color: var(--branding-text-secondary);">
+	    Старые долги не закрываются этим действием. Для погашения долга используйте отдельную оплату долга.
+	  </div>
+	  <button type="submit" class="h-10 px-5 text-[11px] font-semibold tracking-[1px]"
+	          style="background-color: var(--branding-dark); color: var(--branding-on-primary);">
+	    <span x-text="paymentMethod === 'online' ? 'СОЗДАТЬ ССЫЛКУ СБП' : 'СОЗДАТЬ'">СОЗДАТЬ</span>
+  </button>
+</form>
+
+{% include "dashboard/billing/_freeze_requests.html" %}
+
+<!-- Subscription cards (mobile) -->
+<div class="md:hidden space-y-3 mb-4">
+  {% for sub in page_obj %}
+  <div class="p-4 flex flex-col gap-2" style="border: 1px solid var(--branding-border); {% if sub.status == 'expired' or sub.status == 'cancelled' %}background-color: #FFEBEE;{% elif sub.trainings_left is not None and sub.trainings_left <= 1 and sub.status == 'active' %}background-color: #FFF8E1;{% endif %}">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0 flex-1">
+        <div class="text-[14px] font-semibold truncate" style="color: var(--branding-text);">{{ sub.student }}</div>
+        <div class="text-[12px] truncate" style="color: var(--branding-text-secondary);">{{ sub.tariff.name }}</div>
+        {% with allocation=sub.active_trainer_allocations.0 %}
+        {% if allocation %}
+        <div class="text-[11px] truncate mt-0.5" style="color: var(--branding-text-secondary);">Владелец пакета: {{ allocation.owner_trainer }}</div>
+        {% endif %}
+        {% endwith %}
+      </div>
+      <span class="text-[14px] font-bold flex-shrink-0" style="color: var(--branding-text);">{{ sub.paid_amount|money }}₽</span>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 text-[11px]">
+      <span class="px-2 py-0.5 font-semibold" style="{% if sub.status == 'active' %}background-color: #E8F5E9; color: #2E7D32;{% elif sub.status == 'frozen' %}background-color: #E3F2FD; color: #1565C0;{% elif sub.status == 'expired' or sub.status == 'cancelled' %}background-color: #FFCDD2; color: #C62828;{% else %}background-color: #F5F5F5; color: #888;{% endif %}">{{ sub.get_status_display }}</span>
+      <span style="color: var(--branding-text-secondary);">
+        {% if sub.status == 'cancelled' %}остаток недоступен{% elif sub.trainings_left is not None %}{{ sub.trainings_left }} / {{ sub.tariff.trainings_limit }} занятий{% else %}∞{% endif %}
+      </span>
+      <span style="color: {% if sub.status == 'expired' %}#C62828{% elif sub.is_expiring %}#E65100{% else %}var(--branding-text-secondary){% endif %};">до {{ sub.expires_at|date:"d.m.Y" }}</span>
+    </div>
+    {% if sub.status == 'active' %}
+    <button hx-get="/dashboard/billing/subscriptions/{{ sub.id }}/freeze/" hx-target="#slide-over" onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')" class="mt-1 h-9 flex items-center justify-center gap-1.5 text-[12px] font-semibold" style="background-color: #E3F2FD; color: #1565C0;">
+      <i data-lucide="snowflake" class="w-3.5 h-3.5"></i>Заморозить
+    </button>
+    {% elif sub.status == 'frozen' %}
+    <button hx-post="/dashboard/billing/subscriptions/{{ sub.id }}/unfreeze/" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-target="#content" hx-confirm="Разморозить абонемент?" class="mt-1 h-9 flex items-center justify-center gap-1.5 text-[12px] font-semibold" style="background-color: #E8F5E9; color: #2E7D32;">
+      <i data-lucide="sun" class="w-3.5 h-3.5"></i>Разморозить
+    </button>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="py-12 text-center text-[13px]" style="color: var(--branding-text-secondary);">Абонементов нет</div>
+  {% endfor %}
+</div>
+
+<!-- Subscription table -->
+<div class="hidden md:block overflow-x-auto border-2 -mx-4 sm:mx-0" style="border-color: var(--branding-dark);">
+  <table class="w-full min-w-[980px]">
+    <thead>
+      <tr style="background-color: var(--branding-dark); height: 44px;">
+        <th class="w-[140px] px-5 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">УЧЕНИК</th>
+        <th class="px-3 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ТАРИФ</th>
+        <th class="w-[150px] px-3 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ВЛАДЕЛЕЦ ПАКЕТА</th>
+        <th class="w-[90px] px-3 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ОСТАТОК</th>
+        <th class="w-[100px] px-3 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ОКОНЧАНИЕ</th>
+        <th class="w-[90px] px-3 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">СТАТУС</th>
+        <th class="w-[90px] px-3 text-right text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">СУММА</th>
+        <th class="w-[80px] px-3 text-center text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sub in page_obj %}
+      <tr class="transition-colors"
+          style="height: 52px; border-bottom: 1px solid var(--branding-border);
+            {% if sub.status == 'expired' or sub.status == 'cancelled' %}background-color: #FFEBEE;{% elif sub.trainings_left is not None and sub.trainings_left <= 1 and sub.status == 'active' %}background-color: #FFF8E1;{% endif %}"
+          data-hover-color="rgba(255,255,255,0.5)"
+          data-default-color="{% if sub.status == 'expired' or sub.status == 'cancelled' %}#FFEBEE{% elif sub.trainings_left is not None and sub.trainings_left <= 1 and sub.status == 'active' %}#FFF8E1{% else %}transparent{% endif %}"
+          onmouseover="this.style.backgroundColor=this.dataset.hoverColor"
+          onmouseout="this.style.backgroundColor=this.dataset.defaultColor">
+        <td class="px-5 text-[13px] font-medium" style="color: var(--branding-text);">{{ sub.student }}</td>
+        <td class="px-3 text-[12px] max-w-[200px] truncate" style="color: var(--branding-text);" title="{{ sub.tariff.name }}">{{ sub.tariff.name }}</td>
+        <td class="px-3 text-[12px] max-w-[150px] truncate" style="color: var(--branding-text-secondary);">
+          {% with allocation=sub.active_trainer_allocations.0 %}
+          {% if allocation %}{{ allocation.owner_trainer }}{% else %}—{% endif %}
+          {% endwith %}
+        </td>
+        <td class="px-3 text-[12px]" style="color: var(--branding-text);">
+          {% if sub.status == 'cancelled' %}
+            <span style="color: #C62828; font-weight: 600;">отозван</span>
+          {% elif sub.trainings_left is not None %}
+            <span style="{% if sub.trainings_left <= 1 and sub.status == 'active' %}color: #C62828; font-weight: 600;{% endif %}">{{ sub.trainings_left }}</span>
+            <span style="color: var(--branding-text-secondary);"> из {{ sub.tariff.trainings_limit }}</span>
+          {% else %}∞{% endif %}
+        </td>
+        <td class="px-3 text-[12px]">
+          {% if sub.status == 'expired' %}
+          <span style="color: #C62828; font-weight: 600;">{{ sub.expires_at|date:"d.m.Y" }}</span>
+          {% elif sub.is_expiring %}
+          <span style="color: #E65100; font-weight: 600;">{{ sub.expires_at|date:"d.m.Y" }}</span>
+          {% else %}
+          <span style="color: var(--branding-text-secondary);">{{ sub.expires_at|date:"d.m.Y" }}</span>
+          {% endif %}
+        </td>
+        <td class="px-3">
+          <span class="px-2.5 py-1 text-[11px] font-semibold"
+                style="{% if sub.status == 'active' %}background-color: #E8F5E9; color: #2E7D32;{% elif sub.status == 'frozen' %}background-color: #E3F2FD; color: #1565C0;{% elif sub.status == 'expired' or sub.status == 'cancelled' %}background-color: #FFCDD2; color: #C62828;{% else %}background-color: #F5F5F5; color: #888;{% endif %}">
+            {{ sub.get_status_display }}
+          </span>
+        </td>
+        <td class="px-3 text-right text-[13px] font-semibold" style="color: var(--branding-text);">{{ sub.paid_amount|money }}₽</td>
+        <td class="px-3 text-center">
+          {% if sub.status == 'active' %}
+          <button hx-get="/dashboard/billing/subscriptions/{{ sub.id }}/freeze/"
+                  hx-target="#slide-over"
+                  onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                  class="w-7 h-7 inline-flex items-center justify-center rounded-full transition-colors hover:bg-blue-50"
+                  title="Заморозить">
+            <i data-lucide="snowflake" class="w-3.5 h-3.5" style="color: #1565C0;"></i>
+          </button>
+          {% elif sub.status == 'frozen' %}
+          <div x-data="{ confirm: false }" class="inline-flex items-center gap-1">
+            <button x-show="!confirm" @click="confirm = true; $nextTick(() => htmx.process($el.parentElement))"
+                    class="w-7 h-7 inline-flex items-center justify-center rounded-full transition-colors hover:bg-green-50"
+                    title="Разморозить">
+              <i data-lucide="sun" class="w-3.5 h-3.5" style="color: #2E7D32;"></i>
+            </button>
+            <div x-show="confirm" x-cloak class="flex items-center gap-1">
+              <button @click="confirm = false"
+                      class="px-2 py-1 text-[10px] font-semibold"
+                      style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+                НЕТ
+              </button>
+              <button hx-post="/dashboard/billing/subscriptions/{{ sub.id }}/unfreeze/"
+                      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                      hx-target="#content"
+                      hx-disabled-elt="this"
+                      class="px-2 py-1 text-[10px] font-semibold disabled:opacity-50"
+                      style="background-color: #2E7D32; color: #FFFFFF;">
+                РАЗМОРОЗИТЬ
+              </button>
+            </div>
+          </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" class="px-5 py-8 text-center text-[13px]" style="color: var(--branding-text-secondary);">Абонементов нет</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<div class="flex items-center justify-between mt-4">
+  <span class="text-[12px]" style="color: var(--branding-text-secondary);">
+    Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+  </span>
+  <div class="flex gap-2">
+    {% if page_obj.has_previous %}
+    <a hx-get="/dashboard/billing/subscriptions/?page={{ page_obj.previous_page_number }}"
+       hx-target="#content" hx-push-url="true"
+       class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+       style="border: 1px solid var(--branding-border); color: var(--branding-text);">Назад</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+    <a hx-get="/dashboard/billing/subscriptions/?page={{ page_obj.next_page_number }}"
+       hx-target="#content" hx-push-url="true"
+       class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+       style="border: 1px solid var(--branding-border); color: var(--branding-text);">Далее</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% endpartialdef %}
+{% endblock %}

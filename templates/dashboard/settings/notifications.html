@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Настройки — Уведомления{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px] mb-6 sm:mb-7" style="color: var(--branding-text);">Настройки</h1>
+
+{% include "dashboard/settings/_tabs.html" %}
+
+{% partialdef settings-tab-content inline %}
+
+{% if saved %}
+<div class="flex items-center gap-2 px-5 py-3 mb-5" style="background-color: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.3);">
+  <i data-lucide="check-circle" class="w-4 h-4" style="color: #2E7D32;"></i>
+  <span class="text-[13px] font-medium" style="color: #2E7D32;">Настройки сохранены</span>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="flex items-center gap-2 px-5 py-3 mb-5" style="background-color: rgba(198, 40, 40, 0.08); border: 1px solid rgba(198, 40, 40, 0.3);">
+  <i data-lucide="alert-circle" class="w-4 h-4" style="color: #C62828;"></i>
+  <span class="text-[13px] font-medium" style="color: #C62828;">{{ error }}</span>
+</div>
+{% endif %}
+
+<form id="notification-settings-form" hx-post="{% url 'settings-notifications' %}" hx-target="#content">
+  {% csrf_token %}
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# НАСТРОЙКИ УВЕДОМЛЕНИЙ                                    #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center gap-2 mb-5">
+      <i data-lucide="bell" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Уведомления</h2>
+    </div>
+    <p class="text-[12px] mb-5" style="color: var(--branding-text-secondary);">
+      Push-уведомления для учеников и тренеров. Также подписка на уведомления для владельца.
+    </p>
+
+    <div class="flex flex-col md:flex-row gap-6 mb-6">
+      <div class="flex-1">
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Максимум уведомлений в неделю
+        </label>
+        <input type="number" name="max_push_per_week" value="{{ settings.max_push_per_week }}"
+               min="0" max="50"
+               class="w-full h-11 px-4 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+        <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">Лимит автоматических уведомлений на одного ученика в неделю</p>
+      </div>
+      <div class="flex-1">
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Запрос обратной связи (часы)
+        </label>
+        <input type="number" name="feedback_delay_hours" value="{{ settings.feedback_delay_hours }}"
+               min="0" max="72"
+               class="w-full h-11 px-4 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+        <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">Через сколько часов после занятия отправить запрос обратной связи</p>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-6 mb-6">
+      <div class="flex-1">
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Тихие часы — начало
+        </label>
+        <input type="time" name="quiet_hours_start" value="{{ settings.quiet_hours_start|time:'H:i' }}"
+               class="w-full h-11 px-4 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+      </div>
+      <div class="flex-1">
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Тихие часы — конец
+        </label>
+        <input type="time" name="quiet_hours_end" value="{{ settings.quiet_hours_end|time:'H:i' }}"
+               class="w-full h-11 px-4 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+      </div>
+    </div>
+    <p class="text-[11px] mb-6" style="color: var(--branding-text-secondary);">
+      В тихие часы push-уведомления не отправляются. По умолчанию: 21:00 — 09:00
+    </p>
+
+    <!-- Push subscription for owner -->
+    <div style="border-top: 1px solid var(--branding-border); padding-top: 1.25rem;">
+      <h3 class="text-[14px] font-semibold mb-3" style="color: var(--branding-text);">Уведомления для вас</h3>
+      <p class="text-[12px] mb-3" style="color: var(--branding-text-secondary);">
+        Получайте уведомления о новых оплатах, которые нужно подтвердить.
+      </p>
+      <div x-data="{ pushEnabled: localStorage.getItem('adminPushSubscribed') === 'true' && Notification.permission === 'granted', subscribing: false }">
+        <button type="button"
+                x-show="!pushEnabled"
+                :disabled="subscribing"
+                @click="
+                  subscribing = true;
+                  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+                    alert('Браузер не поддерживает push-уведомления');
+                    subscribing = false;
+                    return;
+                  }
+                  Notification.requestPermission().then(function(p) {
+                    if (p !== 'granted') { subscribing = false; return; }
+                    navigator.serviceWorker.ready.then(function(reg) {
+                      return fetch('/api/notifications/vapid-key/').then(function(r) { return r.json(); }).then(function(kd) {
+                        var padding = '='.repeat((4 - (kd.public_key.length % 4)) % 4);
+                        var b64 = (kd.public_key + padding).replace(/-/g, '+').replace(/_/g, '/');
+                        var raw = atob(b64);
+                        var arr = new Uint8Array(raw.length);
+                        for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+                        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: arr });
+                      });
+                    }).then(function(sub) {
+                      var key = sub.getKey('p256dh');
+                      var auth = sub.getKey('auth');
+                      var csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+                      var csrfToken = csrfEl ? csrfEl.value : '';
+                      return fetch('/api/notifications/subscribe/', {
+                        method: 'POST', credentials: 'include',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                        body: JSON.stringify({
+                          endpoint: sub.endpoint,
+                          key_p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(key))),
+                          key_auth: btoa(String.fromCharCode.apply(null, new Uint8Array(auth)))
+                        })
+                      });
+                    }).then(function(response) {
+                      if (!response.ok) throw new Error('subscribe failed');
+                    }).then(function() {
+                      localStorage.setItem('adminPushSubscribed', 'true');
+                      localStorage.removeItem('adminPushDismissed');
+                      pushEnabled = true;
+                      subscribing = false;
+                    }).catch(function() { subscribing = false; });
+                  });
+                "
+                class="flex items-center gap-2 px-5 py-2.5 text-[12px] font-semibold cursor-pointer"
+                style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+          <i data-lucide="bell-ring" class="w-4 h-4"></i>
+          <span x-text="subscribing ? 'Подключение...' : 'Включить push-уведомления'"></span>
+        </button>
+        <div x-show="pushEnabled" class="flex items-center gap-3">
+          <span class="flex items-center gap-2 text-[13px]" style="color: #2E7D32;">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            Push-уведомления включены
+          </span>
+          <button type="button"
+                  @click="
+                    navigator.serviceWorker.ready.then(function(reg) {
+                      return reg.pushManager.getSubscription();
+                    }).then(function(sub) {
+                      if (!sub) return null;
+                      return sub.unsubscribe().then(function() {
+                        var csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+                        var csrfToken = csrfEl ? csrfEl.value : '';
+                        return fetch('/api/notifications/unsubscribe/', {
+                          method: 'POST', credentials: 'include',
+                          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                          body: JSON.stringify({ endpoint: sub.endpoint })
+                        });
+                      });
+                    }).then(function(response) {
+                      if (response && !response.ok) throw new Error('unsubscribe failed');
+                    }).catch(function() {
+                      // Best-effort: browser subscription is already gone or unavailable.
+                    }).then(function() {
+                      localStorage.removeItem('adminPushSubscribed');
+                      localStorage.setItem('adminPushDismissed', 'true');
+                      pushEnabled = false;
+                    });
+                  "
+                  class="text-[12px] px-3 py-1 cursor-pointer"
+                  style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+            Отключить
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# ШАБЛОНЫ УВЕДОМЛЕНИЙ                                     #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center gap-2 mb-5">
+      <i data-lucide="mail" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Шаблоны уведомлений</h2>
+    </div>
+    <p class="text-[12px] mb-5" style="color: var(--branding-text-secondary);">
+      Настройте тексты автоматических уведомлений для учеников, родителей и тренерских задач
+    </p>
+
+    {% for cat_name, cat_templates in grouped_templates %}
+    <div class="{% if not forloop.first %}mt-6{% endif %} mb-4">
+      <h3 class="text-[13px] font-bold tracking-[0.5px] mb-3" style="color: var(--branding-text-secondary);">
+        {{ cat_name }}
+      </h3>
+
+      {% for tmpl in cat_templates %}
+      <div class="flex items-center justify-between py-3"
+           style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+        <div class="flex-1 min-w-0 mr-3">
+          <span class="text-[13px] font-medium" style="color: var(--branding-text);">{{ tmpl.get_trigger_type_display }}</span>
+          <p class="text-[11px] mt-0.5 truncate" style="color: var(--branding-text-secondary);">{{ tmpl.body_template|truncatechars:60 }}</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          {# Toggle button #}
+          <form hx-post="{% url 'notification-template-toggle' tmpl.id %}"
+                hx-target="#content" hx-swap="innerHTML show:none" class="inline">
+            {% csrf_token %}
+            <button type="submit"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors"
+                    style="background-color: {% if tmpl.is_enabled %}var(--branding-primary){% else %}rgba(0,0,0,0.15){% endif %};"
+                    role="switch"
+                    aria-checked="{% if tmpl.is_enabled %}true{% else %}false{% endif %}"
+                    aria-label="{{ tmpl.get_trigger_type_display }} — {% if tmpl.is_enabled %}включено{% else %}выключено{% endif %}"
+                    title="{% if tmpl.is_enabled %}Выключить{% else %}Включить{% endif %}">
+              <span class="inline-block h-4 w-4 rounded-full bg-white shadow transition-transform"
+                    style="transform: translateX({% if tmpl.is_enabled %}22px{% else %}4px{% endif %});"></span>
+            </button>
+          </form>
+          {# Edit button #}
+          <button type="button"
+                  hx-get="{% url 'notification-template-form' tmpl.id %}"
+                  hx-target="#slide-over"
+                  hx-swap="innerHTML"
+                  @click="$el.closest('body').querySelector('#slide-over-backdrop').classList.remove('hidden'); $el.closest('body').querySelector('#slide-over').classList.remove('translate-x-full');"
+                  class="w-8 h-8 flex items-center justify-center rounded cursor-pointer"
+                  style="color: var(--branding-text-secondary);"
+                  title="Редактировать">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% empty %}
+    <p class="text-[12px]" style="color: var(--branding-text-secondary);">Шаблоны не настроены</p>
+    {% endfor %}
+  </div>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# КНОПКИ СОХРАНЕНИЯ                                       #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="flex justify-end gap-3 mb-10">
+    <button type="reset" form="notification-settings-form"
+            class="px-6 py-2.5 text-[12px] font-semibold cursor-pointer"
+            style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+      Отмена
+    </button>
+    <button type="submit" form="notification-settings-form"
+            class="px-6 py-2.5 text-[12px] font-semibold cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      Сохранить
+    </button>
+  </div>
+
+{% endpartialdef %}
+{% endpartialdef %}
+{% endblock %}

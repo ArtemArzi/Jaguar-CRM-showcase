@@ -1,0 +1,25 @@
+{% load money %}
+<div class="p-5 sm:p-7">
+{% include 'dashboard/students/_operation_header.html' %}
+<p class="mb-4 text-[13px]">Оплата {{ payment.amount|money }} ₽. Можно вернуть ещё {{ available_amount|money }} ₽. Записывайте деньги, уже возвращённые клиенту.</p>
+<form hx-post="{% url 'student-payment-refund' student.id payment.id %}" hx-target="#slide-over" class="space-y-4">
+  {% csrf_token %}<input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+  <label class="block text-[13px]">Сумма возврата, ₽<input class="input w-full" type="number" min="0.01" step="0.01" name="amount" value="{{ amount }}" required></label>
+  <label class="block text-[13px]">Дата фактического возврата<input class="input w-full" type="date" name="accounting_date" value="{{ accounting_date }}" required></label>
+  <label class="block text-[13px]">Право посещения<select class="input w-full" name="entitlement_action">
+    <option value="kept_partial" {% if entitlement_action == 'kept_partial' %}selected{% endif %}>Частичный возврат — сохранить</option>
+    <option value="keep_club_absorbs" {% if entitlement_action == 'keep_club_absorbs' %}selected{% endif %}>Полный возврат — сохранить за счёт клуба</option>
+    <option value="revoke_remaining" {% if entitlement_action == 'revoke_remaining' %}selected{% endif %}>Полный возврат — отозвать остаток</option>
+  </select></label>
+  <label class="block text-[13px]">Причина<textarea class="input w-full" name="reason" required>{{ reason }}</textarea></label>
+  <details><summary class="py-3 text-[13px]">Сверка старого зачисления</summary>
+    <label class="block text-[13px]">Решение<select class="input w-full" name="legacy_enrollment_action"><option value="">Не требуется</option><option value="leave_unlinked" {% if legacy_enrollment_action == 'leave_unlinked' %}selected{% endif %}>Сохранить несвязанное зачисление</option><option value="cancel_selected" {% if legacy_enrollment_action == 'cancel_selected' %}selected{% endif %}>Отменить подтверждённое зачисление</option></select></label>
+    <label class="block text-[13px]">Номер зачисления<input class="input w-full" name="legacy_enrollment_id" type="number" value="{{ legacy_enrollment_id }}"></label>
+  </details>
+  <button class="btn btn-primary w-full" type="submit" hx-disabled-elt="this">Записать возврат</button>
+</form>
+<section class="mt-5"><h3 class="font-semibold">Возвраты по этой оплате</h3>
+{% for refund in refunds %}<div class="py-3 text-[13px]">{{ refund.accounting_date|date:'d.m.Y' }} · {{ refund.amount|money }} ₽ · {{ refund.reason }}
+{% if refund.status == 'payroll_action_required' %}{% include 'dashboard/students/_refund_payroll.html' %}{% else %}<p>Компенсация завершена</p>{% endif %}</div>{% empty %}<p class="py-3 text-[13px]">Возвратов пока нет.</p>{% endfor %}</section>
+
+</div>

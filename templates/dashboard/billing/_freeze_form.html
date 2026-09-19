@@ -1,0 +1,82 @@
+<div class="p-7">
+  <h2 class="text-[22px] font-bold mb-6" style="color: var(--branding-text);">Заморозка абонемента</h2>
+
+  <!-- Student info -->
+  <div class="flex items-center gap-3 mb-6 p-4" style="background-color: var(--branding-bg);">
+    <div class="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-semibold"
+         style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      {{ subscription.student.first_name|truncatechars:1 }}{{ subscription.student.last_name|truncatechars:1 }}
+    </div>
+    <div>
+      <div class="text-[14px] font-semibold" style="color: var(--branding-text);">{{ subscription.student }}</div>
+      <div class="text-[12px]" style="color: var(--branding-text-secondary);">
+        {{ subscription.tariff.name }} &bull; до {{ subscription.expires_at|date:"d.m.Y" }} &bull; {{ subscription.get_status_display }}
+      </div>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FDF2EF; color: var(--branding-primary); border: 1px solid var(--branding-primary);">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  {% if subscription.pending_freezes %}
+  <div class="mb-6 p-4 text-[13px]" style="background-color: #FFF8E1; color: #8A5A00; border: 1px solid #FFE082;">
+    По этому абонементу уже есть заявка на заморозку. Рассмотрите её в списке заявок, чтобы не создавать дубль.
+  </div>
+  <div class="flex justify-end">
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="px-5 py-2.5 text-[12px] font-semibold"
+            style="border: 1.5px solid var(--branding-border); color: var(--branding-text);">
+      Закрыть
+    </button>
+  </div>
+  {% else %}
+  <form hx-post="/dashboard/billing/subscriptions/{{ subscription.id }}/freeze/"
+        hx-target="#slide-over" hx-swap="innerHTML">
+    {% csrf_token %}
+
+    <div class="mb-5">
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">Причина заморозки</label>
+      <select name="reason" required class="w-full h-10 px-3 text-[13px] outline-none"
+              style="border: 1.5px solid var(--branding-border); color: var(--branding-text);">
+        <option value="vacation">Отпуск</option>
+        <option value="injury">Травма</option>
+        <option value="illness">Болезнь</option>
+        <option value="other">Другое</option>
+      </select>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">Количество дней</label>
+      <input type="number" name="days" required min="1" max="30" value="7"
+             class="w-full h-10 px-3 text-[13px] outline-none"
+             style="border: 1.5px solid var(--branding-border); color: var(--branding-text);" />
+    </div>
+
+    <div class="flex items-start gap-2 mb-6 p-3" style="background-color: #E3F2FD;">
+      <i data-lucide="info" class="w-4 h-4 mt-0.5" style="color: #1565C0;"></i>
+      <span class="text-[12px]" style="color: #1565C0;">
+        Абонемент будет продлён на количество дней заморозки. Максимум 30 дней заморозки.
+      </span>
+    </div>
+
+    <div class="flex gap-3 justify-end">
+      <button type="button"
+              onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+              class="px-5 py-2.5 text-[12px] font-semibold"
+              style="border: 1.5px solid var(--branding-border); color: var(--branding-text);">
+        Отмена
+      </button>
+      <button type="submit"
+              class="px-5 py-2.5 text-[12px] font-semibold flex items-center gap-2"
+              style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+        <i data-lucide="snowflake" class="w-4 h-4"></i>
+        Заморозить
+      </button>
+    </div>
+  </form>
+  {% endif %}
+</div>

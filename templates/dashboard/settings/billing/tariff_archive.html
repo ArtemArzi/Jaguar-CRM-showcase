@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Настройки — Архив тарифов{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+<h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px] mb-6 sm:mb-7" style="color: var(--branding-text);">Настройки</h1>
+{% include "dashboard/settings/_tabs.html" %}
+
+<div class="p-5 sm:p-7 mb-10" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+  <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Архив тарифов</h2>
+      <p class="text-[12px] mt-1" style="color: var(--branding-text-secondary);">
+        Старые цены остаются доступны в истории оплат и продлений.
+      </p>
+    </div>
+    <a href="{% url 'settings-billing' %}" class="px-3 py-1.5 text-[11px] font-medium rounded"
+       style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">К текущим тарифам</a>
+  </div>
+
+  {% for t in archived_tariffs %}
+  <div class="py-3" style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+    <div class="flex items-center gap-2">
+      <span class="text-[13px] font-medium" style="color: var(--branding-text);">{{ t.name }}</span>
+      <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(158,158,158,0.15); color: #757575;">В архиве</span>
+    </div>
+    <div class="flex flex-wrap gap-3 mt-1 text-[11px]" style="color: var(--branding-text-secondary);">
+      <span>{{ t.price }} ₽</span>
+      <span>{{ t.training_type.name }}</span>
+      <span>{% if t.trainings_limit %}{{ t.trainings_limit }} занятий{% else %}Безлимит{% endif %}</span>
+      <span>{{ t.duration_days }} дней</span>
+      {% if t.location %}<span>{{ t.location.name }}</span>{% endif %}
+      {% if t.personal_booking_trainer %}<span>{{ t.personal_booking_trainer.first_name }} {{ t.personal_booking_trainer.last_name }}</span>{% endif %}
+    </div>
+    {% if t.component_summary %}
+    <div class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">{{ t.component_summary }}</div>
+    {% endif %}
+  </div>
+  {% empty %}
+  <p class="text-[12px]" style="color: var(--branding-text-secondary);">Архив пуст.</p>
+  {% endfor %}
+</div>
+{% endpartialdef %}
+{% endblock %}

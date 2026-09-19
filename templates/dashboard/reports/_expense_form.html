@@ -1,0 +1,69 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">НОВЫЙ РАСХОД</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="/dashboard/reports/expense/create/" hx-target="#slide-over" hx-swap="innerHTML">
+    {% csrf_token %}
+    <input type="hidden" name="date_from" value="{{ date_from }}">
+    <input type="hidden" name="date_to" value="{{ date_to }}">
+
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НАЗВАНИЕ *</label>
+        <input type="text" name="name" required
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">СУММА *</label>
+        <input type="number" name="amount" step="0.01" min="0.01" required
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ДАТА *</label>
+        <input type="date" name="date" value="{{ today }}" required
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">КАТЕГОРИЯ</label>
+        <input type="text" name="category" placeholder="Аренда, транспорт..."
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="is_recurring"
+                 class="w-4 h-4 accent-current"
+                 style="color: var(--branding-primary);">
+          <span class="text-[13px] font-semibold" style="color: var(--branding-text);">Повторяющийся</span>
+        </label>
+        <p class="text-[11px] mt-1 ml-6" style="color: var(--branding-text-secondary);">
+          Ежемесячный расход, учитывается в каждом периоде
+        </p>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      ДОБАВИТЬ РАСХОД
+    </button>
+  </form>
+</div>

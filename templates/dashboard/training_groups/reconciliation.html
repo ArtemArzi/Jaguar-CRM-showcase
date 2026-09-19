@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-6 space-y-6" id="content">
+  <div>
+    <h1 class="text-2xl font-bold">Сверка тренировочных групп</h1>
+    <p class="text-sm text-gray-600">Сначала проверьте точный план, затем owner/admin может применить его только в режиме сверки.</p>
+    <p class="mt-2 text-sm">
+      Режим rollout:
+      <strong>{% if rollout_state %}{{ rollout_state.get_mode_display }} ({{ rollout_state.mode }}){% else %}не настроен{% endif %}</strong>
+    </p>
+  </div>
+  {% if group_error %}<div class="border border-red-300 bg-red-50 p-3 text-red-800">{{ group_error }}</div>{% endif %}
+  {% if group_management %}
+  <section class="rounded border bg-white p-4 space-y-3" aria-label="Текущее состояние канонических групп">
+    <div>
+      <h2 class="text-base font-semibold">Текущее состояние канонических групп</h2>
+      <p class="text-sm text-gray-600">Архивация доступна через API только после повторной серверной проверки всех условий.</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead><tr class="bg-gray-50"><th class="p-2 text-left">Группа</th><th class="p-2 text-left">Ответственный</th><th class="p-2 text-left">Регулярные слоты</th><th class="p-2 text-left">Готовность mapping</th><th class="p-2 text-right">Членства</th><th class="p-2 text-right">Ожидающие оплаты / ссылки</th><th class="p-2 text-left">Жизненный цикл</th></tr></thead>
+        <tbody>
+          {% for item in group_management %}
+          <tr class="border-t align-top">
+            <td class="p-2">{{ item.group.name }}<div class="text-xs text-gray-500">{{ item.group.training_type }} · {{ item.group.location }}</div></td>
+            <td class="p-2">{{ item.group.responsible_trainer }}</td>
+            <td class="p-2"><ul class="space-y-1">{% for slot in item.slots %}<li>#{{ slot.id }} · {{ slot.get_day_of_week_display }} {{ slot.start_time|time:"H:i" }}–{{ slot.end_time|time:"H:i" }} · {{ slot.trainer }}{% if not slot.is_active %} · неактивен{% endif %}</li>{% empty %}<li>Слотов нет</li>{% endfor %}</ul></td>
+            <td class="p-2">{% if item.mapping_ready %}<span class="text-emerald-700">Готова</span>{% else %}<span class="text-amber-700">Требует сверки</span><div class="text-xs">Не хватает проекций: {{ item.missing_projection_count }}; несвязанных постоянных записей: {{ item.unlinked_permanent_count }}</div>{% endif %}</td>
+            <td class="p-2 text-right">{{ item.open_membership_count }}</td>
+            <td class="p-2 text-right">{{ item.pending_payment_count }} / {{ item.open_bank_order_count }}</td>
+            <td class="p-2">
+              {{ item.group.get_status_display }}
+              {% if item.archive_preconditions_clear %}
+              <div class="text-xs text-emerald-700">Предусловия архивации сейчас чистые</div>
+              <form method="post" action="{% url 'training-group-archive' item.group.id %}" hx-post="{% url 'training-group-archive' item.group.id %}" class="mt-2 space-y-2">
+                {% csrf_token %}
+                <label class="block text-xs">Причина архивации<input name="rationale" required maxlength="500" class="mt-1 w-full border rounded p-1"></label>
+                <button type="submit" class="rounded border px-2 py-1 text-xs">Архивировать</button>
+              </form>
+              {% else %}
+              <div class="text-xs text-amber-700">Перед архивом закройте активные состояния</div>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+  <form method="post" hx-post="{% url 'training-group-reconciliation' %}" hx-target="#training-group-preview" hx-swap="innerHTML" class="space-y-4">
+    {% csrf_token %}
+    <div class="grid gap-3 md:grid-cols-3">
+      <label class="block text-sm">Каноническое название<input class="mt-1 w-full border rounded p-2" name="canonical_name" required></label>
+      <label class="block text-sm">Ответственный тренер<select class="mt-1 w-full border rounded p-2" name="responsible_trainer_id"><option value="">По тренеру слота, если он один</option>{% for trainer in trainers %}<option value="{{ trainer.id }}">{{ trainer }}</option>{% endfor %}</select></label>
+    </div>
+    <div class="overflow-x-auto border rounded">
+      <table class="min-w-full text-sm"><thead><tr class="bg-gray-50"><th class="p-2"></th><th class="p-2 text-left">Слот</th><th class="p-2 text-left">Тип / локация</th><th class="p-2 text-left">Тренер</th><th class="p-2 text-right">Реестр</th></tr></thead>
+      <tbody>{% for schedule in inventory %}<tr class="border-t"><td class="p-2"><label><input type="checkbox" name="schedule_ids" value="{{ schedule.schedule_id }}" aria-label="Выбрать слот #{{ schedule.schedule_id }}"><span class="sr-only">Выбрать слот #{{ schedule.schedule_id }}</span></label></td><td class="p-2">#{{ schedule.schedule_id }} · {{ schedule.group_name }} · {{ schedule.start_time }}</td><td class="p-2">#{{ schedule.training_type_id }} / #{{ schedule.location_id }}</td><td class="p-2">#{{ schedule.trainer_id }}</td><td class="p-2 text-right">{{ schedule.permanent_enrollment_ids|length }} / {{ schedule.payment_target_ids|length }} / {{ schedule.refund_case_count }}</td></tr>{% empty %}<tr><td class="p-2" colspan="5">Нет повторяющихся групповых слотов.</td></tr>{% endfor %}</tbody></table>
+    </div>
+    <button type="submit" name="reconciliation_action" value="preview" class="px-4 py-2 rounded bg-slate-900 text-white">Проверить выбранные ID</button>
+    <div id="training-group-preview">{% include "dashboard/training_groups/_reconciliation_preview.html" %}</div>
+  </form>
+</div>
+{% endblock %}

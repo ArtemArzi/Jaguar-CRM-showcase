@@ -1,0 +1,93 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">НОВЫЙ ТРЕНЕР</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="/dashboard/trainers/create/" hx-target="#content">
+    {% csrf_token %}
+
+    <!-- Основные данные -->
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ИМЯ *</label>
+        <input type="text" name="first_name" value="{{ form_data.first_name|default:'' }}" required
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ФАМИЛИЯ *</label>
+        <input type="text" name="last_name" value="{{ form_data.last_name|default:'' }}" required
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТЕЛЕФОН</label>
+        <input type="tel" name="phone" value="{{ form_data.phone|default:'' }}"
+               pattern="\+?\d{10,15}" placeholder="+79111234567"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+    </div>
+
+    <!-- Локации и ставки -->
+    {% if locations %}
+    <div class="mb-6">
+      <div class="mb-1">
+        <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ЛОКАЦИИ И СТАВКИ</span>
+      </div>
+      <p class="text-[11px] mb-3" style="color: var(--branding-text-secondary);">
+        Выберите залы и укажите % от стоимости абонемента за занятие
+      </p>
+
+      <div class="space-y-3">
+        {% for loc_row in rates_grid %}
+        <div class="border-2 overflow-hidden" style="border-color: var(--branding-border);">
+          <!-- Location header -->
+          <label class="flex items-center gap-3 p-3 cursor-pointer"
+                 style="background-color: var(--branding-dark);">
+            <input type="checkbox" name="location_{{ loc_row.location.id }}" value="1"
+                   class="w-4 h-4" style="accent-color: var(--branding-primary);">
+            <span class="text-[13px] font-semibold tracking-[0.5px]" style="color: var(--branding-on-primary);">{{ loc_row.location.name }}</span>
+          </label>
+
+          <!-- Rates (one per training type) -->
+          <div>
+            {% for type_row in loc_row.rates %}
+            <div class="flex items-center justify-between px-4 py-2.5"
+                 {% if not forloop.last %}style="border-bottom: 1px solid var(--branding-border);"{% endif %}>
+              <span class="text-[12px]" style="color: var(--branding-text);">{{ type_row.training_type.name }}</span>
+              <div class="flex items-center gap-1">
+                <input type="number" name="percent_{{ loc_row.location.id }}_{{ type_row.training_type.id }}" value="{{ type_row.percent }}"
+                       min="0" max="100" step="0.01"
+                       class="w-[55px] h-7 px-2 text-[12px] text-center font-semibold outline-none"
+                       style="border: 1.5px solid var(--branding-border); color: var(--branding-text); background: transparent;">
+                <span class="text-[12px]" style="color: var(--branding-text-secondary);">%</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      СОЗДАТЬ ТРЕНЕРА
+    </button>
+  </form>
+</div>

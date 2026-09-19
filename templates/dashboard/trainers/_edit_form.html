@@ -1,0 +1,66 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">РЕДАКТИРОВАТЬ</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  {% if success %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #D1FAE5; color: #065F46;">{{ success }}</div>
+  {% endif %}
+
+  <form hx-post="/dashboard/trainers/{{ trainer.id }}/edit/" hx-target="#slide-over">
+    {% csrf_token %}
+
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ИМЯ *</label>
+        <input type="text" name="first_name" value="{{ trainer.first_name }}" required
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ФАМИЛИЯ *</label>
+        <input type="text" name="last_name" value="{{ trainer.last_name }}" required
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТЕЛЕФОН</label>
+        <input type="tel" name="phone" value="{{ trainer.phone }}"
+               pattern="\+?\d{10,15}" placeholder="+79111234567"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div class="flex items-center justify-between">
+        <label class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">АКТИВЕН</label>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" name="is_active" value="1" {% if trainer.is_active %}checked{% endif %}
+                 class="sr-only peer">
+          <div class="w-11 h-6 rounded-full peer
+                      bg-gray-300 peer-checked:bg-green-600
+                      after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                      after:bg-white after:rounded-full after:h-5 after:w-5
+                      after:transition-all peer-checked:after:translate-x-full"></div>
+        </label>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      СОХРАНИТЬ
+    </button>
+  </form>
+</div>

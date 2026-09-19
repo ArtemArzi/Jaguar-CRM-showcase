@@ -1,0 +1,75 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual env
+.venv/
+venv/
+
+# Django
+staticfiles/
+media/
+*.sqlite3
+db.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+coverage.xml
+coverage/
+frontend/coverage/
+htmlcov/
+.pytest_cache/
+
+# Tailwind standalone CLI
+bin/tailwindcss
+
+# Tailwind built output
+static/css/output.css
+
+# Docker
+pgdata/
+
+# Secrets
+jwt-key.pem
+*.pem
+
+# Node
+node_modules/
+
+# Claude Code local state
+.claude/
+.serena/
+.playwright-mcp/
+
+# Codex Task Delivery local state
+.codex/task-delivery/
+
+# Test/debug screenshots in root
+/*.png
+
+# Misc local files
+excalidraw.log
+untitled*.pen
+pnl-snapshot.md
+/design/
+
+# Private student import sources, previews and results (never public media).
+/local-private/student-imports/

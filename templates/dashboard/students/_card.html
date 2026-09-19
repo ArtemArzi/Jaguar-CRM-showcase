@@ -1,0 +1,255 @@
+<div class="p-5 sm:p-7" data-student-dialog data-student-card>
+  <!-- Breadcrumb + Close -->
+  <div class="flex items-center justify-between mb-1">
+    <span class="text-[12px]" style="color: var(--branding-text-secondary);">
+      Ученики / {{ student.first_name }} {{ student.last_name }}
+    </span>
+    <button data-student-close aria-label="Закрыть" onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-11 h-11 flex items-center justify-center rounded-full hover:bg-black/5">
+      <i data-lucide="x" class="w-5 h-5" style="color: var(--branding-text-secondary);"></i>
+    </button>
+  </div>
+
+  {% if operation_success %}<p role="status" class="p-3 mb-4 text-[13px]" style="background: #E8F5E9; color: #285A2C;">{{ operation_success }}</p>{% endif %}
+
+  <!-- Name + Status -->
+  <div class="flex items-center gap-3 mb-4 flex-wrap">
+    <h2 class="text-[20px] sm:text-[22px] font-bold tracking-[0.5px]" style="color: var(--branding-text);">
+      {{ student.first_name|upper }} {{ student.last_name|upper }}
+    </h2>
+    <span class="px-3 py-1 text-[9px] font-semibold tracking-[1px]"
+          style="{% if student.status == 'active' %}background-color: #6B8E5E; color: var(--branding-on-primary);{% elif student.status == 'at_risk' %}background-color: #C45A3B; color: var(--branding-on-primary);{% elif student.status == 'trial' %}background-color: #E8C84B; color: #1A1A1A;{% elif student.status == 'frozen' %}background-color: #5B9BD5; color: var(--branding-on-primary);{% elif student.status == 'lead' %}background-color: #888888; color: var(--branding-on-primary);{% else %}background-color: #666666; color: var(--branding-on-primary);{% endif %}">
+      {{ student.get_status_display|upper }}
+    </span>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="flex gap-2 mb-6 flex-wrap">
+    {% if student_operations_enabled %}
+    <button hx-get="{% url 'student-attendance-record' student.id %}" hx-target="#slide-over"
+            class="px-4 py-3 text-[12px] font-semibold" style="background: var(--branding-primary); color: var(--branding-on-primary);">Отметить посещение</button>
+    <a href="{% url 'subscription-list' %}?student_id={{ student.id }}&new=1" class="px-4 py-3 text-[12px] font-semibold"
+       style="border: 1.5px solid var(--branding-dark);">Принять оплату</a>
+    {% endif %}
+    <a hx-get="/dashboard/students/{{ student.id }}/edit/"
+       hx-target="#slide-over"
+       class="flex items-center gap-2 px-4 py-2.5 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+       style="border: 1.5px solid var(--branding-dark); color: var(--branding-dark);">
+      <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+      РЕДАКТИРОВАТЬ
+    </a>
+    {% if student.is_child and student.guardian_phone %}
+    <a href="tel:{{ student.guardian_phone }}"
+       class="flex items-center gap-2 px-4 py-2.5 text-[11px] font-semibold tracking-[1px]"
+       style="background-color: var(--branding-dark); color: var(--branding-on-primary);">
+      <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+      ПОЗВОНИТЬ РОДИТЕЛЮ
+    </a>
+    {% elif student.phone %}
+    <a href="tel:{{ student.phone }}"
+       class="flex items-center gap-2 px-4 py-2.5 text-[11px] font-semibold tracking-[1px]"
+       style="background-color: var(--branding-dark); color: var(--branding-on-primary);">
+      <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+      ПОЗВОНИТЬ
+    </a>
+    {% endif %}
+    {% if student.is_child and not student.parent_user_id %}
+    <form hx-post="/dashboard/students/{{ student.id }}/parent-invite/"
+          hx-target="#parent-invite-panel"
+          hx-swap="outerHTML">
+      {% csrf_token %}
+      <button type="submit"
+              class="flex items-center gap-2 px-4 py-2.5 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+              style="border: 1.5px solid var(--branding-dark); color: var(--branding-dark);">
+        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+        Связать родителя
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div id="parent-invite-panel" class="mb-4"></div>
+
+  <!-- Profile card -->
+  <div class="mb-4" style="border: 2px solid var(--branding-dark);">
+    <!-- Dark header: avatar + info -->
+    <div class="flex items-center gap-4 p-5" style="background-color: var(--branding-dark);">
+      <div class="w-[72px] h-[72px] rounded-full flex items-center justify-center text-[24px] font-bold shrink-0"
+           style="background-color: #333333; color: var(--branding-on-primary);">
+        {{ student.first_name|first }}{{ student.last_name|first }}
+      </div>
+      <div class="flex flex-col gap-1">
+        {% if student.date_of_birth %}
+        <span class="text-[12px]" style="color: #888888;">{{ student.date_of_birth|date:"d.m.Y" }}</span>
+        {% endif %}
+        <span class="text-[12px]" style="color: #888888;">Зарегистрирован {{ student.created_at|date:"d.m.Y" }}</span>
+      </div>
+    </div>
+    <!-- Contact rows -->
+    {% if student.is_child and student.guardian_phone %}
+    <div class="flex items-center gap-3 px-5 py-3.5" style="border-bottom: 1px solid var(--branding-border);">
+      <i data-lucide="phone" class="w-3.5 h-3.5 shrink-0" style="color: #888888;"></i>
+      <span class="text-[13px]" style="color: var(--branding-text);">Родитель: {{ student.guardian_phone }}</span>
+    </div>
+    {% elif student.phone %}
+    <div class="flex items-center gap-3 px-5 py-3.5" style="border-bottom: 1px solid var(--branding-border);">
+      <i data-lucide="phone" class="w-3.5 h-3.5 shrink-0" style="color: #888888;"></i>
+      <span class="text-[13px]" style="color: var(--branding-text);">{{ student.phone }}</span>
+    </div>
+    {% endif %}
+    {% if student.email %}
+    <div class="flex items-center gap-3 px-5 py-3.5" style="border-bottom: 1px solid var(--branding-border);">
+      <i data-lucide="mail" class="w-3.5 h-3.5 shrink-0" style="color: #888888;"></i>
+      <span class="text-[13px]" style="color: var(--branding-text);">{{ student.email }}</span>
+    </div>
+    {% endif %}
+    {% if student.source %}
+    <div class="flex items-center gap-3 px-5 py-3.5" style="border-bottom: 1px solid var(--branding-border);">
+      <i data-lucide="map-pin" class="w-3.5 h-3.5 shrink-0" style="color: #888888;"></i>
+      <span class="text-[13px]" style="color: var(--branding-text);">Источник: {{ student.get_source_display }}</span>
+    </div>
+    {% endif %}
+    {% if student.contraindications %}
+    <div class="flex gap-3 px-5 py-3.5" style="border-bottom: 1px solid var(--branding-border);">
+      <i data-lucide="heart-pulse" class="w-3.5 h-3.5 shrink-0 mt-0.5" style="color: #C45A3B;"></i>
+      <div class="flex flex-col gap-1">
+        <span class="text-[11px] font-semibold tracking-[1px]" style="color: #C45A3B;">ПРОТИВОПОКАЗАНИЯ</span>
+        <span class="text-[12px]" style="color: var(--branding-text);">{{ student.contraindications }}</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if existing_refunds %}<details class="mb-4"><summary class="py-3 text-[13px]">Записанные возвраты</summary>
+  {% for refund in existing_refunds %}<button hx-get="{% url 'student-payment-refund' student.id refund.payment_id %}" hx-target="#slide-over" class="block py-3 text-[13px]">{{ refund.accounting_date|date:'d.m.Y' }} · возврат №{{ refund.id }}{% if refund.status == 'payroll_action_required' %} · нужна компенсация комиссии{% endif %}</button>{% endfor %}
+  </details>{% endif %}
+  <!-- Grade card -->
+  <div class="p-5 mb-4 flex flex-col gap-2" style="background-color: var(--branding-dark);">
+    <span class="text-[11px] font-semibold tracking-[1px]" style="color: #888888;">ГРЕЙД</span>
+    <span class="text-[18px] font-bold" style="color: var(--branding-on-primary);">{{ student.grade_name|default:"Не присвоен" }}</span>
+  </div>
+
+  {% if student_operations_enabled %}
+  {% include 'dashboard/students/_card_operations.html' %}
+  {% else %}
+  <!-- Current training entitlements -->
+  {% for card in subscription_cards %}
+  <div class="p-5 mb-4 flex flex-col gap-2" style="border: 2px solid var(--branding-dark);">
+    <span class="text-[11px] font-semibold tracking-[1px]" style="color: #888888;">{{ card.kind_label }}</span>
+    <span class="text-[18px] font-bold" style="color: var(--branding-text);">{{ card.subscription.tariff.name }}</span>
+    <div class="flex items-center gap-4 text-[12px]" style="color: var(--branding-text-secondary);">
+      {% if card.is_single_credit %}
+      <span class="font-semibold tracking-[0.5px]">{{ card.state_label }}</span>
+      {% elif card.remaining_text %}
+      <span>{{ card.remaining_text }}</span>
+      {% endif %}
+      {% if card.subscription.expires_at %}
+      <span>до {{ card.subscription.expires_at|date:"d.m" }}</span>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="p-5 mb-4 flex items-center justify-center text-center text-[13px]" style="border: 2px solid var(--branding-border); color: var(--branding-text-secondary);">
+    Нет активных абонементов или разовых тренировок
+  </div>
+  {% endfor %}
+
+  {% endif %}
+
+  {% include "dashboard/students/_account_access.html" %}
+
+  <!-- Unified attendance stats -->
+  <div data-attendance-summary class="mb-4" style="border: 2px solid var(--branding-dark);">
+    <div class="px-5 py-4 flex items-end justify-between gap-4" style="background-color: var(--branding-dark);">
+      <div class="flex flex-col gap-1">
+        <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-on-primary);">ПОСЕЩАЕМОСТЬ</span>
+        <span class="text-[11px]" style="color: #888888;">Подтверждённые тренировки всех форматов</span>
+      </div>
+      <span data-attendance-rate class="text-[28px] leading-none font-bold shrink-0" style="color: var(--branding-on-primary);">
+        {% if attendance_summary.attendance_rate is None %}—{% else %}{{ attendance_summary.attendance_rate }}%{% endif %}
+      </span>
+    </div>
+    <div class="grid grid-cols-3">
+      <div data-attendance-metric="total"
+           data-value="{{ attendance_summary.decided_count }}"
+           class="px-3 py-4 flex flex-col gap-1"
+           style="border-right: 1px solid var(--branding-border);">
+        <span class="text-[10px] font-semibold tracking-[1px]" style="color: #888888;">ВСЕГО</span>
+        <span class="text-[24px] leading-none font-bold" style="color: var(--branding-text);">{{ attendance_summary.decided_count }}</span>
+      </div>
+      <div data-attendance-metric="attended"
+           data-value="{{ attendance_summary.attended_count }}"
+           class="px-3 py-4 flex flex-col gap-1"
+           style="border-right: 1px solid var(--branding-border);">
+        <span class="text-[10px] font-semibold tracking-[1px]" style="color: #888888;">ПОСЕЩЕНО</span>
+        <span class="text-[24px] leading-none font-bold" style="color: #6B8E5E;">{{ attendance_summary.attended_count }}</span>
+      </div>
+      <div data-attendance-metric="missed"
+           data-value="{{ attendance_summary.missed_count }}"
+           class="px-3 py-4 flex flex-col gap-1">
+        <span class="text-[10px] font-semibold tracking-[1px]" style="color: #888888;">ПРОПУЩЕНО</span>
+        <span class="text-[24px] leading-none font-bold" style="color: {% if attendance_summary.missed_count > 0 %}#C45A3B{% else %}var(--branding-text){% endif %};">{{ attendance_summary.missed_count }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% include "dashboard/students/_card_documents.html" %}
+
+  <!-- Notes section -->
+  <div data-notes class="mb-4" style="border: 2px solid var(--branding-dark);">
+    <div class="flex items-center justify-between px-5 py-3.5" style="background-color: var(--branding-dark);">
+      <div class="flex items-center gap-2">
+        <i data-lucide="message-square" class="w-4 h-4" style="color: var(--branding-on-primary);"></i>
+        <span class="text-[12px] font-semibold tracking-[1px]" style="color: var(--branding-on-primary);">ЗАМЕТКИ ТРЕНЕРА</span>
+      </div>
+      <button type="button" onclick="this.closest('[data-notes]').querySelector('[data-note-form]').classList.toggle('hidden')"
+              class="flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold tracking-[1px] cursor-pointer" style="border: 1px solid #888888; color: var(--branding-on-primary);">
+        <i data-lucide="plus" class="w-3 h-3"></i>
+        ДОБАВИТЬ
+      </button>
+    </div>
+    <!-- Add note form (hidden by default) -->
+    <div data-note-form class="hidden px-5 py-4" style="border-bottom: 1px solid var(--branding-border);">
+      <form hx-post="/dashboard/students/{{ student.id }}/note/" hx-target="#slide-over">
+        {% csrf_token %}
+        <textarea name="text" rows="3" required placeholder="Текст заметки..."
+                  class="w-full px-3 py-2 text-[13px] outline-none resize-none mb-2"
+                  style="border: 1.5px solid var(--branding-border); color: var(--branding-text);"></textarea>
+        <button type="submit" class="px-4 py-2 text-[11px] font-semibold tracking-[1px]"
+                style="background-color: var(--branding-dark); color: var(--branding-on-primary);">
+          СОХРАНИТЬ
+        </button>
+      </form>
+    </div>
+    {% for note in student.notes.all %}
+    <div class="px-5 py-3.5" style="border-bottom: 1px solid var(--branding-border);">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-[12px] font-semibold" style="color: var(--branding-primary);">{{ note.author }}</span>
+        <span class="text-[11px]" style="color: #888888;">{{ note.created_at|date:"d.m.Y H:i" }}</span>
+      </div>
+      <p class="text-[13px]" style="color: var(--branding-text);">{{ note.text }}</p>
+    </div>
+    {% empty %}
+    <div class="px-5 py-6 text-center text-[13px]" style="color: #888888;">Нет заметок</div>
+    {% endfor %}
+  </div>
+
+  <!-- Status change -->
+  <div>
+    <span class="text-[12px] font-semibold tracking-[1px] mb-2 block" style="color: #888888;">СТАТУС</span>
+    <select name="new_status"
+            hx-post="/dashboard/students/{{ student.id }}/status/"
+            hx-target="#slide-over"
+            hx-trigger="change"
+            class="w-full h-10 px-3 text-[13px] outline-none"
+            style="border: 1.5px solid var(--branding-border); color: var(--branding-text);">
+      <option value="{{ student.status }}" selected>{{ student.get_status_display }}</option>
+      {% for value, label in statuses %}
+      <option value="{{ value }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+    {% if status_error %}
+    <div class="mt-2 text-[12px]" style="color: #C45A3B;">{{ status_error }}</div>
+    {% endif %}
+  </div>
+</div>

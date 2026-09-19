@@ -1,0 +1,82 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">КОРРЕКТИРОВКА ВЫПЛАТЫ</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  {% if success %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #D1FAE5; color: #065F46;">{{ success }}</div>
+  {% endif %}
+
+  <div class="mb-5 border-2" style="border-color: var(--branding-border);">
+    <div class="px-4 py-3" style="background-color: var(--branding-bg);">
+      <div class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ИСХОДНОЕ НАЧИСЛЕНИЕ</div>
+      <div class="mt-1 text-[15px] font-bold" style="color: var(--branding-text);">{{ earning.amount|floatformat:0 }}₽</div>
+    </div>
+    <div class="px-4 py-3 text-[12px]" style="color: var(--branding-text-secondary);">
+      <div>{{ earning.trainer.first_name }} {{ earning.trainer.last_name }}</div>
+      <div>
+        {% if earning.checkin %}
+          {{ earning.checkin.date|date:"d.m.Y" }}
+          {% if earning.checkin.schedule %} · {{ earning.checkin.schedule.group_name }}{% endif %}
+        {% elif earning.payment %}
+          Оплата #{{ earning.payment.id }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if correction_result %}
+  <div class="mb-5 space-y-2">
+    <div class="flex items-center justify-between px-3 py-2 text-[12px]" style="background-color: var(--branding-bg); color: var(--branding-text);">
+      <span>{{ correction_result.debit.trainer.first_name }} {{ correction_result.debit.trainer.last_name }}</span>
+      <span class="font-semibold">{{ correction_result.debit.payable_amount_delta|floatformat:0 }}₽</span>
+    </div>
+    <div class="flex items-center justify-between px-3 py-2 text-[12px]" style="background-color: var(--branding-bg); color: var(--branding-text);">
+      <span>{{ correction_result.credit.trainer.first_name }} {{ correction_result.credit.trainer.last_name }}</span>
+      <span class="font-semibold">+{{ correction_result.credit.payable_amount_delta|floatformat:0 }}₽</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <form hx-post="/dashboard/trainers/earnings/{{ earning.id }}/correction/" hx-target="#slide-over">
+    {% csrf_token %}
+    <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ПЕРЕНЕСТИ НА *</label>
+        <select name="target_trainer_id" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">Выберите тренера</option>
+          {% for trainer in target_trainers %}
+          <option value="{{ trainer.id }}" {% if form_data.target_trainer_id == trainer.id %}selected{% endif %}>{{ trainer.first_name }} {{ trainer.last_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ПРИЧИНА *</label>
+        <textarea name="reason" required rows="4"
+                  class="w-full px-3 py-2 text-[13px] border-2 bg-transparent outline-none resize-none"
+                  style="border-color: var(--branding-border); color: var(--branding-text);">{{ form_data.reason|default:"" }}</textarea>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      СОХРАНИТЬ КОРРЕКТИРОВКУ
+    </button>
+  </form>
+</div>

@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% load partials money %}
+
+{% block title %}Финансы - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<!-- Title -->
+<div class="flex flex-wrap items-center justify-between mb-4 gap-3">
+  <h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px]" style="color: var(--branding-text);">ФИНАНСЫ</h1>
+  <a href="/dashboard/reports/export/?date_from={{ date_from }}&date_to={{ date_to }}"
+     class="h-10 px-4 flex items-center gap-2 text-[12px] font-semibold transition-colors hover:bg-white"
+     style="border: 1.5px solid var(--branding-dark); color: var(--branding-dark); background-color: rgba(255,255,255,0.5);">
+    <i data-lucide="download" class="w-4 h-4"></i>
+    Excel
+  </a>
+</div>
+
+<!-- Date picker card -->
+<form class="mb-6 md:mb-7 p-4 flex flex-col gap-3"
+      style="background-color: rgba(255,255,255,0.5); border: 1px solid var(--branding-border);"
+      hx-get="/dashboard/reports/" hx-target="#content" hx-push-url="true">
+  <!-- Preset chips -->
+  <div class="flex flex-wrap gap-1.5 pnl-presets">
+    <button type="button" class="date-preset" data-days="7">7 дней</button>
+    <button type="button" class="date-preset" data-days="30">30 дней</button>
+    <button type="button" class="date-preset" data-days="90">90 дней</button>
+    <button type="button" class="date-preset" data-days="ytd">С начала года</button>
+    <button type="button" class="date-preset" data-days="month">Этот месяц</button>
+  </div>
+  <!-- Date inputs row -->
+  <div class="flex items-end gap-3">
+    <div class="flex flex-col gap-1 flex-1 min-w-0">
+      <label class="text-[10px] font-semibold tracking-[1px] uppercase" style="color: var(--branding-text-secondary);">С</label>
+      <input type="date" name="date_from" value="{{ date_from }}"
+             hx-get="/dashboard/reports/" hx-trigger="change"
+             hx-target="#content" hx-include="closest form" hx-push-url="true"
+             class="soft-input soft-date w-full min-w-0" />
+    </div>
+    <div class="flex items-center mb-2.5 text-[18px]" style="color: var(--branding-text-secondary);">→</div>
+    <div class="flex flex-col gap-1 flex-1 min-w-0">
+      <label class="text-[10px] font-semibold tracking-[1px] uppercase" style="color: var(--branding-text-secondary);">По</label>
+      <input type="date" name="date_to" value="{{ date_to }}"
+             hx-get="/dashboard/reports/" hx-trigger="change"
+             hx-target="#content" hx-include="closest form" hx-push-url="true"
+             class="soft-input soft-date w-full min-w-0" />
+    </div>
+  </div>
+</form>
+
+<script>
+(function() {
+  var presets = document.querySelectorAll('.pnl-presets .date-preset');
+  var fromInput = document.querySelector('input[name=date_from]');
+  var toInput = document.querySelector('input[name=date_to]');
+  if (!presets.length || !fromInput || !toInput) return;
+  function fmt(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  presets.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var v = btn.dataset.days;
+      var today = new Date();
+      var from = new Date();
+      if (v === 'ytd') from = new Date(today.getFullYear(), 0, 1);
+      else if (v === 'month') from = new Date(today.getFullYear(), today.getMonth(), 1);
+      else from.setDate(today.getDate() - parseInt(v,10) + 1);
+      fromInput.value = fmt(from);
+      toInput.value = fmt(today);
+      presets.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      fromInput.dispatchEvent(new Event('change', {bubbles: true}));
+    });
+  });
+})();
+</script>
+
+<!-- Row 1: Three metric cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-7">
+  <!-- ДОХОД -->
+  <div class="p-5 sm:p-6 flex flex-col gap-3 min-w-0" style="background-color: var(--branding-dark);">
+    <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">
+      <i data-lucide="trending-up" class="w-3.5 h-3.5 inline-block mr-1"></i>ДОХОД ПОСЛЕ ВОЗВРАТОВ
+    </span>
+    <span class="text-[24px] sm:text-[32px] font-bold -tracking-[1px] break-all" style="color: var(--status-success);">{{ pnl.income|money }}</span>
+    <span class="text-[11px]" style="color: var(--branding-on-primary);">
+      Валовые оплаты {{ pnl.gross_income|money }} · возвраты {{ pnl.refunded_income|money }}
+    </span>
+  </div>
+
+  <!-- РАСХОДЫ -->
+  <div class="p-5 sm:p-6 flex flex-col gap-3 border-2 min-w-0" style="border-color: var(--branding-dark);">
+    <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">
+      <i data-lucide="arrow-down-right" class="w-3.5 h-3.5 inline-block mr-1"></i>РАСХОДЫ
+    </span>
+    <span class="text-[24px] sm:text-[32px] font-bold -tracking-[1px] break-all" style="color: var(--branding-text);">{{ pnl.total_expenses|money }}</span>
+  </div>
+
+  <!-- МАРЖА -->
+  <div class="p-5 sm:p-6 flex flex-col gap-3 min-w-0"
+       style="{% if pnl.margin >= 0 %}background-color: var(--status-active-bg);{% else %}background-color: var(--status-danger-bg);{% endif %}">
+    <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">
+      <i data-lucide="percent" class="w-3.5 h-3.5 inline-block mr-1"></i>МАРЖА
+    </span>
+    <div class="flex items-end gap-3">
+      <span class="text-[24px] sm:text-[32px] font-bold -tracking-[1px] break-all min-w-0"
+            style="color: {% if pnl.margin >= 0 %}var(--status-active-color){% else %}var(--status-danger-color){% endif %};">{{ pnl.margin|money }}</span>
+      <span class="text-[13px] font-semibold mb-1.5"
+            style="color: {% if pnl.margin >= 0 %}var(--status-active-color){% else %}var(--status-danger-color){% endif %};">{{ pnl.margin_percent }}%</span>
+    </div>
+  </div>
+</div>
+
+<!-- Row 1.5: Activity metrics -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-7">
+
+  <!-- ПОСЕЩАЕМОСТЬ -->
+  <div class="p-5 border-2 flex flex-col gap-2 min-w-0" style="border-color: var(--branding-dark);">
+    <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">
+      <i data-lucide="users" class="w-3.5 h-3.5 inline-block mr-1"></i>ПОСЕЩАЕМОСТЬ
+    </span>
+    <div class="flex items-end gap-3">
+      <span class="text-[24px] font-bold" style="color: var(--branding-text);">{{ attendance.total_checkins }}</span>
+      <span class="text-[12px] mb-1" style="color: var(--branding-text-secondary);">чек-инов</span>
+    </div>
+    <span class="text-[11px]" style="color: var(--branding-text-secondary);">
+      ~{{ attendance.avg_per_day }} в день за {{ attendance.days_in_period }} дн.
+    </span>
+  </div>
+
+  <!-- КОНВЕРСИЯ ПРОБНЫХ -->
+  <div class="p-5 border-2 flex flex-col gap-2 min-w-0" style="border-color: var(--branding-dark);">
+    <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">
+      <i data-lucide="user-plus" class="w-3.5 h-3.5 inline-block mr-1"></i>КОНВЕРСИЯ ПРОБНЫХ
+    </span>
+    <div class="flex items-end gap-3">
+      {% if trial.conversion_rate != None %}
+      <span class="text-[24px] font-bold" style="color: var(--status-active-color);">{{ trial.conversion_rate }}%</span>
+      {% else %}
+      <span class="text-[24px] font-bold" style="color: var(--branding-text-secondary);">&mdash;</span>
+      {% endif %}
+    </div>
+    <span class="text-[11px]" style="color: var(--branding-text-secondary);">
+      {{ trial.converted }} из {{ trial.new_trials }} новых → купили абонемент
+    </span>
+  </div>
+
+  <!-- ДАВНО НЕ БЫЛИ -->
+  <div class="p-5 flex flex-col gap-2 min-w-0"
+       style="{% if dormant.count > 0 %}background-color: #FFF3E0; border: 2px solid #FF9800;{% else %}border: 2px solid var(--branding-dark);{% endif %}">
+    <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">
+      <i data-lucide="user-x" class="w-3.5 h-3.5 inline-block mr-1"></i>ДАВНО НЕ БЫЛИ
+    </span>
+    <div class="flex items-end gap-3">
+      <span class="text-[24px] font-bold" style="color: {% if dormant.count > 0 %}#E65100{% else %}var(--branding-text){% endif %};">{{ dormant.count }}</span>
+      <span class="text-[12px] mb-1" style="color: var(--branding-text-secondary);">учеников</span>
+    </div>
+    <span class="text-[11px]" style="color: var(--branding-text-secondary);">
+      Не приходили 14+ дней
+    </span>
+  </div>
+</div>
+
+<!-- Row 2: Two-column layout -->
+<div class="flex flex-col md:flex-row gap-4 md:gap-5 md:min-h-[300px]">
+
+  <!-- Left column (2/3) -->
+  <div class="flex-1 flex flex-col gap-5 min-w-0">
+
+    <!-- РАЗБИВКА ДОХОДА -->
+    <div class="border-2 overflow-hidden" style="border-color: var(--branding-dark);">
+      <div class="px-5 py-3 flex items-center justify-between" style="background-color: var(--branding-dark);">
+        <span class="text-[12px] font-semibold tracking-[1px]" style="color: var(--branding-on-primary);">РАЗБИВКА ЧИСТОГО ДОХОДА</span>
+        <span class="text-[12px] font-bold" style="color: var(--branding-on-primary);">{{ pnl.income|money }}</span>
+      </div>
+      <div class="flex flex-col">
+        {% if pnl.income_breakdown %}
+        {% for item in pnl.income_breakdown %}
+        <div class="flex items-center justify-between px-5 py-3"
+             style="border-bottom: 1px solid var(--branding-border);">
+          <span class="text-[13px]" style="color: var(--branding-text);">{{ item.label }}</span>
+          <span class="text-[13px] font-semibold" style="color: var(--branding-text);">{{ item.amount|money }}</span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="px-5 py-8 text-center text-[13px]" style="color: var(--branding-text-secondary);">Нет оплат за период</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ЗАРПЛАТЫ ТРЕНЕРОВ -->
+    <div class="border-2 overflow-hidden" style="border-color: var(--branding-dark);">
+      <div class="px-5 py-3 flex items-center justify-between" style="background-color: var(--branding-dark);">
+        <span class="text-[12px] font-semibold tracking-[1px]" style="color: var(--branding-on-primary);">ЗАРПЛАТЫ ТРЕНЕРОВ</span>
+        <span class="text-[12px] font-bold" style="color: var(--branding-on-primary);">{{ pnl.salary_expenses|money }}</span>
+      </div>
+      <div class="flex flex-col">
+        {% if pnl.salary_breakdown %}
+        {% for item in pnl.salary_breakdown %}
+        <div class="px-5 py-3" style="border-bottom: 1px solid var(--branding-border);">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-[13px] font-semibold truncate" style="color: var(--branding-text);">{{ item.trainer }}</span>
+            <span class="text-[14px] font-bold flex-shrink-0" style="color: var(--branding-text);">{{ item.amount|money }}</span>
+          </div>
+          <div class="flex items-center gap-1.5 mt-0.5 text-[11px]" style="color: var(--branding-text-secondary);">
+            <span>{{ item.sessions }} нач.</span>
+            <span>·</span>
+            <span>принёс <span style="color: #2D5A27; font-weight: 600;">{{ item.revenue|money }}</span></span>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="px-5 py-8 text-center text-[13px]" style="color: var(--branding-text-secondary);">Нет начислений</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- РАСХОДЫ -->
+    <div class="border-2 overflow-hidden" style="border-color: var(--branding-dark);">
+      <div class="px-5 py-3 flex items-center justify-between" style="background-color: var(--branding-dark);">
+        <span class="text-[12px] font-semibold tracking-[1px]" style="color: var(--branding-on-primary);">РАСХОДЫ</span>
+        <span class="text-[12px] font-bold" style="color: var(--branding-on-primary);">{{ pnl.manual_expenses|money }}</span>
+      </div>
+      <div class="flex flex-col">
+        {% if pnl.expenses_breakdown %}
+        {% for item in pnl.expenses_breakdown %}
+        <div class="flex items-center justify-between px-5 py-3"
+             style="border-bottom: 1px solid var(--branding-border);">
+          <div class="flex items-center gap-2">
+            <span class="text-[13px]" style="color: var(--branding-text);">{{ item.name }}</span>
+            {% if item.is_recurring %}
+            <span class="text-[10px] font-semibold px-1.5 py-0.5" style="background-color: var(--status-frozen-bg); color: var(--status-frozen-color);">ПОВТОР</span>
+            {% endif %}
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ item.date|date:"d.m" }}</span>
+            <span class="text-[13px] font-semibold" style="color: var(--branding-text);">{{ item.amount|money }}</span>
+        <button class="w-6 h-6 flex items-center justify-center opacity-50 hover:opacity-100"
+                style="color: var(--status-danger-color);"
+                    hx-post="/dashboard/reports/expense/{{ item.id }}/delete/?date_from={{ date_from }}&date_to={{ date_to }}"
+                    hx-swap="none"
+                    hx-confirm="Удалить расход «{{ item.name|escape }}»?">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="px-5 py-8 text-center text-[13px]" style="color: var(--branding-text-secondary);">Нет расходов</div>
+        {% endif %}
+      </div>
+      <div class="px-5 py-3" style="border-top: 1px solid var(--branding-border);">
+        <button class="flex items-center gap-2 px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+                style="border: 1.5px solid var(--branding-dark); color: var(--branding-dark);"
+                hx-get="/dashboard/reports/expense/create/?date_from={{ date_from }}&date_to={{ date_to }}"
+                hx-target="#slide-over"
+                hx-swap="innerHTML"
+                onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full');">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          ДОБАВИТЬ РАСХОД
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right column (1/3, 280px) -->
+  <div class="flex flex-col gap-5 w-full md:w-[280px] md:flex-shrink-0">
+
+    <!-- ДОЛЖНИКИ -->
+    {% if total_debt > 0 %}
+    <div class="p-5 flex flex-col gap-2" style="background-color: #FDF2EF; border: 2px solid var(--branding-primary);">
+      <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-primary);">
+        <i data-lucide="alert-triangle" class="w-3.5 h-3.5 inline-block mr-1"></i>ДОЛЖНИКИ
+      </span>
+      <span class="text-[24px] font-bold" style="color: var(--branding-primary);">{{ total_debt|money }}</span>
+      <a href="/dashboard/billing/"
+         hx-get="/dashboard/billing/" hx-target="#content" hx-push-url="true"
+         class="text-[11px] font-medium mt-1" style="color: var(--branding-primary);">
+        Посмотреть должников &rarr;
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- КЛЮЧЕВЫЕ МЕТРИКИ -->
+    <div class="p-5 flex flex-col gap-4 border-2" style="border-color: var(--branding-dark);">
+      <span class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">
+        <i data-lucide="activity" class="w-3.5 h-3.5 inline-block mr-1"></i>КЛЮЧЕВЫЕ МЕТРИКИ
+      </span>
+
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center justify-between">
+          <span class="text-[12px]" style="color: var(--branding-text-secondary);" title="Процент учеников, чей абонемент истёк и не был продлён">Отток <i data-lucide="info" class="w-3 h-3 inline-block opacity-40"></i></span>
+          <span class="text-[13px] font-bold" style="color: var(--branding-text);">
+            {% if metrics.churn_rate != None %}{{ metrics.churn_rate|floatformat:1 }}%{% else %}&mdash;{% endif %}
+          </span>
+        </div>
+        <span class="text-[10px]" style="color: var(--branding-text-secondary); opacity: 0.7;">{% if metrics.churn_base %}{{ metrics.churn_count }} из {{ metrics.churn_base }} не продлили{% else %}Не продлили абонемент за период{% endif %}</span>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center justify-between">
+          <span class="text-[12px]" style="color: var(--branding-text-secondary);" title="Процент учеников, которые продлили абонемент">Удержание <i data-lucide="info" class="w-3 h-3 inline-block opacity-40"></i></span>
+          <span class="text-[13px] font-bold" style="color: var(--branding-text);">
+            {% if metrics.retention_rate != None %}{{ metrics.retention_rate|floatformat:1 }}%{% else %}&mdash;{% endif %}
+          </span>
+        </div>
+        <span class="text-[10px]" style="color: var(--branding-text-secondary); opacity: 0.7;">{% if metrics.retention_base %}{{ metrics.retention_renewed }} из {{ metrics.retention_base }} продлили{% else %}Продлили абонемент за период{% endif %}</span>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center justify-between">
+          <span class="text-[12px]" style="color: var(--branding-text-secondary);" title="Средний доход на одного активного ученика">ARPM <i data-lucide="info" class="w-3 h-3 inline-block opacity-40"></i></span>
+          <span class="text-[13px] font-bold" style="color: var(--branding-text);">
+            {% if metrics.arpm != None %}{{ metrics.arpm|money }}{% else %}&mdash;{% endif %}
+          </span>
+        </div>
+        <span class="text-[10px]" style="color: var(--branding-text-secondary); opacity: 0.7;">Средний доход на ученика</span>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center justify-between">
+          <span class="text-[12px]" style="color: var(--branding-text-secondary);" title="Сколько в среднем приносит один ученик за всё время">LTV <i data-lucide="info" class="w-3 h-3 inline-block opacity-40"></i></span>
+          <span class="text-[13px] font-bold" style="color: var(--branding-text);">
+            {% if metrics.ltv != None %}{{ metrics.ltv|money }}{% else %}&mdash;{% endif %}
+          </span>
+        </div>
+        <span class="text-[10px]" style="color: var(--branding-text-secondary); opacity: 0.7;">Пожизненная ценность ученика</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endpartialdef %}
+{% endblock %}

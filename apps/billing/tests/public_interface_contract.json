@@ -1,0 +1,157 @@
+{
+  "approve_freeze": {
+    "module": "apps.billing.service_modules.freezes",
+    "return_annotation": "SubscriptionFreeze",
+    "signature": "(*, freeze_id: 'int', club_id: 'int', approved_by_id: 'int') -> 'SubscriptionFreeze'"
+  },
+  "cancel_bank_payment_order": {
+    "module": "apps.billing.service_modules.bank_orders",
+    "return_annotation": "BankPaymentOrder",
+    "signature": "(*, club_id: 'int', order_id: 'int', actor_user_id: 'int', allowed_student_id: 'int | None' = None, allowed_sources: 'set[str] | None' = None, reason: 'str' = 'cancelled_by_user') -> 'BankPaymentOrder'"
+  },
+  "correct_subscription": {
+    "module": "apps.billing.service_modules.subscription_corrections",
+    "return_annotation": "<class 'inspect._empty'>",
+    "signature": "(*, club_id, actor_user_id, subscription_id, reason, command_key, expected_fingerprint, channel='admin', component_id=None, desired_remaining=None, desired_expires_on=None, reverses_id=None)"
+  },
+  "create_bank_payment_order": {
+    "module": "apps.billing.service_modules.bank_orders",
+    "return_annotation": "BankPaymentOrder",
+    "signature": "(*, club_id: 'int', student_id: 'int', tariff_id: 'int | None', source: 'str', created_by_id: 'int', seller_trainer_id: 'int | None' = None, package_owner_trainer_id: 'int | None' = None, discount_ids: 'list[int] | None' = None, debt_ids: 'list[int] | None' = None, target_schedule_id: 'int | None' = None, target_training_group_id: 'int | None' = None, target_start_date: 'date | None' = None, buyer_email: 'str | None' = None, buyer_phone: 'str | None' = None, enforce_trainer_group_contract: 'bool' = False, allow_new_self_service_subscription: 'bool' = False, allow_reuse: 'bool' = True, personal_booking_reservation_id: 'int | None' = None, personal_drop_in_booking_id: 'int | None' = None, expires_at_cap: 'datetime | None' = None, command_idempotency_key: 'str | None' = None, command_fingerprint: 'str | None' = None, renewed_from_subscription_id: 'int | None' = None, expected_target_tariff_id: 'int | None' = None, expected_target_price: 'Decimal | str | None' = None, reject_reusable_order_for_distinct_key: 'bool' = False, _locked_pre_reuse_validator=None, _locked_pre_create_validator=None) -> 'BankPaymentOrder'"
+  },
+  "create_discount": {
+    "module": "apps.billing.service_modules.catalog",
+    "return_annotation": "Discount",
+    "signature": "(*, club_id: 'int', name: 'str', discount_type: 'str', value: 'Decimal') -> 'Discount'"
+  },
+  "create_expense": {
+    "module": "apps.billing.service_modules.expenses",
+    "return_annotation": "Expense",
+    "signature": "(*, club_id: 'int', name: 'str', amount: 'Decimal', date: 'date', category: 'str' = '', is_recurring: 'bool' = False) -> 'Expense'"
+  },
+  "create_payment": {
+    "module": "apps.billing.service_modules.payment_creation",
+    "return_annotation": "Payment",
+    "signature": "(*, club_id: 'int', student_id: 'int', tariff_id: 'int', payment_method: 'str', discount_ids: 'list[int] | None' = None, debt_ids: 'list[int] | None' = None, recorded_by_id: 'int', seller_trainer_id: 'int | None' = None, package_owner_trainer_id: 'int | None' = None, target_schedule_id: 'int | None' = None, target_training_group_id: 'int | None' = None, target_start_date: 'date | None' = None, enforce_trainer_group_contract: 'bool' = False, allow_renewal: 'bool' = False, renewed_from_subscription_id: 'int | None' = None, renewal_source_tariff_id: 'int | None' = None, expected_target_tariff_id: 'int | None' = None, expected_target_price: 'Decimal | str | None' = None, renewal_chain_id=None, personal_drop_in_booking_id: 'int | None' = None, create_manual_operational_admission: 'bool' = False, mixed_v1_lead_only_admission: 'bool' = False, command_idempotency_key: 'str | None' = None, command_fingerprint: 'str | None' = None, _locked_rollout_state=None, _locked_pre_create_validator=None) -> 'Payment'"
+  },
+  "create_subscription": {
+    "module": "apps.billing.service_modules.subscriptions",
+    "return_annotation": "Subscription",
+    "signature": "(*, club_id: 'int', student_id: 'int', tariff_id: 'int', seller_trainer_id: 'int | None' = None, package_owner_trainer_id: 'int | None' = None, recorded_by_id: 'int | None' = None, payment_method: 'str | None' = None, debt_ids: 'list[int] | None' = None) -> 'Subscription'"
+  },
+  "create_tariff": {
+    "module": "apps.billing.service_modules.catalog",
+    "return_annotation": "Tariff",
+    "signature": "(*, club_id: 'int', name: 'str', training_type_id: 'int', price: 'Decimal', trainings_limit: 'int | None', duration_days: 'int', scope: 'str' = 'club', location_id: 'int | None' = None, description: 'str' = '', trainer_payout_policy: 'str' = '', components: 'list[dict] | None' = None, personal_booking_trainer_id: 'int | None' = None, is_personal_booking_default: 'bool' = False) -> 'Tariff'"
+  },
+  "create_training_type": {
+    "module": "apps.billing.service_modules.catalog",
+    "return_annotation": "TrainingType",
+    "signature": "(*, club_id: 'int', name: 'str', slug: 'str', kind: 'str' = TrainingType.Kind.GROUP, grade_system_id: 'int | None' = None, drop_in_price: 'Decimal | None' = None) -> 'TrainingType'"
+  },
+  "create_v2_group_sale_bank_order": {
+    "module": "apps.billing.service_modules.group_sale_commands",
+    "return_annotation": "<class 'inspect._empty'>",
+    "signature": "(*, club_id: 'int', student_id: 'int', tariff_id: 'int', target_training_group_id: 'int', target_schedule_id: 'int', target_start_date: 'date', expected_offer_digest: 'str', command_idempotency_key: 'str', created_by_id: 'int', source: 'str', buyer_email: 'str | None', enforce_trainer_group_contract: 'bool')"
+  },
+  "create_v2_group_sale_manual": {
+    "module": "apps.billing.service_modules.group_sale_commands",
+    "return_annotation": "Payment",
+    "signature": "(*, club_id: 'int', student_id: 'int', tariff_id: 'int', payment_method: 'str', target_training_group_id: 'int', target_schedule_id: 'int', target_start_date: 'date', expected_offer_digest: 'str', command_idempotency_key: 'str', recorded_by_id: 'int', enforce_trainer_group_contract: 'bool') -> 'Payment'"
+  },
+  "delete_expense": {
+    "module": "apps.billing.service_modules.expenses",
+    "return_annotation": "None",
+    "signature": "(*, expense_id: 'int', club_id: 'int') -> 'None'"
+  },
+  "expire_bank_payment_orders": {
+    "module": "apps.billing.service_modules.bank_orders",
+    "return_annotation": "int",
+    "signature": "(*, now=None) -> 'int'"
+  },
+  "freeze_subscription": {
+    "module": "apps.billing.service_modules.freezes",
+    "return_annotation": "SubscriptionFreeze",
+    "signature": "(*, club_id: 'int', subscription_id: 'int', days: 'int', reason: 'str', frozen_by_id: 'int', initiator_role: 'str' = '') -> 'SubscriptionFreeze'"
+  },
+  "get_or_create_club_settings": {
+    "module": "apps.billing.service_modules.club_settings",
+    "return_annotation": "ClubSettings",
+    "signature": "(club_id: 'int') -> 'ClubSettings'"
+  },
+  "is_training_type_kind_locked": {
+    "module": "apps.billing.service_modules.catalog",
+    "return_annotation": "bool",
+    "signature": "(*, club_id: 'int', training_type_id: 'int') -> 'bool'"
+  },
+  "preview_subscription_correction": {
+    "module": "apps.billing.service_modules.subscription_corrections",
+    "return_annotation": "<class 'inspect._empty'>",
+    "signature": "(*, club_id, actor_user_id, subscription_id, component_id=None, desired_remaining=None, desired_expires_on=None, reverses_id=None)"
+  },
+  "process_bank_payment_webhook": {
+    "module": "apps.billing.service_modules.provider_events",
+    "return_annotation": "BankPaymentProviderEvent | ProviderWebhookDelivery",
+    "signature": "(*, provider: 'str', request_body: 'bytes', headers, request_id: 'str') -> 'BankPaymentProviderEvent | ProviderWebhookDelivery'"
+  },
+  "reject_freeze": {
+    "module": "apps.billing.service_modules.freezes",
+    "return_annotation": "SubscriptionFreeze",
+    "signature": "(*, freeze_id: 'int', club_id: 'int', rejected_by_id: 'int', decision_reason: 'str' = '') -> 'SubscriptionFreeze'"
+  },
+  "replay_deferred_bank_payment_provider_events": {
+    "module": "apps.billing.service_modules.provider_events",
+    "return_annotation": "dict[str, int]",
+    "signature": "(*, club_id: 'int') -> 'dict[str, int]'"
+  },
+  "resolve_bank_payment_order_manual_review": {
+    "module": "apps.billing.service_modules.bank_order_review",
+    "return_annotation": "BankPaymentOrder",
+    "signature": "(*, club_id: 'int', order_id: 'int', actor_user_id: 'int', resolution: 'str', reason: 'str' = '', evidence: 'dict | None' = None, resolved_at=None) -> 'BankPaymentOrder'"
+  },
+  "resolve_v2_group_sale_offer": {
+    "module": "apps.billing.service_modules.group_payments",
+    "return_annotation": "GroupSaleOffer",
+    "signature": "(*, club_id: 'int', student_id: 'int', tariff_id: 'int', target_training_group_id: 'int', target_schedule_id: 'int', target_start_date: 'date', lock: 'bool') -> 'GroupSaleOffer'"
+  },
+  "unfreeze_subscription": {
+    "module": "apps.billing.service_modules.freezes",
+    "return_annotation": "SubscriptionFreeze",
+    "signature": "(*, freeze_id: 'int', club_id: 'int') -> 'SubscriptionFreeze'"
+  },
+  "update_club_settings": {
+    "module": "apps.billing.service_modules.club_settings",
+    "return_annotation": "ClubSettings",
+    "signature": "(*, club_id: 'int', **fields) -> 'ClubSettings'"
+  },
+  "update_discount": {
+    "module": "apps.billing.service_modules.catalog",
+    "return_annotation": "Discount",
+    "signature": "(*, discount_id: 'int', club_id: 'int', **fields) -> 'Discount'"
+  },
+  "update_expense": {
+    "module": "apps.billing.service_modules.expenses",
+    "return_annotation": "Expense",
+    "signature": "(*, expense_id: 'int', club_id: 'int', **fields) -> 'Expense'"
+  },
+  "update_tariff": {
+    "module": "apps.billing.service_modules.catalog",
+    "return_annotation": "Tariff",
+    "signature": "(*, tariff_id: 'int', club_id: 'int', components: 'list[dict] | None' = None, is_personal_booking_default: 'bool | None' = None, **fields) -> 'Tariff'"
+  },
+  "update_training_type": {
+    "module": "apps.billing.service_modules.catalog",
+    "return_annotation": "TrainingType",
+    "signature": "(*, training_type_id: 'int', club_id: 'int', **fields) -> 'TrainingType'"
+  },
+  "verify_payment": {
+    "module": "apps.billing.service_modules.payment_review",
+    "return_annotation": "Payment",
+    "signature": "(*, payment_id: 'int', club_id: 'int', verified_by_id: 'int | None', action: 'str', rejection_reason: 'str' = '', verified_at=None, allow_online: 'bool' = False) -> 'Payment'"
+  },
+  "write_off_debt": {
+    "module": "apps.billing.service_modules.debts",
+    "return_annotation": "Debt",
+    "signature": "(*, debt_id: 'int', club_id: 'int', written_off_by_id: 'int', reason: 'str' = '') -> 'Debt'"
+  }
+}

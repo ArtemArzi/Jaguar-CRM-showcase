@@ -1,0 +1,29 @@
+{% load money %}
+<div class="p-4 mb-4" style="border: 1.5px solid var(--branding-border);" data-subscription-id="{{ card.subscription.id }}">
+  <div class="flex items-start justify-between gap-3 mb-3">
+    <div><span class="text-[11px] font-semibold">АБОНЕМЕНТ · №{{ card.subscription.id }}</span><h3 class="font-bold">{{ card.subscription.tariff.name }}</h3></div>
+    <details class="text-[13px]"><summary class="cursor-pointer px-2 py-2">Ещё</summary>
+      <div class="flex flex-col gap-2 py-2">
+        <button hx-get="{% url 'student-subscription-renew' student.id card.subscription.id %}" hx-target="#slide-over" class="px-2 py-2 text-left">Продлить</button>
+        <button hx-get="{% url 'subscription-freeze' card.subscription.id %}?student_context=1" hx-target="#slide-over" class="px-2 py-2 text-left">{% if subscription.status == 'frozen' or card.subscription.status == 'frozen' %}Разморозить{% else %}Заморозить{% endif %}</button>
+        <a class="px-2 py-2" href="{% url 'subscription-list' %}?student_id={{ student.id }}">Открыть абонементы</a>
+      </div>
+    </details>
+  </div>
+  <p class="text-[12px] mb-3" style="color: var(--branding-text-secondary);">{{ card.subscription.get_status_display }}{% if card.expires_on %} · действует по {{ card.expires_on|date:'d.m.Y' }}{% endif %}</p>
+  {% for component in card.components %}
+  <div class="flex items-center justify-between gap-3 py-3" style="border-top: 1px solid var(--branding-border);">
+    <div class="min-w-0">
+      <p class="text-[13px] font-semibold">{{ component.training_type.name }}</p>
+      <p class="text-[15px]" data-component-id="{{ component.id }}">{% if component.entitlement_kind == 'finite_credits' %}Осталось {{ component.credits_left }} занятий{% elif component.entitlement_kind == 'weekly_limit' %}До {{ component.weekly_limit }} занятий в неделю{% else %}Безлимит{% endif %}</p>
+      <p class="text-[12px]" style="color: var(--branding-text-secondary);">{% if component.credits_total is not None %}Исходно {{ component.credits_total }} · {% endif %}{% if card.subscription.paid_amount > 0 %}оплачено{% else %}стоимость{% endif %} {{ component.paid_amount_basis_snapshot|money }} ₽</p>
+    </div>
+    <button hx-get="{% url 'student-subscription-correction' student.id card.subscription.id %}?component_id={{ component.id }}" hx-target="#slide-over"
+            class="shrink-0 px-3 py-3 text-[12px] font-semibold" style="border: 1px solid var(--branding-dark);">Исправить</button>
+  </div>
+  {% empty %}
+  <p class="mb-3 text-[13px]">Остаток {{ card.subscription.trainings_left|default_if_none:'без лимита' }} · требуется сверка исходных условий.</p>
+  <button hx-get="{% url 'student-subscription-correction' student.id card.subscription.id %}" hx-target="#slide-over" class="px-3 py-3 text-[12px] font-semibold" style="border: 1px solid var(--branding-dark);">Исправить срок</button>
+  {% endfor %}
+  {% if card.opening %}<p class="text-[12px] mt-2" style="color: var(--branding-text-secondary);">Перенесён по состоянию на {{ card.opening.covered_through|date:'d.m.Y' }}</p>{% endif %}
+</div>

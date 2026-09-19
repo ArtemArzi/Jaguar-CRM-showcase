@@ -1,0 +1,5 @@
+{% if error %}
+  <span class="text-red-600">{{ error }}</span>
+{% else %}
+  Will be sent to <strong>{{ recipient_count }}</strong> recipient{{ recipient_count|pluralize }}
+{% endif %}

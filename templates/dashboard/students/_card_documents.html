@@ -1,0 +1,138 @@
+<div id="student-documents-block" class="mb-4" style="border: 2px solid var(--branding-dark);">
+  <div class="flex items-center justify-between gap-3 px-5 py-3.5" style="background-color: var(--branding-dark);">
+    <div class="flex items-center gap-2">
+      <i data-lucide="file-check-2" class="w-4 h-4" style="color: var(--branding-on-primary);"></i>
+      <span class="text-[12px] font-semibold tracking-[1px]" style="color: var(--branding-on-primary);">ДОКУМЕНТЫ</span>
+    </div>
+    {% if missing_documents_count %}
+    <span class="px-2.5 py-1 text-[10px] font-semibold tracking-[1px]" style="background-color: #C45A3B; color: var(--branding-on-primary);">
+      НЕ ХВАТАЕТ: {{ missing_documents_count }}
+    </span>
+    {% endif %}
+  </div>
+
+  <div class="px-5 py-3" style="border-bottom: 1px solid var(--branding-border); background-color: rgba(0, 0, 0, 0.02);">
+    <p class="text-[12px]" style="color: var(--branding-text-secondary);">
+      Форматы: PDF, JPEG, PNG, WEBP. Максимальный размер файла: 10 МБ.
+    </p>
+  </div>
+
+  {% if documents_error %}
+  <div class="px-5 py-3" style="border-bottom: 1px solid rgba(198, 40, 40, 0.2); background-color: rgba(198, 40, 40, 0.08);">
+    <p class="text-[12px] font-medium" style="color: #C62828;">{{ documents_error }}</p>
+  </div>
+  {% endif %}
+
+  {% if document_checklist %}
+    {% for item in document_checklist %}
+    <div class="px-5 py-4" style="border-bottom: {% if not forloop.last %}1px solid var(--branding-border){% else %}0{% endif %};">
+      <div class="flex items-start justify-between gap-3 flex-wrap mb-3">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <span class="text-[14px] font-semibold" style="color: var(--branding-text);">
+              {{ item.document_type.name }}
+            </span>
+            {% if item.document_type.is_required %}
+            <span class="px-2 py-1 text-[9px] font-semibold tracking-[1px]" style="background-color: #F5E6B8; color: #1A1A1A;">
+              ОБЯЗАТЕЛЬНЫЙ
+            </span>
+            {% endif %}
+            {% if item.is_archived or item.archived or item.student_document.is_archived or item.student_document.archived or not item.document_type.is_active %}
+            <span class="px-2 py-1 text-[9px] font-semibold tracking-[1px]" style="background-color: #666666; color: var(--branding-on-primary);">
+              АРХИВ
+            </span>
+            {% endif %}
+          </div>
+
+          {% if item.document_type.description %}
+          <p class="text-[12px]" style="color: var(--branding-text-secondary);">
+            {{ item.document_type.description }}
+          </p>
+          {% endif %}
+        </div>
+
+        <div class="shrink-0">
+          {% if item.has_file %}
+          <span class="inline-flex items-center px-3 py-1 text-[10px] font-semibold tracking-[1px]" style="background-color: #E8F5E9; color: #2E7D32;">
+            ЗАГРУЖЕН
+          </span>
+          {% elif item.is_provided %}
+          <span class="inline-flex items-center px-3 py-1 text-[10px] font-semibold tracking-[1px]" style="background-color: #E3F2FD; color: #1565C0;">
+            ПРЕДОСТАВЛЕН
+          </span>
+          {% elif item.document_type.is_required %}
+          <span class="inline-flex items-center px-3 py-1 text-[10px] font-semibold tracking-[1px]" style="background-color: #FCE8E2; color: #C45A3B;">
+            ТРЕБУЕТСЯ
+          </span>
+          {% else %}
+          <span class="inline-flex items-center px-3 py-1 text-[10px] font-semibold tracking-[1px]" style="background-color: #F4F4F4; color: #666666;">
+            НЕ ЗАГРУЖЕН
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap mb-3">
+        {% if item.mark_url or documents_mark_url %}
+        <form class="inline" hx-post="{{ item.mark_url|default:documents_mark_url }}" hx-target="{{ documents_target|default:'#slide-over' }}">
+          {% csrf_token %}
+          <input type="hidden" name="document_type_id" value="{{ item.document_type.id }}">
+          <input type="hidden" name="is_provided" value="{% if item.is_provided and not item.has_file %}false{% else %}true{% endif %}">
+          <button type="submit"
+                  class="h-9 px-3 flex items-center gap-1.5 text-[11px] font-semibold tracking-[1px]"
+                  style="border: 1.5px solid var(--branding-dark); color: var(--branding-dark);">
+            <i data-lucide="{% if item.is_provided and not item.has_file %}rotate-ccw{% else %}badge-check{% endif %}" class="w-3.5 h-3.5"></i>
+            {% if item.is_provided and not item.has_file %}
+              СНЯТЬ ОТМЕТКУ
+            {% else %}
+              ОТМЕТИТЬ
+            {% endif %}
+          </button>
+        </form>
+        {% endif %}
+
+        {% if item.upload_url or documents_upload_url %}
+        <button type="button"
+                onclick="var target = document.getElementById('student-document-upload-{{ student.id }}-{{ item.document_type.id }}'); if (target) { target.classList.toggle('hidden'); }"
+                class="h-9 px-3 flex items-center gap-1.5 text-[11px] font-semibold tracking-[1px]"
+                style="background-color: var(--branding-dark); color: var(--branding-on-primary);">
+          <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+          {% if item.has_file %}
+            ЗАМЕНИТЬ ФАЙЛ
+          {% else %}
+            ЗАГРУЗИТЬ
+          {% endif %}
+        </button>
+        {% endif %}
+
+        {% if item.open_url %}
+        <a href="{{ item.open_url }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="h-9 px-3 flex items-center gap-1.5 text-[11px] font-semibold tracking-[1px]"
+           style="background-color: #E3F2FD; color: #1565C0;">
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          Открыть файл
+        </a>
+        {% endif %}
+      </div>
+
+      <div id="student-document-upload-{{ student.id }}-{{ item.document_type.id }}" class="hidden">
+        {% include "dashboard/students/_card_documents_upload_form.html" with item=item student=student documents_target=documents_target %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="px-5 py-6 text-center">
+    <div class="inline-flex w-12 h-12 items-center justify-center rounded-full mb-3" style="background-color: rgba(0, 0, 0, 0.04);">
+      <i data-lucide="folder-open" class="w-5 h-5" style="color: #888888;"></i>
+    </div>
+    <p class="text-[13px] font-medium mb-1" style="color: var(--branding-text);">
+      Для этого ученика не настроены документы
+    </p>
+    <p class="text-[12px]" style="color: var(--branding-text-secondary);">
+      После настройки типов документов клуба здесь появится чеклист и действия по каждому документу.
+    </p>
+  </div>
+  {% endif %}
+</div>

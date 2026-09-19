@@ -1,0 +1,26 @@
+{% load money %}
+<div class="p-5 sm:p-7" data-operation-history>
+  {% include 'dashboard/students/_operation_header.html' with title='История ученика' %}
+  {% for row in history_page %}
+    <article class="py-4 text-[13px]" style="border-bottom: 1px solid var(--branding-border);">
+    {% if kind == 'attendance' %}
+      <p class="font-semibold">{{ row.date|date:'d.m.Y' }} · {{ row.training_type.name }}</p><p>{{ row.trainer }}</p>
+      {% if row.cancelled_at or row.deleted_at %}<p>Отменено {{ row.cancelled_at|date:'d.m.Y' }}</p>{% else %}<button hx-get="{% url 'student-attendance-cancel' student.id row.id %}" hx-target="#slide-over" class="mt-2 py-2">Отменить отметку</button>{% endif %}
+    {% elif kind == 'payments' %}
+      <p class="font-semibold">{{ row.recognition_on|date:'d.m.Y'|default:'Ожидает проверки' }} · {{ row.amount|money }} ₽</p><p>{{ row.tariff.name }} · {% if row.origin == 'opening' %}Перенесена{% else %}{{ row.get_status_display }}{% endif %}</p>
+    {% if row.status == 'confirmed' and row.subscription_id and row.payment_method != 'online' %}<button hx-get="{% url 'student-payment-refund' student.id row.id %}" hx-target="#slide-over" class="py-3 text-[13px]">Возвраты</button>{% endif %}
+    {% else %}
+      <p class="font-semibold">{{ row.created_at|date:'d.m.Y H:i' }} · {{ row.actor }} · канал {{ row.channel }}</p>
+      {% if row.checkin_id %}<p>{% if row.action == "record" %}Отметка посещения{% else %}Отмена отметки{% endif %} · посещение {{ row.checkin.date|date:'d.m.Y' }}</p>{% else %}<p>{{ row.subscription.tariff.name }}{% if row.component %} · {{ row.component.training_type.name }} · компонент №{{ row.component_id }}{% endif %}</p>
+      {% for change in row.balance_changes %}<p>Остаток: {{ change.before }} → {{ change.after }}</p>{% endfor %}
+      {% if row.expiry_changed %}<p>Срок: {{ row.before_expiry|date:'d.m.Y'|default:'Без срока' }} → {{ row.after_expiry|date:'d.m.Y'|default:'Без срока' }}</p>{% endif %}{% endif %}
+      <p class="mt-1">{{ row.reason }}</p>
+    {% endif %}
+    </article>
+  {% empty %}<p class="text-[13px]">Записей пока нет.</p>{% endfor %}
+  <div class="flex justify-between gap-3 mt-5 text-[13px]">
+    {% if history_page.has_previous %}<button hx-get="{% url 'student-operation-history' student.id %}?kind={{ kind }}&page={{ history_page.previous_page_number }}" hx-target="#slide-over" class="py-3">← Предыдущие</button>{% endif %}
+    <span class="py-3">{{ history_page.number }} / {{ history_page.paginator.num_pages }}</span>
+    {% if history_page.has_next %}<button hx-get="{% url 'student-operation-history' student.id %}?kind={{ kind }}&page={{ history_page.next_page_number }}" hx-target="#slide-over" class="py-3">Следующие →</button>{% endif %}
+  </div>
+</div>

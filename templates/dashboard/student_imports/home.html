@@ -1,0 +1,22 @@
+{% extends 'base.html' %}{% load partials %}
+{% block title %}Загрузить из Excel{% endblock %}
+{% block content %}{% partialdef content inline %}
+<div class="max-w-4xl mx-auto" data-opening-import-home>
+  <a href="{% url 'student-list' %}" class="inline-block py-3 text-[13px]">← Ученики</a>
+  <h1 class="text-[24px] font-bold mb-3">Загрузить из Excel</h1>
+  <p class="mb-5 text-[13px]">Перенесите учеников, оплаченные абонементы и расчёты с тренерами. Сначала проверим таблицу и покажем изменения. Спорные записи останутся на сверке.</p>
+  {% if error %}<p role="alert" class="mb-4 p-3" style="background:#FDF2EF;color:#9F3D28;">{{ error }}</p>{% endif %}
+  <form method="post" enctype="multipart/form-data" action="{% url 'student-opening-home' %}" class="space-y-4 p-5 mb-5" style="border:1px solid var(--branding-border);">
+    {% csrf_token %}<label class="block text-[13px] font-semibold">Таблица Excel<input type="file" name="workbook" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required class="block w-full mt-3 text-[13px]"></label>
+    <p class="text-[13px]">До 10 МБ и 2 000 абонементов. Сохраняйте подготовленную копию: она защищает от повторной загрузки. Формулы замените подтверждёнными значениями.</p>
+    <button type="submit" class="btn btn-primary w-full sm:w-auto">Проверить таблицу</button>
+  </form>
+  <div class="flex flex-wrap gap-4 mb-6 text-[13px]">
+    <a href="{% url 'student-opening-template' %}" class="py-3 font-semibold">Скачать шаблон и справочники</a>
+    <a href="{% url 'student-opening-single' %}" class="py-3">Внести один абонемент вручную</a>
+  </div>
+  <h2 class="font-semibold text-[18px] mb-3">Черновики и результаты</h2>
+  {% for batch in batches_page %}<a href="{% url 'student-opening-batch' batch.id %}" class="block py-4 text-[13px]" style="border-top:1px solid var(--branding-border);">Партия №{{ batch.id }} · {{ batch.created_at|date:'d.m.Y H:i' }} · {{ batch.item_count }} записей · {{ batch.status_label }}</a>{% empty %}<p class="text-[13px]">Загруженных таблиц пока нет.</p>{% endfor %}
+  <div class="flex justify-between gap-3 mt-4 text-[13px]">{% if batches_page.has_previous %}<a class="py-3" href="?page={{ batches_page.previous_page_number }}">← Предыдущие</a>{% endif %}{% if batches_page.has_next %}<a class="py-3" href="?page={{ batches_page.next_page_number }}">Следующие →</a>{% endif %}</div>
+</div>
+{% endpartialdef %}{% endblock %}

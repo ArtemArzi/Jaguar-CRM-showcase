@@ -1,0 +1,6 @@
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}
+<p class="text-[13px]">Начисления за дату возврата закрыты. Выберите открытую дату компенсации не раньше {{ refund.accounting_date|date:'d.m.Y' }}.</p>
+<form hx-post="{% url 'student-refund-payroll' student.id refund.id %}" hx-target="#slide-over" class="space-y-3">
+{% csrf_token %}<label class="block text-[13px]">Дата компенсации<input class="input w-full" type="date" name="effective_date" min="{{ refund.accounting_date|date:'Y-m-d' }}" value="{{ effective_date }}" required></label>
+<button class="btn btn-primary w-full" hx-disabled-elt="this">Записать компенсацию</button>
+</form>

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Тренировки - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px] mb-3" style="color: var(--branding-text);">ТРЕНЕРЫ</h1>
+{% include "dashboard/trainers/_tabs.html" %}
+
+<!-- Filter bar -->
+<form id="sessions-filters"
+      class="flex flex-wrap items-end gap-3 mb-5 p-4"
+      style="background-color: rgba(0,0,0,0.02); border: 1px solid var(--branding-border);"
+      hx-get="/dashboard/trainers/sessions/"
+      hx-target="#content"
+      hx-push-url="true"
+      hx-trigger="change">
+
+  <!-- Date range -->
+  <div class="flex flex-col gap-1.5">
+    <label class="text-[10px] font-semibold tracking-[0.5px] uppercase" style="color: var(--branding-text-secondary);">Период</label>
+    <div class="flex items-center gap-2">
+      <input type="date" name="date_from" value="{{ date_from|date:'Y-m-d' }}"
+             class="soft-input soft-date font-semibold" style="height:36px;padding:0 10px;width:150px;">
+      <span class="text-[14px]" style="color: var(--branding-text-secondary);">→</span>
+      <input type="date" name="date_to" value="{{ date_to|date:'Y-m-d' }}"
+             class="soft-input soft-date font-semibold" style="height:36px;padding:0 10px;width:150px;">
+    </div>
+  </div>
+
+  <!-- Trainer filter -->
+  <div class="flex flex-col gap-1.5">
+    <label class="text-[10px] font-semibold tracking-[0.5px] uppercase" style="color: var(--branding-text-secondary);">Тренер</label>
+    <select name="trainer_id"
+            class="h-9 px-3 text-[13px]"
+            style="border: 1px solid var(--branding-border); background: white; min-width: 180px;">
+      <option value="">Все тренеры</option>
+      {% for t in all_trainers %}
+      <option value="{{ t.id }}" {% if t.id == current_trainer_id %}selected{% endif %}>{{ t.first_name }} {{ t.last_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Schedule (group) filter -->
+  <div class="flex flex-col gap-1.5">
+    <label class="text-[10px] font-semibold tracking-[0.5px] uppercase" style="color: var(--branding-text-secondary);">Группа</label>
+    <select name="schedule_id"
+            class="h-9 px-3 text-[13px]"
+            style="border: 1px solid var(--branding-border); background: white; min-width: 200px;">
+      <option value="">Все группы</option>
+      {% for s in all_schedules %}
+      <option value="{{ s.id }}" {% if s.id == current_schedule_id %}selected{% endif %}>{% if s.training_group_id %}{{ s.training_group.name }}{% else %}{{ s.group_name }}{% endif %} · {{ s.start_time|time:"H:i" }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  {% if current_trainer_id or current_schedule_id %}
+  <a href="/dashboard/trainers/sessions/?date_from={{ date_from|date:'Y-m-d' }}&date_to={{ date_to|date:'Y-m-d' }}"
+     hx-get="/dashboard/trainers/sessions/?date_from={{ date_from|date:'Y-m-d' }}&date_to={{ date_to|date:'Y-m-d' }}"
+     hx-target="#content" hx-push-url="true"
+     class="h-9 px-3 flex items-center text-[11px] font-semibold tracking-[0.5px]"
+     style="color: var(--branding-text-secondary); border: 1px solid var(--branding-border);">
+    СБРОС
+  </a>
+  {% endif %}
+</form>
+
+{% if sessions %}
+<!-- Mobile list (cards) -->
+<div class="md:hidden flex flex-col gap-2">
+  {% for s in sessions %}
+  <div>
+    <button type="button"
+       hx-get="/dashboard/trainers/sessions/checkins/?schedule_id={{ s.schedule_id }}&date={{ s.date|date:'Y-m-d' }}"
+       hx-target="#checkins-m-{{ s.schedule_id }}-{{ s.date|date:'Ymd' }}"
+       hx-swap="innerHTML"
+       class="w-full p-3 flex items-center justify-between gap-3 text-left cursor-pointer"
+       style="background-color: rgba(255,255,255,0.6); border: 1px solid var(--branding-border);">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-baseline gap-2">
+          <span class="text-[13px] font-semibold" style="color: var(--branding-text);">{{ s.date|date:"d.m" }}</span>
+          <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ s.start_time|time:"H:i" }}</span>
+        </div>
+        <div class="text-[12px] truncate mt-0.5" style="color: var(--branding-text);">{{ s.group_name }}</div>
+        <div class="text-[11px] truncate" style="color: var(--branding-text-secondary);">{{ s.trainer_name }}</div>
+      </div>
+      <div class="flex items-baseline gap-1 flex-shrink-0">
+        <span class="text-[20px] font-bold" style="color: var(--branding-text);">{{ s.attendees }}</span>
+        <span class="text-[11px]" style="color: var(--branding-text-secondary);">чел.</span>
+      </div>
+    </button>
+    <div id="checkins-m-{{ s.schedule_id }}-{{ s.date|date:'Ymd' }}"></div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Desktop table -->
+<div class="hidden md:block overflow-x-auto border-2" style="border-color: var(--branding-dark);">
+  <table class="w-full">
+    <thead>
+      <tr style="background-color: var(--branding-dark); height: 44px;">
+        <th class="w-[100px] px-5 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ДАТА</th>
+        <th class="w-[80px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ВРЕМЯ</th>
+        <th class="text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ГРУППА</th>
+        <th class="text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ТРЕНЕР</th>
+        <th class="w-[130px] text-right px-5 text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">УЧЕНИКОВ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in sessions %}
+      <tr class="cursor-pointer transition-colors"
+          style="border-bottom: 1px solid var(--branding-border);"
+          onclick="var t=document.getElementById('checkins-{{ s.schedule_id }}-{{ s.date|date:'Ymd' }}'); if(t.innerHTML.trim()){t.innerHTML=''}else{htmx.ajax('GET','/dashboard/trainers/sessions/checkins/?schedule_id={{ s.schedule_id }}&date={{ s.date|date:'Y-m-d' }}',{target:t})}"
+          data-hover-color="rgba(255,255,255,0.5)"
+          data-default-color="transparent"
+          onmouseover="this.style.backgroundColor=this.dataset.hoverColor"
+          onmouseout="this.style.backgroundColor=this.dataset.defaultColor">
+        <td class="px-5 py-3 text-[13px] font-semibold" style="color: var(--branding-text);">{{ s.date|date:"d.m.Y" }}</td>
+        <td class="text-[13px]" style="color: var(--branding-text-secondary);">{{ s.start_time|time:"H:i" }}</td>
+        <td class="text-[13px]" style="color: var(--branding-text);">{{ s.group_name }}</td>
+        <td class="text-[13px]" style="color: var(--branding-text);">{{ s.trainer_name }}</td>
+        <td class="text-right px-5">
+          <span class="text-[16px] font-bold" style="color: var(--branding-text);">{{ s.attendees }}</span>
+          <span class="text-[11px] ml-1" style="color: var(--branding-text-secondary);">чел.</span>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="5" class="p-0">
+          <div id="checkins-{{ s.schedule_id }}-{{ s.date|date:'Ymd' }}"></div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr style="background-color: rgba(0,0,0,0.03); border-top: 2px solid var(--branding-dark);">
+        <td colspan="4" class="px-5 py-3 text-[12px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">
+          ИТОГО: {{ session_count }} трен. · {{ avg_attendees }} в среднем
+        </td>
+        <td class="text-right px-5 py-3">
+          <span class="text-[16px] font-bold" style="color: var(--branding-text);">{{ total_attendees }}</span>
+          <span class="text-[11px] ml-1" style="color: var(--branding-text-secondary);">чел.</span>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<!-- Mobile footer -->
+<div class="md:hidden mt-4 p-4 flex items-center justify-between"
+     style="background-color: rgba(0,0,0,0.03); border: 1px solid var(--branding-border);">
+  <div class="text-[12px]" style="color: var(--branding-text-secondary);">
+    <div>{{ session_count }} трен.</div>
+    <div>{{ avg_attendees }} в среднем</div>
+  </div>
+  <div class="flex items-baseline gap-1">
+    <span class="text-[22px] font-bold" style="color: var(--branding-text);">{{ total_attendees }}</span>
+    <span class="text-[11px]" style="color: var(--branding-text-secondary);">чел.</span>
+  </div>
+</div>
+
+{% else %}
+<div class="p-12 text-center" style="background-color: rgba(255,255,255,0.4); border: 1px solid var(--branding-border);">
+  <div class="text-[14px] mb-1" style="color: var(--branding-text);">За этот период тренировок не было</div>
+  <div class="text-[12px]" style="color: var(--branding-text-secondary);">Попробуйте расширить даты или сбросить фильтры</div>
+</div>
+{% endif %}
+
+{% endpartialdef %}
+{% endblock %}

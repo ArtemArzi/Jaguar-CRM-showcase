@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Настройки — {{ settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px] mb-6 sm:mb-7" style="color: var(--branding-text);">Настройки</h1>
+
+{% include "dashboard/settings/_tabs.html" %}
+
+{% partialdef settings-tab-content inline %}
+
+{% if saved %}
+<div class="flex items-center gap-2 px-5 py-3 mb-5" style="background-color: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.3);">
+  <i data-lucide="check-circle" class="w-4 h-4" style="color: #2E7D32;"></i>
+  <span class="text-[13px] font-medium" style="color: #2E7D32;">Настройки сохранены</span>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="flex items-center gap-2 px-5 py-3 mb-5" style="background-color: rgba(198, 40, 40, 0.08); border: 1px solid rgba(198, 40, 40, 0.3);">
+  <i data-lucide="alert-circle" class="w-4 h-4" style="color: #C62828;"></i>
+  <span class="text-[13px] font-medium" style="color: #C62828;">{{ error }}</span>
+</div>
+{% endif %}
+
+<form hx-post="{% url 'settings-general' %}" hx-target="#content"
+      hx-encoding="multipart/form-data" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# СЕКЦИЯ 1: БРЕНДИНГ                                      #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center gap-2 mb-5">
+      <i data-lucide="palette" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Внешний вид клуба</h2>
+    </div>
+    <p class="text-[12px] mb-5" style="color: var(--branding-text-secondary);">
+      Логотип, название и цвета вашего клуба. Отображаются в панели управления, приложении и на киоске.
+    </p>
+
+    <!-- Logo -->
+    <div class="mb-6">
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">Логотип клуба</label>
+      <div class="flex items-center gap-4 mb-3">
+        <div class="w-16 h-16 rounded flex items-center justify-center text-[24px] font-bold shrink-0 overflow-hidden"
+             style="background-color: {{ settings.primary_color|default:'var(--branding-primary)' }}; color: var(--branding-on-primary);">
+          {% if settings.logo_src %}
+          <img id="logo-preview" src="{{ settings.logo_src }}" class="w-full h-full object-cover" alt="" />
+          {% else %}
+          <img id="logo-preview" src="" class="w-full h-full object-cover hidden" alt="" />
+          <span id="logo-letter">{{ settings.club_name_display|truncatechars:1|upper }}</span>
+          {% endif %}
+        </div>
+        <div class="flex-1">
+          <label class="inline-flex items-center gap-2 h-11 px-4 text-[12px] font-medium cursor-pointer"
+                 style="border: 1px solid var(--branding-border-input); color: var(--branding-text); background-color: var(--branding-bg);">
+            <i data-lucide="upload" class="w-4 h-4"></i>
+            <span>Выбрать файл</span>
+            <input type="file" name="logo_file" accept="image/png,image/jpeg,image/webp"
+                   class="hidden"
+                   onchange="handleLogoPreview(this);">
+          </label>
+          {% if settings.logo_file %}
+          <label class="inline-flex items-center gap-2 h-11 px-3 text-[11px] font-medium cursor-pointer ml-2"
+                 style="border: 1px solid var(--branding-border-input); color: #C62828;">
+            <input type="checkbox" name="logo_remove" value="1" class="w-3 h-3">
+            Удалить текущий
+          </label>
+          {% endif %}
+          <p id="logo-filename" class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">
+            {% if settings.logo_file %}Текущий файл: {{ settings.logo_file.name|cut:"club_logos/" }}{% else %}PNG, JPG или WEBP. Максимум 2 МБ.{% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+    <script>
+      function handleLogoPreview(input) {
+        var file = input.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+          alert('Файл слишком большой. Максимум 2 МБ.');
+          input.value = '';
+          return;
+        }
+        var nameEl = document.getElementById('logo-filename');
+        if (nameEl) nameEl.textContent = 'Выбран: ' + file.name;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var preview = document.getElementById('logo-preview');
+          if (preview) {
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+          }
+          var letter = document.getElementById('logo-letter');
+          if (letter) letter.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    </script>
+
+    <!-- Club name -->
+    <div class="mb-6">
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">Название клуба</label>
+      <input type="text" name="club_name_display" value="{{ settings.club_name_display }}"
+             maxlength="60" placeholder="Например: Jaguar Muay Thai"
+             class="w-full h-11 px-4 text-[13px] outline-none"
+             style="border: 1px solid var(--branding-border-input); color: var(--branding-text);" />
+    </div>
+
+    <!-- Color -->
+    <div class="mb-6">
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">Цвет клуба</label>
+      <div class="flex items-center gap-3">
+        <input type="color" name="primary_color" value="{{ settings.primary_color }}"
+               class="w-10 h-10 cursor-pointer rounded border-0 p-0"
+               oninput="document.getElementById('primary-hex').value=this.value; document.getElementById('preview-bar').style.backgroundColor=this.value" />
+        <input type="text" id="primary-hex" value="{{ settings.primary_color }}"
+               class="h-10 px-3 text-[12px] w-24 outline-none"
+               style="border: 1px solid var(--branding-border-input); font-family: monospace; color: var(--branding-text);"
+               oninput="document.querySelector('[name=primary_color]').value=this.value" />
+      </div>
+      <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">Верхняя панель, кнопки, активные элементы меню. Применяется после сохранения.</p>
+    </div>
+
+    <!-- Live preview bar -->
+    <div>
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">Предпросмотр</label>
+      <div id="preview-bar" class="flex items-center gap-3 px-5 py-3 rounded"
+           style="background-color: {{ settings.primary_color|default:'var(--branding-primary)' }}; border: 1px solid var(--branding-border);">
+        {% if settings.logo_src %}
+        <img src="{{ settings.logo_src }}" class="h-7 rounded" alt="" />
+        {% else %}
+        <div class="w-7 h-7 rounded flex items-center justify-center" id="preview-icon" style="background-color: rgba(255,255,255,0.2);">
+          <i data-lucide="swords" class="w-4 h-4" style="color: var(--branding-on-primary);"></i>
+        </div>
+        {% endif %}
+        <span id="preview-text" class="text-[13px] font-bold tracking-[2px]" style="color: var(--branding-on-primary);">
+          {{ settings.club_name_display|default:"КЛУБ"|upper }}
+        </span>
+      </div>
+      <script>
+        // Live preview contrast — update text color when color picker changes
+        document.querySelector('[name=primary_color]').addEventListener('input', function(e) {
+          var hex = e.target.value;
+          var r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+          var light = (0.299*r + 0.587*g + 0.114*b) / 255 > 0.6;
+          var textColor = light ? '#1A1A1A' : '#F5F2ED';
+          var el = document.getElementById('preview-text'); if (el) el.style.color = textColor;
+          var icon = document.querySelector('#preview-icon i'); if (icon) icon.style.color = textColor;
+        });
+      </script>
+    </div>
+  </div>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# СЕКЦИЯ 2: ОСНОВНЫЕ                                      #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center gap-2 mb-5">
+      <i data-lucide="settings" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Время и регион</h2>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-6 mb-6">
+      <div class="flex-1">
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">Часовой пояс</label>
+        <div class="relative">
+          <select name="timezone" class="w-full h-11 px-4 text-[13px] outline-none appearance-none"
+                  style="border: 1px solid var(--branding-border-input); color: var(--branding-text); background-color: transparent;">
+            <option value="Europe/Moscow" {% if club.timezone == "Europe/Moscow" %}selected{% endif %}>Москва (UTC+3)</option>
+            <option value="Europe/Kaliningrad" {% if club.timezone == "Europe/Kaliningrad" %}selected{% endif %}>Калининград (UTC+2)</option>
+            <option value="Europe/Samara" {% if club.timezone == "Europe/Samara" %}selected{% endif %}>Самара (UTC+4)</option>
+            <option value="Asia/Yekaterinburg" {% if club.timezone == "Asia/Yekaterinburg" %}selected{% endif %}>Екатеринбург (UTC+5)</option>
+            <option value="Asia/Omsk" {% if club.timezone == "Asia/Omsk" %}selected{% endif %}>Омск (UTC+6)</option>
+            <option value="Asia/Novosibirsk" {% if club.timezone == "Asia/Novosibirsk" %}selected{% endif %}>Новосибирск (UTC+7)</option>
+            <option value="Asia/Krasnoyarsk" {% if club.timezone == "Asia/Krasnoyarsk" %}selected{% endif %}>Красноярск (UTC+7)</option>
+            <option value="Asia/Irkutsk" {% if club.timezone == "Asia/Irkutsk" %}selected{% endif %}>Иркутск (UTC+8)</option>
+            <option value="Asia/Vladivostok" {% if club.timezone == "Asia/Vladivostok" %}selected{% endif %}>Владивосток (UTC+10)</option>
+            <option value="Asia/Kamchatka" {% if club.timezone == "Asia/Kamchatka" %}selected{% endif %}>Камчатка (UTC+12)</option>
+          </select>
+          <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style="color: var(--branding-text-secondary);"></i>
+        </div>
+        <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">Влияет на расписание и отображение времени</p>
+      </div>
+      <div class="flex-1"></div>
+    </div>
+
+  </div>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# СЕКЦИЯ 3: ЗАМОРОЗКА АБОНЕМЕНТОВ                         #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center gap-2 mb-5">
+      <i data-lucide="snowflake" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Заморозка абонементов</h2>
+    </div>
+    <p class="text-[12px] mb-5" style="color: var(--branding-text-secondary);">
+      Ученики могут приостановить абонемент (отпуск, болезнь). Срок действия продлевается на дни заморозки.
+    </p>
+
+    <div class="mb-5">
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="freeze_enabled"
+               {% if settings.freeze_enabled %}checked{% endif %}
+               class="w-4 h-4"
+               onchange="document.getElementById('freeze-details').style.display = this.checked ? 'flex' : 'none'">
+        <span class="text-[13px] font-medium" style="color: var(--branding-text);">Разрешить заморозку</span>
+      </label>
+    </div>
+
+    <div id="freeze-details" class="flex flex-col md:flex-row gap-6"
+         style="display: {% if settings.freeze_enabled %}flex{% else %}none{% endif %};">
+      <div class="flex-1">
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Максимум дней за одну заморозку
+        </label>
+        <input type="number" name="freeze_max_days" value="{{ settings.freeze_max_days }}"
+               min="1" max="365"
+               class="w-full h-11 px-4 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+        <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">По умолчанию: 30 дней</p>
+      </div>
+      <div class="flex-1">
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Максимум заморозок на абонемент
+        </label>
+        <input type="number" name="freeze_max_count" value="{{ settings.freeze_max_count|default_if_none:'' }}"
+               min="0" max="99" placeholder="Без ограничений"
+               class="w-full h-11 px-4 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+        <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">Оставьте пустым — без ограничений. Значение 0 — заморозки запрещены.</p>
+      </div>
+      <div class="flex-1">
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Минимум тренировок для заморозки
+        </label>
+        <input type="number" name="min_trainings_to_freeze" value="{{ settings.min_trainings_to_freeze }}"
+               min="0" max="99"
+               class="w-full h-11 px-4 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+        <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">По умолчанию: 2. Безлимитные абонементы исключены из проверки.</p>
+      </div>
+    </div>
+  </div>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# КНОПКИ СОХРАНЕНИЯ                                       #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="flex justify-end gap-3 mb-10">
+    <button type="submit" class="px-6 py-2.5 text-[12px] font-semibold cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      Сохранить
+    </button>
+  </div>
+</form>
+
+{% endpartialdef %}
+{% endpartialdef %}
+{% endblock %}

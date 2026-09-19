@@ -1,0 +1,70 @@
+{% extends 'base.html' %}{% load partials money %}
+{% block title %}Проверка переноса{% endblock %}
+{% block content %}{% partialdef content inline %}
+<div class="max-w-4xl mx-auto" data-opening-import-batch="{{ batch.id }}" {% if can_poll %}hx-get="{% url 'student-opening-batch' batch.id %}?page={{ items_page.number }}" hx-trigger="every 3s" hx-target="#content" hx-swap="innerHTML"{% endif %}>
+  <a href="{% url 'student-opening-home' %}" class="inline-block py-3 text-[13px]">← Таблицы переноса</a>
+  <h1 class="text-[24px] font-bold mb-2">Партия №{{ batch.id }}</h1>
+  <p class="mb-4 text-[13px]" role="status">{{ batch_status_label }} · Всего {{ total_count }} записей</p>
+  {% if error %}<p role="alert" class="mb-4 p-3" style="background:#FDF2EF;color:#9F3D28;">{{ error }}</p>{% endif %}
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-[13px]">
+    <p>Готово<strong class="block text-[24px]" data-import-ready>{{ selected_ready_count }}</strong></p>
+    <p>Нужно уточнить<strong class="block text-[24px]" data-import-review>{{ review_count }}</strong></p>
+    <p>Применено<strong class="block text-[24px]" data-import-applied>{{ applied_count }}</strong></p>
+    <p>Уже было в CRM<strong class="block text-[24px]" data-import-replayed>{{ replayed_count }}</strong></p>
+  </div>
+  {% if not current_actor_allowed %}<p role="alert" class="mb-4 text-[13px]">Обработка остановлена: доступ автора применения изменился. Скачайте результат и подготовьте оставшиеся записи под действующим владельцем или администратором. Уже принятые записи сохраняются.</p>{% endif %}
+  {% if review_count %}<p class="mb-4 text-[13px]">Не вся таблица готова. Записи с вопросами не будут загружены; исправьте их здесь или в подготовленной копии Excel.</p>{% endif %}
+  {% if selected_ready_count %}<p class="mb-4 text-[13px]">Исходные оплаты готовых абонементов: {{ source_paid_total|money }} ₽. Они сохранят дату исходной оплаты. Применение охватывает готовые записи на всех страницах.</p>{% endif %}
+  {% if not import_enabled and new_count %}<p class="mb-4 text-[13px]">Применение новых переносов выключено. Таблицу можно подготовить и проверить.</p>{% endif %}
+  {% if preview_expired %}<p role="alert" class="mb-4 text-[13px]">Проверка истекла. Проверьте записи ещё раз.</p>{% endif %}
+  <div class="flex flex-wrap items-start gap-3 mb-5">
+  {% if preview and selected_ready_count and current_actor_allowed and not preview_expired %}
+    <form hx-post="{% url 'student-opening-apply' batch.id %}" hx-target="#content" class="w-full sm:w-auto">
+      {% csrf_token %}<input type="hidden" name="revision" value="{{ preview.revision }}"><input type="hidden" name="selection_token" value="{{ preview.selection_token }}">
+      <button class="btn btn-primary w-full" type="submit" hx-disabled-elt="this" {% if not import_enabled and new_count and not batch.accepted_preview_id %}disabled{% endif %}>{% if batch.accepted_preview_id %}Продолжить обработку{% else %}Применить {{ selected_ready_count }} готовых записей{% endif %}</button>
+    </form>
+  {% endif %}
+  {% if not batch.accepted_preview_id %}<form hx-post="{% url 'student-opening-validate' batch.id %}" hx-target="#content">{% csrf_token %}<button class="btn" type="submit" hx-disabled-elt="this">Проверить ещё раз</button></form>{% endif %}
+  <a class="inline-block py-3 text-[13px] font-semibold" href="{% url 'student-opening-export' batch.id %}">Скачать таблицу для исправления</a>
+  </div>
+  {% if can_poll %}<p class="mb-4 text-[13px]">Обработка идёт небольшими частями. Страницу можно закрыть и открыть позже; повтор не создаст дубликатов.</p>{% endif %}
+  <div class="space-y-4" data-import-items>
+  {% for item in items_page %}
+    <article class="p-4 text-[13px]" style="border:1px solid var(--branding-border);" data-import-item="{{ item.id }}">
+      <p class="font-semibold">{{ item.get_kind_display }} · строка {{ item.source_row }} · {{ item.person_name|default:item.trainer_name }}</p>
+      <p class="py-2 font-semibold">{{ item.status_label }}{% if item.preview_summary.replay %} · без повторного создания{% endif %}</p>
+      {% for issue in item.errors %}<p class="mb-2" style="color:#9F3D28;">{{ issue.message }}</p>{% endfor %}
+      {% if item.preview_terms and item.kind == 'entitlement' %}
+        <p>{{ item.tariff_name }} · Всего {{ item.preview_terms.original_total }}, использовано {{ item.preview_terms.original_used }}, осталось {{ item.preview_terms.original_left }}</p>
+        <p>Оплачено {{ item.preview_terms.paid_amount|money }} ₽ · {{ item.preview_terms.effective_on }}</p>
+        <p>Срок {{ item.preview_terms.started_on }} — {{ item.preview_terms.expires_on }}</p>
+        {% if item.preview_summary.history_only %}<p>Только история — активного права посещения не добавится.</p>{% elif item.preview_summary.student_id %}<p>Используем существующую карточку ученика.</p>{% else %}<p>Будет создана карточка действующего ученика или использована карточка, созданная предыдущей строкой партии.</p>{% endif %}
+        {% if not item.preview_summary.replay %}
+        {% if item.preview_summary.history_only %}<p>Статус: при создании — «Ушёл»; у существующей карточки сохраняется статус на момент применения строки, включая изменения предыдущих строк. Снимок проверки: {% if item.old_status_label %}{{ item.old_status_label }} → {% endif %}{{ item.new_status_label }}.</p>{% else %}<p>Статус: {% if item.old_status_label %}{{ item.old_status_label }} → {% endif %}{{ item.new_status_label }}.</p>{% endif %}
+        {% if item.preview_summary.history_only %}<p>Карточка будет в разделе «Ученики». История не активирует ученика. Статус лида очищается; дата перехода в ученики сохраняется или устанавливается при переносе.</p>{% endif %}
+        {% endif %}
+        <details><summary class="py-3 cursor-pointer">Группа, тренеры и граница переноса</summary>
+          {% if item.group_name %}<p>Группа: {{ item.group_name }}</p>{% endif %}
+          {% if not item.preview_summary.replay %}
+          <p>Ответственный: {% if item.assignment_action == 'preserve' %}текущее назначение сохраняется на момент применения этой строки, с учётом изменений предыдущих строк партии{% elif item.assignment_action == 'create_or_preserve' %}при создании — {% if item.assigned_name %}назначить {{ item.assigned_name }}{% else %}без ответственного{% endif %}; если карточка уже создана предыдущей строкой партии — сохранить её назначение{% elif item.assignment_action == 'set' %}назначить {{ item.assigned_name }}{% else %}без ответственного{% if item.preview_summary.student_id %} — текущее назначение будет снято{% endif %}{% endif %}.</p>
+          {% if item.membership_effect == 'independent' %}<p>Существующее независимое членство сохраняется. Возврат этой оплаты не удаляет независимое членство.</p>{% elif item.membership_effect == 'existing_payment_owned' %}<p>Существующее членство с владельцем-оплатой сохраняется. Перенос не меняет владельца; возврат этой оплаты не удаляет членство, принадлежащее другой оплате.</p>{% elif item.membership_effect == 'new_payment_owned' %}<p>Если членство ещё не создано предыдущей строкой, будет создано членство от перенесённой оплаты. Эта оплата станет владельцем членства только при его создании; иначе прежний владелец сохраняется; отмена или возврат обрабатывают его по правилам платного членства.</p>{% endif %}
+          {% endif %}
+          <p>Историческое правило начислений: {{ item.payout_policy_label }}.</p>
+          {% if item.package_owner_name %}<p>Владелец персонального пакета: {{ item.package_owner_name }}</p>{% endif %}
+          {% if item.sale_trainer_name %}<p>Получатель комиссии: {{ item.sale_trainer_name }} · {{ item.preview_terms.sale_rate_percent }} % от исходной оплаты</p>{% endif %}
+          <p>Прежние посещения включены по {{ item.preview_terms.covered_through }}. Первый допуск в CRM: {{ item.preview_terms.operational_cutover }}.</p>
+          <p>Использованные занятия не создадут повторных начислений. Доступ к аккаунту выдаётся отдельным действием.</p>
+        </details>
+      {% elif item.preview_terms %}<p>{{ item.trainer_name }} · {{ item.preview_terms.effective_on }} · {% if item.kind == 'settlement_opening' %}Начальный долг / аванс {{ item.preview_terms.balance_delta|money }} ₽{% else %}Фактическая выплата {{ item.preview_terms.amount|money }} ₽{% endif %}</p><p>{{ item.preview_terms.reason }}</p>{% if item.preview_summary.after_dependency %}<p>После применения начальной сверки.</p>{% endif %}
+      {% endif %}
+      <div class="flex flex-wrap gap-3">
+        {% if item.result.student_id %}<a href="{% url 'student-list' %}?student_id={{ item.result.student_id }}" hx-get="{% url 'student-card' item.result.student_id %}" hx-target="#slide-over" onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden');document.getElementById('slide-over').classList.remove('translate-x-full')" class="py-3 font-semibold">Открыть ученика</a>{% endif %}
+        {% if item.result.trainer_id %}<a href="{% url 'trainer-detail' item.result.trainer_id %}" class="py-3 font-semibold">Открыть расчёты тренера</a>{% endif %}
+        {% if can_edit and not item.result_receipt_id %}<a href="{% url 'student-opening-item' batch.id item.id %}" class="py-3">Уточнить запись</a>{% endif %}
+      </div>
+    </article>
+  {% empty %}<p class="text-[13px]">В таблице нет записей. Скачайте шаблон и заполните исходные данные.</p>{% endfor %}
+  </div>
+  <div class="flex justify-between gap-3 mt-4 text-[13px]">{% if items_page.has_previous %}<a class="py-3" href="?page={{ items_page.previous_page_number }}">← Предыдущие</a>{% endif %}<span class="py-3">{{ items_page.number }} / {{ items_page.paginator.num_pages }}</span>{% if items_page.has_next %}<a class="py-3" href="?page={{ items_page.next_page_number }}">Следующие →</a>{% endif %}</div>
+</div>
+{% endpartialdef %}{% endblock %}

@@ -1,0 +1,154 @@
+<div class="p-7">
+  <!-- Breadcrumb + Close -->
+  <div class="flex items-center justify-between mb-1">
+    <span class="text-[12px]" style="color: var(--branding-text-secondary);">
+      Тренеры / {{ trainer.first_name }} {{ trainer.last_name }}
+    </span>
+    <button onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5">
+      <i data-lucide="x" class="w-5 h-5" style="color: var(--branding-text-secondary);"></i>
+    </button>
+  </div>
+
+  <!-- Trainer name + badge -->
+  <div class="flex items-center gap-3 mb-6">
+    <h2 class="text-[22px] font-bold" style="color: var(--branding-text);">
+      {{ trainer.first_name|upper }} {{ trainer.last_name|upper }}
+    </h2>
+    <span class="px-2.5 py-1 text-[11px] font-semibold" style="background-color: #E8F5E9; color: #2E7D32;">ТРЕНЕР</span>
+  </div>
+
+  <!-- Period selector -->
+  <div class="flex items-center gap-3 mb-6">
+    <span class="px-4 py-2 text-[11px] font-semibold tracking-[1px]"
+          style="background-color: var(--branding-dark); color: var(--branding-on-primary);">
+      {{ date_from|date:"d.m" }} — {{ date_to|date:"d.m.Y" }}
+    </span>
+    <button class="w-8 h-8 flex items-center justify-center border cursor-pointer"
+            style="border-color: var(--branding-dark);">
+      <i data-lucide="chevron-down" class="w-4 h-4" style="color: var(--branding-dark);"></i>
+    </button>
+  </div>
+
+  <!-- Three KPI cards -->
+  <div class="flex gap-3 mb-6">
+    <div class="flex-1 p-4 flex flex-col gap-1" style="background-color: var(--branding-dark);">
+      <span class="text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">НАЧИСЛЕНО ЗА ПЕРИОД</span>
+      <span class="text-[22px] font-bold" style="color: var(--branding-on-primary);">{{ summary.total_amount|floatformat:0 }}₽</span>
+      <span class="text-[11px]" style="color: var(--branding-text-secondary);">+{{ summary.sessions_percent|default:"0" }}% к средней загрузке</span>
+    </div>
+    <div class="flex-1 p-4 flex flex-col gap-1 border-2" style="border-color: var(--branding-dark);">
+      <span class="text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">КОНВЕРСИЯ УЧЕНИКОВ</span>
+      <span class="text-[22px] font-bold" style="color: #6B8E5E;">{{ summary.conversion_rate|default:"0" }}%</span>
+      <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ summary.converted|default:"0" }} из {{ summary.total_students|default:"0" }} учеников</span>
+    </div>
+    <div class="flex-1 p-4 flex flex-col gap-1 border-2" style="border-color: var(--branding-dark);">
+      <span class="text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ДОКТРЕЙН</span>
+      <span class="text-[22px] font-bold" style="color: var(--branding-text);">{{ summary.attendance_rate|default:"0" }}%</span>
+      <span class="text-[11px]" style="color: var(--branding-text-secondary);">Посещаемость записей с тренера</span>
+    </div>
+  </div>
+
+  <!-- Salary breakdown table -->
+  <div class="border-2 overflow-hidden" style="border-color: var(--branding-dark);">
+    <div class="flex items-center justify-between px-5 py-3" style="background-color: var(--branding-dark);">
+      <span class="text-[12px] font-semibold tracking-[1px]" style="color: var(--branding-on-primary);">РАСЧЁТНЫЙ ЛИСТ</span>
+      <span class="text-[12px]" style="color: var(--branding-text-secondary);">{{ date_from|date:"d.m" }} — {{ date_to|date:"d.m" }}</span>
+    </div>
+
+    {% if summary.by_type %}
+    {% for type_key, data in summary.by_type.items %}
+    <div class="flex items-center justify-between px-5 py-3.5"
+         style="border-bottom: 1px solid var(--branding-border);">
+      <div>
+        <span class="text-[13px]" style="color: var(--branding-text);">{{ data.label|default:type_key|capfirst }}</span>
+        <span class="text-[11px] ml-1" style="color: var(--branding-text-secondary);">({{ data.count }})</span>
+      </div>
+      <span class="text-[13px] font-semibold" style="color: var(--branding-text);">{{ data.total|floatformat:0 }}₽</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Total -->
+    <div class="flex items-center justify-between px-5 py-4" style="background-color: var(--branding-bg);">
+      <span class="text-[14px] font-bold" style="color: var(--branding-text);">ИТОГО</span>
+      <span class="text-[16px] font-bold" style="color: var(--branding-text);">{{ summary.total_amount|floatformat:0 }}₽</span>
+    </div>
+  </div>
+
+  <div class="mt-6 border-2 overflow-hidden" style="border-color: var(--branding-dark);">
+    <div class="flex items-center justify-between px-5 py-3" style="background-color: var(--branding-dark);">
+      <span class="text-[12px] font-semibold tracking-[1px]" style="color: var(--branding-on-primary);">АУДИТ И КОРРЕКТИРОВКИ</span>
+      <span class="text-[12px]" style="color: var(--branding-text-secondary);">История начислений</span>
+    </div>
+
+    {% if salary_audit_rows %}
+    {% for row in salary_audit_rows %}
+    <div class="px-5 py-4" style="border-bottom: 1px solid var(--branding-border);">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-[13px] font-semibold" style="color: var(--branding-text);">{{ row.earning_type }}</span>
+            <span class="px-2 py-0.5 text-[10px] font-semibold" style="background-color: var(--branding-bg); color: var(--branding-text-secondary);">{{ row.source }}</span>
+          </div>
+          <div class="mt-1 text-[11px]" style="color: var(--branding-text-secondary);">
+            {% if row.date %}{{ row.date|date:"d.m.Y" }}{% else %}Дата не указана{% endif %}
+            {% if row.schedule_name %} · {{ row.schedule_name }}{% endif %}
+            {% if row.checkin_id %} · check-in #{{ row.checkin_id }}{% endif %}
+            {% if row.payment_id %} · оплата #{{ row.payment_id }}{% endif %}
+          </div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="text-[14px] font-bold" style="color: var(--branding-text);">{{ row.amount|floatformat:0 }}₽</div>
+          <div class="text-[11px]" style="color: var(--branding-text-secondary);">{{ row.rate_percent|floatformat:0 }}%</div>
+          {% if row.can_correct %}
+          <button type="button"
+                  hx-get="/dashboard/trainers/earnings/{{ row.id }}/correction/"
+                  hx-target="#slide-over"
+                  onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                  class="mt-2 px-2 py-1 text-[10px] font-semibold"
+                  style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+            Корректировка выплаты
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if row.package_owner_name %}
+      <div class="mt-3 px-3 py-2 text-[12px]" style="background-color: #FFF7ED; color: #9A3412;">
+        Пакет тренера: {{ row.package_owner_name }}. Выплата оставлена фактическому тренеру; корректировка только отдельным аудитом.
+      </div>
+      {% endif %}
+
+      {% if row.adjustments %}
+      <div class="mt-3 space-y-2">
+        {% for adjustment in row.adjustments %}
+        <div class="flex items-start justify-between gap-3 px-3 py-2 text-[12px]" style="background-color: var(--branding-bg); color: var(--branding-text-secondary);">
+          <div>
+            <div class="font-semibold" style="color: var(--branding-text);">
+              {{ adjustment.kind }} · {{ adjustment.direction }}
+              {% if not adjustment.affects_payroll %}<span style="color: #9A3412;"> · не влияет на выплату</span>{% endif %}
+            </div>
+            <div>
+              {{ adjustment.trainer_name }}
+              {% if adjustment.counterparty_name %} → {{ adjustment.counterparty_name }}{% endif %}
+              {% if adjustment.reason %} · {{ adjustment.reason }}{% endif %}
+              {% if adjustment.created_by %} · {{ adjustment.created_by }}{% endif %}
+            </div>
+          </div>
+          <div class="font-semibold shrink-0" style="color: var(--branding-text);">
+            {{ adjustment.payable_delta|floatformat:0 }}₽
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="px-5 py-5 text-[13px]" style="color: var(--branding-text-secondary);">
+      За период нет начислений или корректировок.
+    </div>
+    {% endif %}
+  </div>
+</div>

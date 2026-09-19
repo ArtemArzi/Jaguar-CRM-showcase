@@ -1,0 +1,1430 @@
+[
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/api.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/api.py",
+    "symbol": "get_or_create_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/services/drop_in.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/services/drop_in.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/services/enrollment.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_personal_drop_in.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_personal_drop_in.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_personal_drop_in.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_personal_drop_in.py",
+    "symbol": "update_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_personal_drop_in.py",
+    "symbol": "update_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_personal_drop_in.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_selectors.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_services.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_services.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_staff_personal_intents.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_training_group_payment_admission.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_training_group_payment_admission.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_training_group_payment_admission.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_training_group_payment_admission.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/attendance/tests/test_training_group_payment_admission.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "approve_freeze"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_v2_group_sale_bank_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "create_v2_group_sale_manual"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "delete_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "freeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "get_or_create_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "reject_freeze"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "replay_deferred_bank_payment_provider_events"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "resolve_bank_payment_order_manual_review"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "resolve_v2_group_sale_offer"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "unfreeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "update_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "update_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "update_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "update_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/api.py",
+    "symbol": "write_off_debt"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tasks.py",
+    "symbol": "expire_bank_payment_orders"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tasks.py",
+    "symbol": "replay_deferred_bank_payment_provider_events"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tasks.py",
+    "symbol": "unfreeze_subscription"
+  },
+  {
+    "count": 2,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_api.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_bank_payment_orders.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_bank_payment_orders.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_bank_payment_orders.py",
+    "symbol": "expire_bank_payment_orders"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_bank_payment_orders.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_bank_payment_orders.py",
+    "symbol": "replay_deferred_bank_payment_provider_events"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_bank_payment_orders.py",
+    "symbol": "resolve_bank_payment_order_manual_review"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "create_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "create_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "create_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "delete_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "is_training_type_kind_locked"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "update_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "update_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "update_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_catalog_error_contracts.py",
+    "symbol": "update_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_group_sale_offers_v2.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_hybrid_package_components.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_hybrid_package_components.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_hybrid_package_components.py",
+    "symbol": "update_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_hybrid_package_components.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 2,
+    "kind": "module-attribute",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_import_contracts.py",
+    "symbol": "__all__"
+  },
+  {
+    "count": 1,
+    "kind": "module-attribute",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_import_contracts.py",
+    "symbol": "create_expense"
+  },
+  {
+    "count": 1,
+    "kind": "module-attribute",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_import_contracts.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "module-attribute",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_import_contracts.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "module-attribute",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_import_contracts.py",
+    "symbol": "delete_expense"
+  },
+  {
+    "count": 1,
+    "kind": "module-attribute",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_import_contracts.py",
+    "symbol": "update_expense"
+  },
+  {
+    "count": 1,
+    "kind": "module-attribute",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_import_contracts.py",
+    "symbol": "write_off_debt"
+  },
+  {
+    "count": 1,
+    "kind": "module-import",
+    "migration_slice": 5,
+    "path": "apps/billing/tests/test_import_contracts.py",
+    "symbol": "services"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_provider_reconciliation.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_provider_reconciliation.py",
+    "symbol": "expire_bank_payment_orders"
+  },
+  {
+    "count": 1,
+    "kind": "module-import",
+    "migration_slice": 5,
+    "path": "apps/billing/tests/test_service_error_ledger.py",
+    "symbol": "services"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "approve_freeze"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "create_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "create_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "create_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "delete_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "freeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "get_or_create_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "reject_freeze"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "unfreeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "update_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "update_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "update_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "update_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_services.py",
+    "symbol": "write_off_debt"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_subscription_payout_policy.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_subscription_payout_policy.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_subscription_payout_policy.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_subscription_renewals.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_t1_group_salary.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_t1_group_salary.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_t1_group_salary.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_t2_freeze.py",
+    "symbol": "freeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_t2_freeze.py",
+    "symbol": "get_or_create_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_t2_freeze.py",
+    "symbol": "update_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_tariff_revision_renewals.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_tochka_webhooks.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_tochka_webhooks.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_wave5_finance_audit.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_wave5_finance_audit.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_wave5_finance_audit.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/billing/tests/test_wave5_finance_audit.py",
+    "symbol": "write_off_debt"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/assert_bank_payment_link_e2e.py",
+    "symbol": "expire_bank_payment_orders"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/assert_bank_payment_link_e2e.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/assert_club_settings_business_config_e2e.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/assert_pwa_ux_ledger_smoke_e2e.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/assert_unified_client_commercial_journey_e2e.py",
+    "symbol": "create_v2_group_sale_manual"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/assert_unified_client_commercial_journey_e2e.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/assert_unified_client_commercial_journey_e2e.py",
+    "symbol": "resolve_v2_group_sale_offer"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/assert_unified_client_commercial_journey_e2e.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_bank_payment_link_e2e.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_bank_payment_link_e2e.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_dashboard_access_subscriptions_e2e.py",
+    "symbol": "freeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_debt_writeoff_e2e.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_freeze_lifecycle_e2e.py",
+    "symbol": "freeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_hybrid_package_entitlements_e2e.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_hybrid_package_entitlements_e2e.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_pwa_ux_ledger_smoke_e2e.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_refund_resolution_e2e.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_refund_resolution_e2e.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_schedule_exception_visibility_e2e.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_schedule_exception_visibility_e2e.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_student_parent_self_booking_e2e.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_subscription_payout_policy_e2e.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_subscription_payout_policy_e2e.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_subscription_payout_policy_e2e.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_trainer_personal_intent_e2e.py",
+    "symbol": "create_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/prepare_trainer_personal_intent_e2e.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/seed_p0_payment_ux_demo.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/management/commands/seed_p0_payment_ux_demo.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/common/tests/test_trainer_personal_intent_e2e_commands.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "approve_freeze"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "freeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "reject_freeze"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "resolve_bank_payment_order_manual_review"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "unfreeze_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/billing.py",
+    "symbol": "write_off_debt"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/reports.py",
+    "symbol": "create_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/reports.py",
+    "symbol": "delete_expense"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/billing.py",
+    "symbol": "create_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/billing.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/billing.py",
+    "symbol": "create_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/billing.py",
+    "symbol": "is_training_type_kind_locked"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/billing.py",
+    "symbol": "update_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/billing.py",
+    "symbol": "update_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/billing.py",
+    "symbol": "update_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/general.py",
+    "symbol": "update_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/htmx_admin/views/settings/notifications.py",
+    "symbol": "update_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/onboarding/services.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/students/api.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/students/api.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/students/parent_api.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/students/parent_api.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/students/tests/test_journey_readiness.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/students/tests/test_legacy_tariff_revision_bank_orders.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/students/tests/test_parent_api.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/students/tests/test_student_me_api.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/trainers/tests/test_rate_invariants.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/trainers/tests/test_rate_invariants.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/trainers/tests/test_stats_include_sale_earnings.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "apps/trainers/tests/test_stats_include_sale_earnings.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_billing_services.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_billing_services.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 2,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_htmx_admin.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_htmx_admin.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_kiosk_checkin.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "approve_freeze"
+  },
+  {
+    "count": 3,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "cancel_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "create_bank_payment_order"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "create_discount"
+  },
+  {
+    "count": 2,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "create_payment"
+  },
+  {
+    "count": 2,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "create_subscription"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "create_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "create_training_type"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "process_bank_payment_webhook"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "reject_freeze"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "unfreeze_subscription"
+  },
+  {
+    "count": 2,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "update_club_settings"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "update_discount"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "update_tariff"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "update_training_type"
+  },
+  {
+    "count": 6,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "verify_payment"
+  },
+  {
+    "count": 1,
+    "kind": "import-from",
+    "migration_slice": 13,
+    "path": "tests/test_real_stack_e2e_commands.py",
+    "symbol": "write_off_debt"
+  }
+]

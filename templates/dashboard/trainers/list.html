@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Тренеры - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px] mb-3" style="color: var(--branding-text);">ТРЕНЕРЫ</h1>
+{% include "dashboard/trainers/_tabs.html" %}
+
+<div class="flex flex-wrap items-end justify-between mb-5 gap-3">
+
+  <div></div>
+  <div class="flex items-center gap-2 flex-wrap">
+    <!-- Period selector -->
+    <form class="flex items-center gap-2 flex-1 min-w-0" hx-get="/dashboard/trainers/" hx-target="#content" hx-push-url="true">
+      <input type="date" name="date_from" value="{{ date_from|date:'Y-m-d' }}"
+             hx-get="/dashboard/trainers/" hx-trigger="change" hx-include="closest form" hx-target="#content" hx-push-url="true"
+             class="soft-input soft-date font-semibold flex-1 min-w-0" style="height:36px;padding:0 10px;">
+      <span class="text-[14px] flex-shrink-0" style="color: var(--branding-text-secondary);">→</span>
+      <input type="date" name="date_to" value="{{ date_to|date:'Y-m-d' }}"
+             hx-get="/dashboard/trainers/" hx-trigger="change" hx-include="closest form" hx-target="#content" hx-push-url="true"
+             class="soft-input soft-date font-semibold flex-1 min-w-0" style="height:36px;padding:0 10px;">
+    </form>
+
+    <!-- Add trainer -->
+    <button hx-get="/dashboard/trainers/create/"
+            hx-target="#slide-over"
+            onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+            class="flex items-center gap-2 h-9 px-4 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+      ДОБАВИТЬ
+    </button>
+  </div>
+</div>
+
+<!-- Mobile cards -->
+<div class="md:hidden flex flex-col gap-2.5">
+  {% for trainer in trainers %}
+  <div hx-get="/dashboard/trainers/{{ trainer.id }}/"
+       hx-target="#content"
+       hx-push-url="true"
+       class="p-4 cursor-pointer transition-colors {% if not trainer.is_active %}opacity-60{% endif %}"
+       style="background-color: rgba(255,255,255,0.6); border: 1px solid var(--branding-border);">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-full flex items-center justify-center text-[13px] font-semibold flex-shrink-0"
+           style="background-color: {% cycle '#2D5A27' '#5A3D27' '#3B5AC4' '#8B5A2B' as colors %}; color: var(--branding-on-primary);">
+        {{ trainer.first_name|first }}{{ trainer.last_name|first }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-0.5">
+          <span class="text-[14px] font-semibold truncate" style="color: var(--branding-text);">{{ trainer.first_name }} {{ trainer.last_name }}</span>
+          {% if not trainer.is_active %}
+          <span class="text-[9px] px-1.5 py-0.5 flex-shrink-0" style="background-color: #666; color: var(--branding-on-primary);">НЕАКТИВЕН</span>
+          {% endif %}
+        </div>
+        <div class="text-[11px] truncate" style="color: var(--branding-text-secondary);">
+          {% for tl in trainer.trainer_locations.all %}{{ tl.location.name }}{% if not forloop.last %} · {% endif %}{% empty %}Нет локаций{% endfor %}
+        </div>
+        {% if trainer.phone %}
+        <div class="text-[11px] truncate" style="color: var(--branding-text-secondary);">{{ trainer.phone }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mt-3 pt-3" style="border-top: 1px solid var(--branding-border);">
+      <div class="flex flex-col">
+        <span class="text-[9px] font-semibold tracking-[0.5px] uppercase" style="color: var(--branding-text-secondary);">Занятий</span>
+        <span class="text-[14px] font-semibold" style="color: var(--branding-text);">{{ trainer.monthly_sessions|default:0 }}</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-[9px] font-semibold tracking-[0.5px] uppercase" style="color: var(--branding-text-secondary);">Принёс</span>
+        <span class="text-[14px] font-semibold" style="color: #2D5A27;">{{ trainer.monthly_revenue|default:0|floatformat:0 }}₽</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="text-[9px] font-semibold tracking-[0.5px] uppercase" style="color: var(--branding-text-secondary);">Зарплата</span>
+        <span class="text-[14px] font-bold" style="color: var(--branding-text);">{{ trainer.monthly_salary|default:0|floatformat:0 }}₽</span>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="py-12 text-center">
+    <div class="text-[13px] mb-2" style="color: var(--branding-text-secondary);">Тренеров пока нет</div>
+    <span class="text-[12px]" style="color: var(--branding-text-secondary);">Нажмите «Добавить» чтобы создать первого</span>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Desktop table -->
+<div class="hidden md:block overflow-x-auto border-2" style="border-color: var(--branding-dark);">
+  <table class="w-full min-w-[560px]">
+    <thead>
+      <tr style="background-color: var(--branding-dark); height: 44px;">
+        <th class="px-5 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ТРЕНЕР</th>
+        <th class="w-[110px] text-center text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ЗАНЯТИЙ</th>
+        <th class="w-[150px] text-right px-5 text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ПРИНЁС</th>
+        <th class="w-[150px] text-right px-5 text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ЗАРПЛАТА</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trainer in trainers %}
+      <tr class="cursor-pointer transition-colors {% if not trainer.is_active %}opacity-50{% endif %}"
+          style="border-bottom: 1px solid var(--branding-border);"
+          hx-get="/dashboard/trainers/{{ trainer.id }}/"
+          hx-target="#content"
+          hx-push-url="true"
+          data-hover-color="rgba(255,255,255,0.5)"
+          data-default-color="transparent"
+          onmouseover="this.style.backgroundColor=this.dataset.hoverColor"
+          onmouseout="this.style.backgroundColor=this.dataset.defaultColor">
+        <td class="px-5 py-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-semibold flex-shrink-0"
+                 style="background-color: {% cycle '#2D5A27' '#5A3D27' '#3B5AC4' '#8B5A2B' as colors %}; color: var(--branding-on-primary);">
+              {{ trainer.first_name|first }}{{ trainer.last_name|first }}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[13px] font-medium" style="color: var(--branding-text);">{{ trainer.first_name }} {{ trainer.last_name }}</span>
+                {% if not trainer.is_active %}
+                <span class="text-[9px] px-1.5 py-0.5 flex-shrink-0" style="background-color: #666; color: var(--branding-on-primary);">НЕАКТИВЕН</span>
+                {% endif %}
+              </div>
+              <div class="text-[11px] mt-0.5" style="color: var(--branding-text-secondary);">
+                {% for tl in trainer.trainer_locations.all %}{{ tl.location.name }}{% if not forloop.last %} · {% endif %}{% empty %}Нет локаций{% endfor %}
+                {% if trainer.phone %} · {{ trainer.phone }}{% endif %}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td class="text-center">
+          <span class="text-[15px] font-semibold" style="color: var(--branding-text);">{{ trainer.monthly_sessions|default:0 }}</span>
+        </td>
+        <td class="text-right px-5">
+          <span class="text-[15px] font-semibold" style="color: #2D5A27;">{{ trainer.monthly_revenue|default:0|floatformat:0 }}₽</span>
+        </td>
+        <td class="text-right px-5">
+          <span class="text-[15px] font-bold" style="color: var(--branding-text);">{{ trainer.monthly_salary|default:0|floatformat:0 }}₽</span>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="px-5 py-12 text-center">
+          <div class="text-[13px] mb-2" style="color: var(--branding-text-secondary);">Тренеров пока нет</div>
+          <span class="text-[12px]" style="color: var(--branding-text-secondary);">Нажмите «Добавить» чтобы создать первого тренера</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.body.addEventListener("closeSlideOver", function() {
+  document.getElementById('slide-over-backdrop').classList.add('hidden');
+  document.getElementById('slide-over').classList.add('translate-x-full');
+});
+</script>
+
+{% endpartialdef %}
+{% endblock %}

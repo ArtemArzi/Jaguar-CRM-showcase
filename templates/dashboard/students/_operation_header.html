@@ -1,0 +1,6 @@
+<button type="button" data-student-close aria-label="Закрыть" class="float-right px-3 py-3">×</button>
+<button type="button" data-student-back hx-get="{% url 'student-card' student.id %}" hx-target="#slide-over"
+        class="mb-4 px-2 py-3 text-[13px] font-semibold" style="color: var(--branding-primary);">← Назад к ученику</button>
+<h2 data-student-dialog class="text-[20px] font-bold mb-2" style="color: var(--branding-text);">{{ title }}</h2>
+<p class="text-[13px] mb-5" style="color: var(--branding-text-secondary);">{{ student.first_name }} {{ student.last_name }}</p>
+{% if error %}<div role="alert" class="mb-4 p-3 text-[13px]" style="background: #FDF2EF; color: #9F3D28;">{{ error }}</div>{% endif %}

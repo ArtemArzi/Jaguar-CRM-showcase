@@ -1,0 +1,19 @@
+{% if preview_error %}<div class="border border-red-300 bg-red-50 p-3 text-red-800">{{ preview_error }}</div>{% endif %}
+{% if preview %}
+<div class="border rounded p-4 space-y-3">
+  <div class="font-medium">Предпросмотр #{{ preview.digest }}</div>
+  <div class="text-sm">Выбраны слоты: {{ preview.selected_schedule_ids|join:', ' }}. Применение доступно только owner/admin в режиме reconciling и повторно проверяет этот digest.</div>
+  {% if preview.conflicts %}<div><div class="font-medium text-amber-800">Неразрешённые конфликты</div><ul class="list-disc ml-5 text-sm">{% for conflict in preview.conflicts %}<li>{{ conflict.code }}: {{ conflict.detail }} ({{ conflict.ids|join:', ' }})</li>{% endfor %}</ul></div>{% endif %}
+  <div><div class="font-medium">Предлагаемые membership</div><ul class="text-sm">{% for membership in preview.proposed_memberships %}<li>student #{{ membership.student_id }} · {{ membership.authority }} · {{ membership.starts_on|default:'нужна дата' }} · источники {{ membership.source_enrollment_ids|join:', ' }}</li>{% empty %}<li>Нет постоянных записей для выбранных слотов.</li>{% endfor %}</ul></div>
+  {% if preview.proposed_roster_deltas %}<div><div class="font-medium">Предлагаемые дельты roster</div><ul class="text-sm">{% for delta in preview.proposed_roster_deltas %}<li>student #{{ delta.student_id }} · schedule #{{ delta.schedule_id }} · {{ delta.action }} · начало {{ delta.effective_starts_on|default:'требуется явный выбор' }}</li>{% endfor %}</ul></div>{% endif %}
+  {% for membership in preview.proposed_memberships %}{% if membership.starts_on is None %}<label class="block text-sm">Дата начала для student #{{ membership.student_id }}<input type="date" name="start_date_{{ membership.student_id }}" class="ml-2 border rounded p-1"></label>{% endif %}{% endfor %}
+  {% if apply_result %}
+  <div class="border border-emerald-300 bg-emerald-50 p-3 text-emerald-900">Сверка применена: группа #{{ apply_result.training_group_id }}, membership {{ apply_result.membership_count }}, проекции {{ apply_result.projection_count }}. Повтор с тем же ключом безопасен.</div>
+  {% elif not preview.conflicts %}
+  <input type="hidden" name="preview_digest" value="{{ preview.digest }}">
+  <label class="block text-sm">Причина подтверждения<input class="mt-1 w-full border rounded p-2" name="rationale" required maxlength="500"></label>
+  <label class="block text-sm">Ключ повтора<input class="mt-1 w-full border rounded p-2" name="idempotency_key" required maxlength="120"></label>
+  <button type="submit" name="reconciliation_action" value="apply" class="px-4 py-2 rounded bg-emerald-700 text-white">Подтвердить и применить digest</button>
+  {% endif %}
+</div>
+{% endif %}

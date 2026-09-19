@@ -1,0 +1,86 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">
+      {% if tt %}ПЕРЕИМЕНОВАТЬ: {{ tt.name }}{% else %}НОВЫЙ ТИП ТРЕНИРОВКИ{% endif %}
+    </h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded cursor-pointer"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="flex items-center gap-2 px-4 py-2.5 mb-4" style="background-color: rgba(198, 40, 40, 0.08); border: 1px solid rgba(198, 40, 40, 0.3);">
+    <span class="text-[12px]" style="color: #C62828;">{{ error }}</span>
+  </div>
+  {% endif %}
+
+  <form hx-post="{% if tt %}{% url 'training-type-edit' training_type_id=tt.id %}{% else %}{% url 'training-type-form' %}{% endif %}"
+        hx-target="#slide-over">
+    {% csrf_token %}
+
+    <div class="mb-5">
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+        Название
+      </label>
+      <input type="text" name="name" value="{{ tt.name|default:'' }}" required
+             placeholder="Например: Групповая, Персональная, Мини-группа"
+             class="w-full h-11 px-4 text-[13px] outline-none"
+             style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+      <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">
+        Тип тренировки — категория занятий. К каждому типу привязываются тарифы и расписание.
+      </p>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+        Формат
+      </label>
+      {% if kind_locked %}
+      <input type="hidden" name="kind" value="{{ tt.kind }}">
+      {% endif %}
+      <select {% if not kind_locked %}name="kind" required{% else %}disabled aria-describedby="training-type-kind-lock-help"{% endif %}
+              class="w-full h-11 px-4 text-[13px] outline-none {% if kind_locked %}opacity-70 cursor-not-allowed{% endif %}"
+              style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+        {% for value,label in training_type_kinds %}
+        <option value="{{ value }}"
+                {% if tt and tt.kind == value %}selected{% elif not tt and value == 'group' %}selected{% endif %}>
+          {{ label }}
+        </option>
+        {% endfor %}
+      </select>
+      {% if kind_locked %}
+      <p id="training-type-kind-lock-help" class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">
+        Формат нельзя менять, потому что тип уже используется в тарифах, расписании или финансовых событиях.
+      </p>
+      {% endif %}
+      <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">
+        Для персональных и мини-групповых пакетов CRM фиксирует тренера-владельца пакета.
+      </p>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+        Система грейдов
+      </label>
+      <select name="grade_system_id"
+              class="w-full h-11 px-4 text-[13px] outline-none"
+              style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+        <option value="">Не считать прогресс</option>
+        {% for grade_system in grade_systems %}
+        <option value="{{ grade_system.id }}"
+                {% if tt and tt.grade_system_id == grade_system.id %}selected{% endif %}>
+          {{ grade_system.discipline }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit" class="w-full h-11 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      {% if tt %}СОХРАНИТЬ{% else %}СОЗДАТЬ{% endif %}
+    </button>
+  </form>
+</div>

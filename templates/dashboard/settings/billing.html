@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Настройки — Биллинг{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px] mb-6 sm:mb-7" style="color: var(--branding-text);">Настройки</h1>
+
+{% include "dashboard/settings/_tabs.html" %}
+
+{% partialdef settings-tab-content inline %}
+
+{% if saved %}
+<div class="flex items-center gap-2 px-5 py-3 mb-5" style="background-color: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.3);">
+  <i data-lucide="check-circle" class="w-4 h-4" style="color: #2E7D32;"></i>
+  <span class="text-[13px] font-medium" style="color: #2E7D32;">Настройки сохранены</span>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="flex items-center gap-2 px-5 py-3 mb-5" style="background-color: rgba(198, 40, 40, 0.08); border: 1px solid rgba(198, 40, 40, 0.3);">
+  <i data-lucide="alert-circle" class="w-4 h-4" style="color: #C62828;"></i>
+  <span class="text-[13px] font-medium" style="color: #C62828;">{{ error }}</span>
+</div>
+{% endif %}
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# ТИПЫ ТРЕНИРОВОК                                          #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+      <div class="flex items-center gap-2">
+        <i data-lucide="dumbbell" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+        <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Типы тренировок</h2>
+      </div>
+      <button type="button"
+              hx-get="{% url 'training-type-form' %}"
+              hx-target="#slide-over"
+              onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+              class="flex items-center gap-1.5 h-8 px-3 text-[11px] font-semibold tracking-[0.5px] cursor-pointer"
+              style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        Добавить тип
+      </button>
+    </div>
+    <p class="text-[12px] mb-4" style="color: var(--branding-text-secondary);">
+      Категории занятий клуба. К каждому типу привязываются тарифы (абонементы) и расписание.
+    </p>
+
+    {% for tt in training_types %}
+    <div class="flex items-center gap-4 py-3"
+         style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+      <div class="flex-1 flex items-center gap-2">
+        <span class="text-[13px] font-medium" style="color: var(--branding-text);">{{ tt.name }}</span>
+        {% if tt.grade_system %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(46,125,50,0.12); color: #2E7D32;">{{ tt.grade_system.discipline }}</span>
+        {% else %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(198,40,40,0.08); color: #C62828;">Без грейдов</span>
+        {% endif %}
+        {% if not tt.is_active %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(158,158,158,0.15); color: #9E9E9E;">Неактивен</span>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <form class="inline" hx-post="{% url 'training-type-toggle' training_type_id=tt.id %}"
+              hx-target="#content" hx-swap="innerHTML show:none"
+              {% if tt.is_active %}hx-confirm="Выключение скроет тип из расписания и новых абонементов. Существующие абонементы продолжат работать. Продолжить?"{% endif %}>
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+                  aria-pressed="{% if tt.is_active %}true{% else %}false{% endif %}"
+                  aria-label="Тип тренировки «{{ tt.name }}» — {% if tt.is_active %}активен, нажмите чтобы выключить{% else %}неактивен, нажмите чтобы включить{% endif %}"
+                  style="border: 1px solid var(--branding-border); color: {% if tt.is_active %}#C62828{% else %}#2E7D32{% endif %};">
+            {% if tt.is_active %}Выключить{% else %}Включить{% endif %}
+          </button>
+        </form>
+        <button type="button"
+                hx-get="{% url 'training-type-edit' training_type_id=tt.id %}"
+                hx-target="#slide-over"
+                onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+                style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+          Изменить
+        </button>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-[12px]" style="color: var(--branding-text-secondary);">Нет типов тренировок. Создайте первый, чтобы добавить тарифы.</p>
+    {% endfor %}
+  </div>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# РАЗОВЫЕ ПОСЕЩЕНИЯ                                        #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <form id="billing-settings-form" hx-post="{% url 'settings-billing' %}" hx-target="#content">
+  {% csrf_token %}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center gap-2 mb-1">
+      <i data-lucide="ticket" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Разовые посещения</h2>
+    </div>
+    <p class="text-[12px] mb-5" style="color: var(--branding-text-secondary);">
+      Цена занятия без абонемента для каждого типа тренировки. Пробные бесплатно — ученик со статусом «Пробный» не платит за первое занятие.
+    </p>
+    {% for tt in training_types %}
+    <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 py-3"
+         style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+      <span class="text-[13px] font-medium md:w-[200px]" style="color: var(--branding-text);">{{ tt.name }}</span>
+      <div class="flex items-center gap-2">
+        <input type="number" name="tt_drop_in_price_{{ tt.id }}"
+               value="{{ tt.drop_in_price|default_if_none:'' }}"
+               placeholder="Не задано" min="0" step="1"
+               class="h-9 w-[120px] px-3 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+        <span class="text-[12px]" style="color: var(--branding-text-secondary);">₽</span>
+      </div>
+      <label class="flex items-center gap-2 md:ml-4 cursor-pointer">
+        <input type="checkbox" name="tt_trial_free_{{ tt.id }}"
+               {% if tt.trial_free %}checked{% endif %}
+               class="w-4 h-4">
+        <span class="text-[12px]" style="color: var(--branding-text);">Пробное бесплатно</span>
+      </label>
+    </div>
+    {% empty %}
+    <p class="text-[12px]" style="color: var(--branding-text-secondary);">Нет типов тренировок. Создайте тип в секции выше.</p>
+    {% endfor %}
+  </div>
+  </form>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# ТАРИФЫ                                                   #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+      <div class="flex items-center gap-2">
+        <i data-lucide="file-text" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+        <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Тарифы</h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="{{ archive_url }}"
+           class="px-3 py-1.5 text-[11px] font-medium rounded"
+           style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+          Архив тарифов
+        </a>
+        <button type="button"
+                hx-get="{% url 'tariff-form' %}"
+                hx-target="#slide-over"
+                onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                class="flex items-center gap-1.5 h-8 px-3 text-[11px] font-semibold tracking-[0.5px]"
+                style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          Добавить тариф
+        </button>
+      </div>
+    </div>
+    <p class="text-[12px] mb-4" style="color: var(--branding-text-secondary);">
+      Абонементы для учеников. Цена из тарифа автоматически подставляется в оплату.
+    </p>
+
+    {% for t in tariffs %}
+    <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 py-3"
+         style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="text-[13px] font-medium truncate" style="color: var(--branding-text);">{{ t.name }}</span>
+          {% if t.is_personal_booking_default %}
+          <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(46,125,50,0.10); color: #2E7D32;">Текущая цена персоналки</span>
+          {% endif %}
+          {% if not t.is_active %}
+          <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(158,158,158,0.15); color: #9E9E9E;">Неактивен</span>
+          {% endif %}
+        </div>
+        <div class="flex items-center gap-3 mt-0.5">
+          <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ t.training_type.name }}</span>
+          <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ t.price }} ₽</span>
+          <span class="text-[11px]" style="color: var(--branding-text-secondary);">
+            {% if t.trainings_limit %}{{ t.trainings_limit }} занятий{% else %}&#8734;{% endif %}
+          </span>
+          <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ t.duration_days }} дней</span>
+          {% if t.payout_summary %}
+          <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ t.payout_summary }}</span>
+          {% endif %}
+          {% if t.location %}
+          <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ t.location.name }}</span>
+          {% endif %}
+          {% if t.personal_booking_trainer %}
+          <span class="text-[11px]" style="color: var(--branding-text-secondary);">
+            {{ t.personal_booking_trainer.first_name }} {{ t.personal_booking_trainer.last_name }}
+          </span>
+          {% endif %}
+        </div>
+        {% if t.component_summary %}
+        <div class="text-[11px] mt-1 break-words" style="color: var(--branding-text-secondary);">
+          {{ t.component_summary }}
+        </div>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button"
+                hx-get="{% url 'tariff-price-revision' tariff_id=t.id %}"
+                hx-target="#slide-over"
+                onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+                style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+          Изменить цену
+        </button>
+        <form class="inline" hx-post="{% url 'tariff-toggle' tariff_id=t.id %}"
+              hx-target="#content" hx-swap="innerHTML show:none"
+              hx-confirm="Выключить тариф? Новые абонементы по нему создать будет нельзя. Существующие продолжат работать.">
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+                  aria-pressed="true"
+                  aria-label="Тариф «{{ t.name }}» — активен, нажмите чтобы выключить"
+                  style="border: 1px solid var(--branding-border); color: #C62828;">
+            В архив
+          </button>
+        </form>
+        <button type="button"
+                hx-get="{% url 'tariff-edit' tariff_id=t.id %}"
+                hx-target="#slide-over"
+                onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+                style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+          Изменить
+        </button>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-[12px]" style="color: var(--branding-text-secondary);">Нет тарифов. Нажмите «Добавить тариф» для создания первого.</p>
+    {% endfor %}
+  </div>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# СКИДКИ                                                   #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+      <div class="flex items-center gap-2">
+        <i data-lucide="percent" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+        <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Скидки</h2>
+      </div>
+      <button type="button"
+              hx-get="{% url 'discount-form' %}"
+              hx-target="#slide-over"
+              onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+              class="flex items-center gap-1.5 h-8 px-3 text-[11px] font-semibold tracking-[0.5px]"
+              style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        Добавить скидку
+      </button>
+    </div>
+    <p class="text-[12px] mb-4" style="color: var(--branding-text-secondary);">
+      Скидки применяются при оформлении оплаты и уменьшают итоговую сумму.
+    </p>
+
+    {% for d in discounts %}
+    <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 py-3"
+         style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="text-[13px] font-medium truncate" style="color: var(--branding-text);">{{ d.name }}</span>
+          {% if not d.is_active %}
+          <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(158,158,158,0.15); color: #9E9E9E;">Неактивна</span>
+          {% endif %}
+        </div>
+        <span class="text-[11px]" style="color: var(--branding-text-secondary);">
+          {% if d.discount_type == 'percent' %}{{ d.value }}%{% else %}{{ d.value }} ₽{% endif %}
+        </span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <form class="inline" hx-post="{% url 'discount-toggle' discount_id=d.id %}"
+              hx-target="#content" hx-swap="innerHTML show:none"
+              {% if d.is_active %}hx-confirm="Выключить скидку? Она перестанет применяться к новым оплатам."{% endif %}>
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+                  aria-pressed="{% if d.is_active %}true{% else %}false{% endif %}"
+                  aria-label="Скидка «{{ d.name }}» — {% if d.is_active %}активна, нажмите чтобы выключить{% else %}неактивна, нажмите чтобы включить{% endif %}"
+                  style="border: 1px solid var(--branding-border); color: {% if d.is_active %}#C62828{% else %}#2E7D32{% endif %};">
+            {% if d.is_active %}Выключить{% else %}Включить{% endif %}
+          </button>
+        </form>
+        <button type="button"
+                hx-get="{% url 'discount-edit' discount_id=d.id %}"
+                hx-target="#slide-over"
+                onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+                style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+          Изменить
+        </button>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-[12px]" style="color: var(--branding-text-secondary);">Нет скидок. Нажмите «Добавить скидку» для создания первой.</p>
+    {% endfor %}
+  </div>
+
+  {# ═══════════════════════════════════════════════════════ #}
+  {# КНОПКИ СОХРАНЕНИЯ                                       #}
+  {# ═══════════════════════════════════════════════════════ #}
+  <div class="flex justify-end gap-3 mb-10">
+    <button type="submit" form="billing-settings-form" class="px-6 py-2.5 text-[12px] font-semibold cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      Сохранить
+    </button>
+  </div>
+
+{% endpartialdef %}
+{% endpartialdef %}
+{% endblock %}

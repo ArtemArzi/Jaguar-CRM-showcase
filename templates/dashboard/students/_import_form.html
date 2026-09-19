@@ -1,0 +1,42 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">ИМПОРТ ИЗ EXCEL</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  <p class="text-[12px] mb-4" style="color: var(--branding-text-secondary);">
+    Загрузите файл .xlsx с колонками: <strong>Имя</strong>, <strong>Телефон</strong>
+  </p>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="/dashboard/students/import/"
+        hx-target="#slide-over"
+        hx-encoding="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Drag-and-drop style file input -->
+    <label class="flex flex-col items-center justify-center gap-3 p-8 mb-4 cursor-pointer border-2 border-dashed transition-colors hover:opacity-80"
+           style="border-color: var(--branding-border); color: var(--branding-text-secondary);">
+      <i data-lucide="upload" class="w-8 h-8"></i>
+      <span class="text-[13px] font-medium" style="color: var(--branding-text);">Выберите файл .xlsx</span>
+      <span class="text-[11px]">или перетащите сюда</span>
+      <input type="file" name="file" accept=".xlsx,.xls" required class="hidden"
+             onchange="this.closest('label').querySelector('[data-filename]').textContent = this.files[0]?.name || ''">
+      <span data-filename class="text-[12px] font-medium" style="color: var(--branding-primary);"></span>
+    </label>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      ЗАГРУЗИТЬ И ПРЕДПРОСМОТР
+    </button>
+  </form>
+</div>

@@ -1,0 +1,149 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">НОВОЕ ЗАНЯТИЕ</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="/dashboard/schedule/create/" hx-target="#slide-over" hx-swap="innerHTML" x-data="{ oneTime: false, existingGroup: '' }">
+    {% csrf_token %}
+
+    <div class="space-y-4 mb-6">
+      {% if training_groups %}
+      <div x-show="!oneTime">
+        <label for="training-group-id" class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">СУЩЕСТВУЮЩАЯ ГРУППА</label>
+        <select id="training-group-id" name="training_group_id" x-model="existingGroup"
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">— создать новую группу —</option>
+          {% for group in training_groups %}
+          <option value="{{ group.id }}">{{ group.name }} · {{ group.training_type }} · {{ group.location }} · ответственный {{ group.responsible_trainer }}</option>
+          {% endfor %}
+        </select>
+        <p class="mt-1 text-[11px]" style="color: var(--branding-text-secondary);">
+          Новый регулярный слот будет добавлен в выбранную группу без создания дубля.
+        </p>
+      </div>
+      {% endif %}
+
+      <div x-show="oneTime || !existingGroup">
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НАЗВАНИЕ ТРЕНИРОВКИ *</label>
+        <input type="text" name="group_name" :required="oneTime || !existingGroup"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТИП ТРЕНИРОВКИ *</label>
+        <select name="training_type_id" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">— выберите —</option>
+          {% for training_type in training_types %}
+          <option value="{{ training_type.id }}">{{ training_type.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <!-- Toggle: regular vs one-time -->
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-2" style="color: var(--branding-text-secondary);">ТИП ЗАНЯТИЯ</label>
+        <div class="flex mb-4" style="border: 2px solid var(--branding-border);">
+          <button type="button" @click="oneTime = false"
+                  class="flex-1 h-10 text-[12px] font-semibold tracking-[0.5px] transition-colors"
+                  :style="!oneTime ? 'background-color: var(--branding-dark); color: var(--branding-on-primary);' : 'color: var(--branding-text-secondary);'">
+            <i data-lucide="repeat" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>
+            Регулярное
+          </button>
+          <button type="button" @click="oneTime = true; existingGroup = ''"
+                  class="flex-1 h-10 text-[12px] font-semibold tracking-[0.5px] transition-colors"
+                  :style="oneTime ? 'background-color: var(--branding-primary); color: var(--branding-on-primary);' : 'color: var(--branding-text-secondary);'"
+                  style="border-left: 2px solid var(--branding-border);">
+            <i data-lucide="calendar-plus" class="w-3.5 h-3.5 inline -mt-0.5 mr-1"></i>
+            Разовое
+          </button>
+        </div>
+
+        <!-- Regular: day of week -->
+        <div x-show="!oneTime">
+          <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ДЕНЬ НЕДЕЛИ *</label>
+          <select name="day_of_week"
+                  class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                  style="border-color: var(--branding-border); color: var(--branding-text);">
+            {% for value, label in days %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- One-time: specific date -->
+        <div x-show="oneTime" x-cloak>
+          <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ДАТА ЗАНЯТИЯ *</label>
+          <input type="date" name="one_time_date"
+                 class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                 style="border-color: var(--branding-border); color: var(--branding-text);">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НАЧАЛО *</label>
+          <input type="time" name="start_time" required
+                 class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                 style="border-color: var(--branding-border); color: var(--branding-text);">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">КОНЕЦ *</label>
+          <input type="time" name="end_time" required
+                 class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                 style="border-color: var(--branding-border); color: var(--branding-text);">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТРЕНЕР *</label>
+        <select name="trainer_id" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">— выберите —</option>
+          {% for trainer in trainers %}
+          <option value="{{ trainer.id }}">{{ trainer }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ЛОКАЦИЯ *</label>
+        <select name="location_id" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">— выберите —</option>
+          {% for loc in locations %}
+          <option value="{{ loc.id }}">{{ loc.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <p x-show="!oneTime" class="text-[11px] mb-4" style="color: var(--branding-text-secondary);">
+      Занятие будет повторяться каждую неделю в выбранный день
+    </p>
+    <p x-show="oneTime" x-cloak class="text-[11px] mb-4" style="color: var(--branding-primary);">
+      Разовое занятие — только на выбранную дату, не повторяется
+    </p>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      ДОБАВИТЬ В РАСПИСАНИЕ
+    </button>
+  </form>
+</div>

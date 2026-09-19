@@ -1,0 +1,20 @@
+{% load money %}
+<div class="p-5 sm:p-7" data-settlement-reconciliation>
+  {% include 'dashboard/trainers/_settlement_back.html' %}
+  <h2 class="text-[20px] font-bold mb-4">Сверка исторического изменения</h2>
+  <p class="mb-4 text-[13px]">Факт за {{ case.effective_on|date:'d.m.Y' }} изменился после начальной сверки на {{ case.opening.effective_on|date:'d.m.Y' }}. Изменение начисленного или выданного: {{ case.suggested_delta|money }} ₽.</p>
+  {% if not success %}<form hx-post="{% url 'trainer-settlement-reconciliation' trainer.id case.id %}" hx-target="#slide-over" x-data="{action: {% if action == 'adjust_opening' %}'adjust_opening'{% else %}'already_included'{% endif %}}">
+    {% csrf_token %}<input type="hidden" name="source_key" value="{{ source_key }}">
+    <label class="block mb-4 text-[13px]">Решение
+      <select name="action" aria-label="Решение" x-model="action" class="block w-full min-h-11 px-3 mt-1" style="border:1px solid var(--branding-border);">
+        <option value="already_included">Факт уже учтён в начальном остатке</option><option value="adjust_opening">Добавить исправление остатка</option>
+      </select>
+    </label>
+    <div x-show="action === 'adjust_opening'">
+      <label class="block mb-4 text-[13px]">Изменение остатка, ₽<input name="value" value="{{ value }}" type="number" step="0.01" inputmode="decimal" class="block w-full min-h-11 px-3 mt-1" style="border:1px solid var(--branding-border);"></label>
+      <label class="block mb-4 text-[13px]">Дата исправления<input name="effective_on" value="{{ effective_on }}" type="date" class="block w-full min-h-11 px-3 mt-1" style="border:1px solid var(--branding-border);"></label>
+    </div>
+    <label class="block mb-4 text-[13px]">Основание решения<textarea name="reason" required maxlength="1000" rows="2" class="block w-full p-3 mt-1" style="border:1px solid var(--branding-border);">{{ reason }}</textarea></label>
+    <button class="w-full min-h-11 px-4 py-3 font-semibold" style="background:var(--branding-primary);color:var(--branding-on-primary);">Сохранить решение</button>
+  </form>{% endif %}
+</div>

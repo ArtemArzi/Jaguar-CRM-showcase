@@ -1,0 +1,60 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">
+      {% if grade %}РЕДАКТИРОВАТЬ УРОВЕНЬ{% else %}НОВЫЙ УРОВЕНЬ{% endif %}
+    </h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  <p class="text-[12px] mb-4" style="color: var(--branding-text-secondary);">
+    Система: <strong>{{ grade_system.discipline }}</strong>
+  </p>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="{% if grade %}{% url 'grade-edit' grade_system.id grade.id %}{% else %}{% url 'grade-form' grade_system.id %}{% endif %}"
+        hx-target="#slide-over" hx-swap="innerHTML">
+    {% csrf_token %}
+
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НАЗВАНИЕ *</label>
+        <input type="text" name="name" value="{{ grade.name|default:'' }}" required
+               placeholder="Например: Белый пояс, Котёнок, 10 кю"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ПОРЯДОК *</label>
+        <input type="number" name="order" value="{{ grade.order|default:'0' }}" required
+               min="0" max="999"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+        <p class="text-[10px] mt-1" style="color: var(--branding-text-secondary);">Определяет последовательность: 0 — начальный, 1 — следующий, и т.д.</p>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">МИНИМУМ ТРЕНИРОВОК</label>
+        <input type="number" name="min_trainings" value="{{ grade.min_trainings|default:'0' }}"
+               min="0" max="9999"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+        <p class="text-[10px] mt-1" style="color: var(--branding-text-secondary);">Сколько тренировок ученик должен посетить перед допуском к этому уровню. 0 — без требований.</p>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      {% if grade %}СОХРАНИТЬ{% else %}СОЗДАТЬ УРОВЕНЬ{% endif %}
+    </button>
+  </form>
+</div>

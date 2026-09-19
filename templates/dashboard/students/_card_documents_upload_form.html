@@ -1,0 +1,48 @@
+<form {% if item.upload_url or documents_upload_url %}hx-post="{{ item.upload_url|default:documents_upload_url }}"{% endif %}
+      hx-target="{{ documents_target|default:'#slide-over' }}"
+      hx-encoding="multipart/form-data"
+      method="post"
+      enctype="multipart/form-data"
+      class="p-4"
+      style="border: 1px solid var(--branding-border); background-color: rgba(0, 0, 0, 0.02);">
+  {% csrf_token %}
+  <input type="hidden" name="document_type_id" value="{{ item.document_type.id }}">
+
+  <div class="flex items-start gap-2 mb-3">
+    <i data-lucide="paperclip" class="w-4 h-4 mt-0.5 shrink-0" style="color: #888888;"></i>
+    <div class="min-w-0">
+      <div class="text-[12px] font-semibold mb-1" style="color: var(--branding-text);">
+        {{ item.document_type.name }}
+      </div>
+      <p class="text-[11px]" style="color: var(--branding-text-secondary);">
+        Поддерживаются PDF, JPEG, PNG, WEBP. До 10 МБ.
+      </p>
+    </div>
+  </div>
+
+  <label class="block mb-3">
+    <span class="block text-[11px] font-semibold tracking-[1px] mb-2" style="color: #888888;">ФАЙЛ</span>
+    <input type="file"
+           name="file"
+           required
+           accept=".pdf,image/jpeg,image/png,image/webp,application/pdf"
+           class="block w-full text-[12px]"
+           style="color: var(--branding-text);">
+  </label>
+
+  <div class="flex items-center gap-2 flex-wrap">
+    <button type="submit"
+            class="h-9 px-4 flex items-center gap-1.5 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-dark); color: var(--branding-on-primary);">
+      <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+      ЗАГРУЗИТЬ ФАЙЛ
+    </button>
+    <button type="button"
+            onclick="this.closest('[id^=student-document-upload-]').classList.add('hidden')"
+            class="h-9 px-4 flex items-center gap-1.5 text-[11px] font-semibold tracking-[1px]"
+            style="border: 1.5px solid var(--branding-border); color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      ОТМЕНА
+    </button>
+  </div>
+</form>

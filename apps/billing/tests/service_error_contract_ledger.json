@@ -1,0 +1,925 @@
+{
+  "completed_slice": 4,
+  "direct_raises": {
+    "apps.billing.service_modules._shared:_apply_updates": [
+      {
+        "code": "invalid_fields",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_update_training_type_rejects_unknown_fields_without_mutation",
+        "message": "Некорректные данные запроса"
+      }
+    ],
+    "apps.billing.service_modules._shared:_validate_positive_money": [
+      {
+        "code": "invalid_money_amount",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_training_type_rejects_non_positive_drop_in_without_mutation",
+        "message": "Сумма должна быть больше нуля"
+      }
+    ],
+    "apps.billing.service_modules.catalog:_resolve_grade_system_id_for_training_type": [
+      {
+        "code": "grade_system_not_found",
+        "evidence": "apps/billing/tests/test_services.py::TestCreateTrainingType::test_create_training_type_rejects_foreign_grade_system",
+        "message": "Система грейдов не найдена"
+      }
+    ],
+    "apps.billing.service_modules.catalog:_resolve_personal_booking_trainer_id": [
+      {
+        "code": "personal_booking_trainer_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_personal_tariff_trainer_scope_rejects_foreign_rows_without_mutation",
+        "message": "Тренер персонального тарифа не найден"
+      }
+    ],
+    "apps.billing.service_modules.catalog:_lock_catalog_training_type": [
+      {
+        "code": "training_type_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_rejects_missing_or_foreign_training_type_without_mutation",
+        "message": "Тип тренировки не найден"
+      }
+    ],
+    "apps.billing.service_modules.catalog:_lock_catalog_trainers": [
+      {
+        "code": "personal_booking_trainer_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_personal_tariff_trainer_scope_rejects_foreign_rows_without_mutation",
+        "message": "Тренер персонального тарифа не найден"
+      }
+    ],
+    "apps.billing.service_modules.catalog:_validate_discount_value": [
+      {
+        "code": "invalid_discount_type",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_discount_type_missing_rows_and_unknown_fields_are_stable",
+        "message": "Некорректный тип скидки"
+      },
+      {
+        "code": "invalid_discount_value",
+        "evidence": "apps/billing/tests/test_services.py::TestCreateDiscount::test_create_discount_rejects_invalid_value",
+        "message": "Процентная скидка должна быть от 0 до 100"
+      },
+      {
+        "code": "invalid_discount_value",
+        "evidence": "apps/billing/tests/test_services.py::TestCreateDiscount::test_create_discount_rejects_invalid_value",
+        "message": "Фиксированная скидка не может быть отрицательной"
+      }
+    ],
+    "apps.billing.service_modules.catalog:_validate_training_type_kind": [
+      {
+        "code": "invalid_training_type_kind",
+        "evidence": "apps/billing/tests/test_services.py::TestCreateTrainingType::test_create_training_type_rejects_invalid_kind",
+        "message": "Некорректный формат тренировки"
+      }
+    ],
+    "apps.billing.service_modules.catalog:create_tariff": [
+      {
+        "code": "invalid_tariff_scope",
+        "evidence": "apps/billing/tests/test_services.py::TestCreateTariff::test_create_tariff_rejects_unknown_scope",
+        "message": "Некорректная область действия тарифа"
+      },
+      {
+        "code": "location_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_rejects_foreign_location_and_invalid_payout_without_mutation",
+        "message": "Локация не найдена"
+      },
+      {
+        "code": "location_required",
+        "evidence": "apps/billing/tests/test_services.py::TestCreateTariff::test_create_tariff_location_scope_requires_location",
+        "message": "Location is required for location-scoped tariff"
+      }
+    ],
+    "apps.billing.service_modules.catalog:_set_personal_booking_default": [
+      {
+        "code": "tariff_revision_contract_sealed",
+        "evidence": "apps/billing/tests/test_catalog_name_only.py::test_personal_booking_default_helper_rejects_sealed_source",
+        "message": "Версия тарифа зафиксирована изменением цены."
+      }
+    ],
+    "apps.billing.service_modules.catalog:update_tariff": [
+      {
+        "code": "personal_booking_catalog_scope_changed",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_update_tariff_rolls_back_when_trainer_scope_changes_after_lock",
+        "message": "Область персонального тарифа изменилась во время блокировки"
+      },
+      {
+        "code": "personal_offer_default_clear_required",
+        "evidence": "apps/attendance/tests/test_personal_offer_policy.py::test_default_flip_is_atomic_scope_switch_and_deactivation_requires_clear",
+        "message": "Сначала снимите назначение personal-тарифа в той же операции"
+      },
+      {
+        "code": "personal_drop_in_contract_change_blocked",
+        "evidence": "apps/attendance/tests/test_personal_drop_in.py::TestPersonalDropInBooking::test_scheduled_drop_in_blocks_tariff_contract_change_with_safe_lock",
+        "message": "Нельзя менять тариф, пока есть открытая разовая персоналка"
+      },
+      {
+        "code": "tariff_contract_change_blocked",
+        "evidence": "apps/billing/tests/test_api.py::TestTariffAPI::test_update_tariff_blocks_component_changes_with_pending_payment",
+        "message": "Нельзя менять финансовые правила тарифа с активными или ожидающими продажами"
+      },
+      {
+        "code": "tariff_revision_contract_sealed",
+        "evidence": "apps/billing/tests/test_catalog_name_only.py::test_sealed_source_and_current_tariff_reject_name_only_edit",
+        "message": "Версия тарифа зафиксирована изменением цены. Для новой цены используйте действие «Изменить цену»."
+      },
+      {
+        "code": "tariff_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_update_tariff_missing_foreign_unknown_fields_and_empty_components",
+        "message": "Тариф не найден"
+      },
+      {
+        "code": "tariff_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_update_tariff_rolls_back_when_row_disappears_after_catalog_lock",
+        "message": "Тариф не найден"
+      }
+    ],
+    "apps.billing.service_modules.catalog:update_training_type": [
+      {
+        "code": "personal_drop_in_contract_change_blocked",
+        "evidence": "apps/attendance/tests/test_personal_drop_in.py::TestPersonalDropInBooking::test_scheduled_drop_in_blocks_training_type_contract_change_with_safe_lock",
+        "message": "Нельзя менять контракт типа тренировки, пока есть открытая разовая персоналка"
+      },
+      {
+        "code": "training_type_kind_locked",
+        "evidence": "apps/billing/tests/test_services.py::TestCreateTrainingType::test_update_training_type_rejects_kind_change_after_use",
+        "message": "Формат типа тренировки нельзя менять после использования"
+      },
+      {
+        "code": "training_type_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_update_training_type_missing_or_foreign_is_stable_not_found",
+        "message": "Тип тренировки не найден"
+      }
+    ],
+    "apps.billing.service_modules.debts:_assert_personal_drop_in_payment_path": [
+      {
+        "audit_before_failure": "none",
+        "code": "personal_drop_in_payment_not_actionable",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_payment_path_rejects_non_actionable_booking_id",
+        "message": "Разовая персоналка недоступна для этой оплаты",
+        "mutations_before_failure": "none; the helper only locks and reads booking rows",
+        "rollback": "not applicable; no write or audit event is attempted"
+      },
+      {
+        "audit_before_failure": "the existing pending payment link or bank-order origin remains unchanged",
+        "code": "personal_drop_in_payment_pending",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_payment_path_rejects_existing_pending_origin",
+        "message": "Разовая персоналка уже ожидает оплату",
+        "mutations_before_failure": "none; the helper only locks and reads booking and pending-origin rows",
+        "rollback": "not applicable; the duplicate guard rejects before financial writes"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "personal_drop_in_use_booking_payment",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_payment_path_requires_booking_payment_without_booking_id",
+        "message": "Используйте оплату из карточки разовой персоналки",
+        "mutations_before_failure": "none; the helper only locks and reads booking rows",
+        "rollback": "not applicable; no write or audit event is attempted"
+      }
+    ],
+    "apps.billing.service_modules.debts:_validate_complete_personal_debt_terms": [
+      {
+        "audit_before_failure": "none",
+        "code": "personal_terms_debt_mismatch",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::test_complete_personal_debt_terms_mismatch_has_no_mutation",
+        "message": "Personal booking debt does not match immutable terms",
+        "mutations_before_failure": "none; the helper compares locked debt rows with immutable terms snapshots",
+        "rollback": "not applicable; no write or audit event is attempted"
+      }
+    ],
+    "apps.billing.service_modules.debts:_attach_debts_to_subscription": [
+      {
+        "audit_before_failure": "none",
+        "code": "debt_exceeds_subscription_limit",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_attach_rejects_debts_over_subscription_limit_without_mutation",
+        "message": "Выбранных долгов больше, чем тренировок в абонементе",
+        "mutations_before_failure": "none after payroll and debt-row locks",
+        "rollback": "not applicable; the capacity guard runs before check-in, subscription, debt or audit writes"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "debt_not_found",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_attach_rejects_missing_selected_debt_without_mutation",
+        "message": "Долг не найден",
+        "mutations_before_failure": "none after payroll and debt-row locks",
+        "rollback": "not applicable; tenant/debt selection fails before mutable rows are changed"
+      },
+      {
+        "audit_before_failure": "transient lifecycle evidence is created before the late-settlement guard, then rolled back with the caller transaction",
+        "code": "drop_in_payment_required",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_attach_late_drop_in_requires_payment_and_rolls_back",
+        "message": "Late drop-in settlement requires its payment",
+        "mutations_before_failure": "the helper has updated the check-in, subscription and debt and attempted its lifecycle event before the missing-payment guard",
+        "rollback": "the surrounding atomic sale transaction rolls back every transient check-in, subscription, debt and audit mutation"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "subscription_component_not_found",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_attach_rejects_unmatched_subscription_component_without_mutation",
+        "message": "Нет подходящего компонента абонемента для закрытия долга",
+        "mutations_before_failure": "none after debt/component locks and component selection",
+        "rollback": "not applicable; the guard runs before check-in, subscription, debt or audit writes"
+      }
+    ],
+    "apps.billing.service_modules.debts:_reserve_debts_for_payment": [
+      {
+        "audit_before_failure": "none",
+        "code": "debt_exceeds_subscription_limit",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_reserve_rejects_debts_over_subscription_limit_without_mutation",
+        "message": "Выбранных долгов больше, чем тренировок в абонементе",
+        "mutations_before_failure": "none after selected debt locks",
+        "rollback": "not applicable; the capacity guard runs before reservation updates and audit inserts"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "debt_not_found",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_reserve_rejects_missing_selected_debt_without_mutation",
+        "message": "Долг не найден",
+        "mutations_before_failure": "none after selected debt locks",
+        "rollback": "not applicable; tenant/debt selection fails before reservation updates and audit inserts"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "personal_drop_in_use_booking_payment",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_reserve_requires_personal_booking_payment_without_mutation",
+        "message": "Используйте оплату из карточки разовой персоналки",
+        "mutations_before_failure": "none after selected debt and booking reads",
+        "rollback": "not applicable; the booking guard runs before reservation updates and audit inserts"
+      }
+    ],
+    "apps.billing.service_modules.debts:_validate_personal_drop_in_debt_tariff_contract": [
+      {
+        "audit_before_failure": "none",
+        "code": "drop_in_debt_tariff_mismatch",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_drop_in_debt_tariff_mismatch_has_no_mutation",
+        "message": "Выбранный долг за персоналку можно закрыть только его исходным тарифом",
+        "mutations_before_failure": "none; the contract helper only reads debt and tariff state",
+        "rollback": "not applicable; no write or audit event is attempted"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "drop_in_tariff_contract_changed",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_drop_in_debt_changed_tariff_price_has_no_mutation",
+        "message": "Тариф персоналки изменился после записи и не может закрыть этот долг",
+        "mutations_before_failure": "none after booking, trainer, tariff and component locks",
+        "rollback": "not applicable; no write or audit event is attempted"
+      }
+    ],
+    "apps.billing.service_modules.debts:assert_payment_reservation_capacity": [
+      {
+        "audit_before_failure": "none",
+        "code": "debt_exceeds_subscription_limit",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_capacity_rejects_debts_over_finite_subscription_limit_without_mutation",
+        "message": "Выбранных долгов больше, чем тренировок в абонементе",
+        "mutations_before_failure": "none; the allocator uses only virtual visit capacity",
+        "rollback": "not applicable; no reservation, component or audit row is changed"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "subscription_component_limit_exceeded",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_capacity_rejects_exhausted_component_without_mutation",
+        "message": "Лимит компонента абонемента исчерпан",
+        "mutations_before_failure": "none; the allocator uses only virtual visit capacity",
+        "rollback": "not applicable; no reservation, component or audit row is changed"
+      }
+    ],
+    "apps.billing.service_modules.debts:record_debt_settlement_events": [
+      {
+        "audit_before_failure": "none",
+        "code": "debt_not_found",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_settlement_events_reject_missing_debt_without_audit",
+        "message": "Долг не найден",
+        "mutations_before_failure": "none after tenant-scoped debt lookup",
+        "rollback": "not applicable; bulk event creation is not reached"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "payment_not_found",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_settlement_events_reject_foreign_payment_without_audit",
+        "message": "Оплата не найдена",
+        "mutations_before_failure": "none; the payment club guard runs before debt lookup",
+        "rollback": "not applicable; bulk event creation is not reached"
+      }
+    ],
+    "apps.billing.service_modules.debts:write_off_debt": [
+      {
+        "audit_before_failure": "none",
+        "code": "debt_already_resolved",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_write_off_rejects_resolved_debt_without_mutation",
+        "message": "Долг уже закрыт",
+        "mutations_before_failure": "none after tenant debt lock",
+        "rollback": "the atomic block exits before debt state or write-off/lifecycle event persistence"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "debt_payment_pending",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_write_off_rejects_pending_payment_reservation_without_mutation",
+        "message": "Долг уже привязан к ожидающей оплате",
+        "mutations_before_failure": "none after tenant debt lock",
+        "rollback": "the atomic block exits before debt state or write-off/lifecycle event persistence"
+      },
+      {
+        "audit_before_failure": "none",
+        "code": "writeoff_reason_required",
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_write_off_requires_reason_without_mutation",
+        "message": "Write-off reason is required",
+        "mutations_before_failure": "none; blank-reason validation runs before the transaction",
+        "rollback": "not applicable; no debt or audit write is attempted"
+      }
+    ],
+    "apps.billing.service_modules.entitlements:_allocate_component_paid_amounts": [
+      {
+        "code": "component_discount_allocation_required",
+        "evidence": "apps/billing/tests/test_entitlement_error_contracts.py::test_component_allocation_rejects_discount_that_rounds_component_to_zero",
+        "message": "Скидка не может обнулить стоимость компонента пакета"
+      },
+      {
+        "code": "invalid_component_total",
+        "evidence": "apps/billing/tests/test_entitlement_error_contracts.py::test_component_allocation_rejects_non_positive_component_total",
+        "message": "Сумма компонентов должна быть больше нуля"
+      }
+    ],
+    "apps.billing.service_modules.entitlements:_deduct_subscription_component_for_checkin": [
+      {
+        "code": "subscription_component_credits_exhausted",
+        "evidence": "apps/billing/tests/test_entitlement_error_contracts.py::test_deduct_component_rejects_exhausted_credit_without_mutation",
+        "message": "В компоненте абонемента закончились посещения"
+      }
+    ],
+    "apps.billing.service_modules.entitlements:_resolve_package_owner_trainer_id_for_components": [
+      {
+        "code": "package_owner_trainer_required",
+        "evidence": "apps/billing/tests/test_entitlement_error_contracts.py::test_package_owner_resolvers_preserve_distinct_required_messages",
+        "message": "Для персонального или мини-группового компонента укажите владельца пакета"
+      }
+    ],
+    "apps.billing.service_modules.entitlements:_resolve_package_owner_trainer_id_for_sale": [
+      {
+        "code": "package_owner_trainer_required",
+        "evidence": "apps/billing/tests/test_entitlement_error_contracts.py::test_package_owner_resolvers_preserve_distinct_required_messages",
+        "message": "Для персонального или мини-группового пакета укажите владельца пакета"
+      }
+    ],
+    "apps.billing.service_modules.tariff_components:_validate_component_payloads": [
+      {
+        "code": "component_amount_sum_mismatch",
+        "evidence": "apps/billing/tests/test_api.py::TestTariffAPI::test_create_tariff_api_rejects_component_sum_mismatch",
+        "message": "Сумма компонентов должна совпадать с ценой пакета"
+      },
+      {
+        "code": "component_credits_required",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_component_business_errors_roll_back_tariff",
+        "message": "Укажите количество посещений для компонента"
+      },
+      {
+        "code": "component_weekly_limit_required",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_component_business_errors_roll_back_tariff",
+        "message": "Укажите недельный лимит для компонента"
+      },
+      {
+        "code": "invalid_component_scope",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_component_business_errors_roll_back_tariff",
+        "message": "Некорректная область действия компонента"
+      },
+      {
+        "code": "location_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_component_foreign_training_and_location_are_hidden",
+        "message": "Локация не найдена"
+      },
+      {
+        "code": "location_required",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_component_business_errors_roll_back_tariff",
+        "message": "Локация обязательна для компонента"
+      },
+      {
+        "code": "package_components_required",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_update_tariff_missing_foreign_unknown_fields_and_empty_components",
+        "message": "Добавьте хотя бы один компонент пакета"
+      },
+      {
+        "code": "training_type_not_found",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_component_foreign_training_and_location_are_hidden",
+        "message": "Тип тренировки не найден"
+      }
+    ],
+    "apps.billing.service_modules.tariff_components:_validate_payout_policy": [
+      {
+        "code": "invalid_payout_policy",
+        "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_rejects_foreign_location_and_invalid_payout_without_mutation",
+        "message": "Некорректная политика выплаты"
+      }
+    ]
+  },
+  "interfaces": {
+    "create_discount": {
+      "error_sources": [
+        "apps.billing.service_modules.catalog:_validate_discount_value"
+      ],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "Validation branches run before insert; a missing-club insert is transient only.",
+        "rollback": "The caller-visible database contains no Discount row after every characterized failure."
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_discount_missing_club_integrity_error_has_no_row",
+          "exception": "django.db.IntegrityError",
+          "mutations_before_failure": "attempted Discount insert only",
+          "rollback": "inner transaction rolls back; no row remains",
+          "trigger": "nonexistent club foreign key"
+        }
+      ],
+      "owner": "apps.billing.service_modules.catalog"
+    },
+    "create_expense": {
+      "error_sources": [
+        "apps.billing.service_modules._shared:_validate_positive_money"
+      ],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "Expense is only an unsaved in-memory instance.",
+        "rollback": "full_clean failures happen before save; no row exists."
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_expense_missing_rows_unknown_fields_and_model_validation_are_stable",
+          "exception": "django.core.exceptions.ValidationError",
+          "mutations_before_failure": "unsaved Expense instance with blank name",
+          "rollback": "no save occurred; no row remains",
+          "trigger": "model validation rejects blank required name"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_expense_missing_club_validation_error_has_no_row",
+          "exception": "django.core.exceptions.ValidationError",
+          "mutations_before_failure": "unsaved Expense instance with nonexistent club id",
+          "rollback": "no save occurred; no row remains",
+          "trigger": "model validation rejects missing club foreign key"
+        }
+      ],
+      "owner": "apps.billing.service_modules.expenses"
+    },
+    "create_tariff": {
+      "error_sources": [
+        "apps.billing.service_modules._shared:_validate_positive_money",
+        "apps.billing.service_modules.catalog:_lock_catalog_training_type",
+        "apps.billing.service_modules.catalog:create_tariff",
+        "apps.billing.service_modules.tariff_components:_validate_component_payloads",
+        "apps.billing.service_modules.tariff_components:_validate_payout_policy"
+      ],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "Pre-atomic validation has no mutation; component validation may follow a transient Tariff insert.",
+        "rollback": "The create atomic block rolls back the Tariff and all component rows."
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_malformed_component_exceptions_and_tariff_rollback",
+          "exception": "KeyError | ValueError | decimal.InvalidOperation",
+          "mutations_before_failure": "transient Tariff insert before component normalization",
+          "rollback": "atomic create removes the transient Tariff and component family",
+          "trigger": "missing or malformed component training_type_id/paid_amount_basis"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_tariff_database_constraints_escape_and_roll_back",
+          "exception": "django.db.IntegrityError",
+          "mutations_before_failure": "attempted Tariff insert",
+          "rollback": "database constraint failure rolls back the atomic create",
+          "trigger": "negative duration_days or trainings_limit"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_negative_component_counts_raise_integrity_error_and_roll_back_create_and_update",
+          "exception": "django.db.IntegrityError",
+          "mutations_before_failure": "transient Tariff insert followed by attempted TariffComponent insert",
+          "rollback": "outer create transaction removes the Tariff and invalid component family",
+          "trigger": "negative finite credits_total or weekly_limit passes truthiness validation and reaches a positive-integer database constraint"
+        }
+      ],
+      "owner": "apps.billing.service_modules.catalog"
+    },
+    "create_training_type": {
+      "error_sources": [
+        "apps.billing.service_modules._shared:_validate_positive_money",
+        "apps.billing.service_modules.catalog:_resolve_grade_system_id_for_training_type",
+        "apps.billing.service_modules.catalog:_validate_training_type_kind"
+      ],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "Validation branches have no mutation; database failures may follow an attempted insert.",
+        "rollback": "No TrainingType row remains after the characterized database failures."
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_services.py::TestCreateTrainingType::test_training_type_unique_slug_per_club",
+          "exception": "django.db.IntegrityError",
+          "mutations_before_failure": "attempted duplicate TrainingType insert",
+          "rollback": "duplicate insert is rejected; the original row is unchanged",
+          "trigger": "duplicate club/slug unique constraint"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_create_training_type_missing_club_integrity_error_has_no_row",
+          "exception": "django.db.IntegrityError",
+          "mutations_before_failure": "attempted TrainingType insert",
+          "rollback": "foreign-key failure leaves no row",
+          "trigger": "nonexistent club foreign key"
+        }
+      ],
+      "owner": "apps.billing.service_modules.catalog"
+    },
+    "delete_expense": {
+      "error_sources": [],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "tenant and deleted_at lookup runs before soft delete",
+        "rollback": "lookup failure performs no mutation"
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_expense_missing_rows_unknown_fields_and_model_validation_are_stable",
+          "exception": "apps.billing.models.Expense.DoesNotExist",
+          "mutations_before_failure": "none",
+          "rollback": "not applicable; lookup fails before soft delete",
+          "trigger": "missing, foreign-club or already-soft-deleted expense"
+        }
+      ],
+      "owner": "apps.billing.service_modules.expenses"
+    },
+    "debt_state": {
+      "error_sources": [],
+      "exposed_via_facade": false,
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "none; the interface reads only resolved_at, resolution_type and settlement_payment_id",
+        "rollback": "not applicable; the interface is a pure state projection"
+      },
+      "implicit": [],
+      "owner": "apps.billing.service_modules.debts",
+      "return_contract": {
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_debt_state_returns_exact_open_reserved_and_resolved_values",
+        "identity": "Returns the exact state string: open, reserved, resolved:unknown, or resolved:<resolution_type>."
+      }
+    },
+    "record_debt_lifecycle_event": {
+      "error_sources": [],
+      "exposed_via_facade": false,
+      "failure_state": {
+        "audit_before_failure": "none; full_clean runs before save",
+        "mutations_before_failure": "an unsaved DebtLifecycleEvent snapshot is assembled in memory",
+        "rollback": "validation and save failures persist no lifecycle row; callers retain their surrounding transaction semantics"
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_rejects_invalid_event_type_without_audit",
+          "exception": "django.core.exceptions.ValidationError",
+          "message": "event_type: Значения 'invalid-event' нет среди допустимых вариантов.",
+          "message_marker": "Значения 'invalid-event' нет среди допустимых вариантов.",
+          "mutations_before_failure": "unsaved lifecycle snapshot only",
+          "rollback": "full_clean rejects the event before save",
+          "trigger": "event_type is not a DebtLifecycleEvent.EventType value"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_rejects_foreign_debt_without_audit",
+          "exception": "django.core.exceptions.ValidationError",
+          "message": "debt: Debt must belong to the same club as lifecycle event.",
+          "message_marker": "Debt must belong to the same club as lifecycle event.",
+          "mutations_before_failure": "unsaved lifecycle snapshot only",
+          "rollback": "model clean rejects the cross-tenant debt before save",
+          "trigger": "debt.club_id differs from club_id"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_rejects_foreign_payment_and_subscription_without_audit",
+          "exception": "django.core.exceptions.ValidationError",
+          "message": "payment: Payment must belong to the same club as lifecycle event.",
+          "message_marker": "Payment must belong to the same club as lifecycle event.",
+          "mutations_before_failure": "unsaved lifecycle snapshot only",
+          "rollback": "model clean rejects the cross-tenant payment before save",
+          "trigger": "payment.club_id differs from club_id"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_rejects_foreign_payment_and_subscription_without_audit",
+          "exception": "django.core.exceptions.ValidationError",
+          "message": "subscription: Subscription must belong to the same club as lifecycle event.",
+          "message_marker": "Subscription must belong to the same club as lifecycle event.",
+          "mutations_before_failure": "unsaved lifecycle snapshot only",
+          "rollback": "model clean rejects the cross-tenant subscription before save",
+          "trigger": "subscription.club_id differs from club_id"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_rejects_missing_optional_foreign_keys_without_audit",
+          "exception": "django.core.exceptions.ValidationError",
+          "message": "actor: Значение \"999999\" не является допустимым для поля \"id\" объекта типа пользователь",
+          "message_marker": "объекта типа пользователь",
+          "mutations_before_failure": "unsaved lifecycle snapshot only",
+          "rollback": "foreign-key validation rejects the missing actor before save",
+          "trigger": "actor_user_id does not identify a user"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_rejects_missing_optional_foreign_keys_without_audit",
+          "exception": "apps.billing.models.Payment.DoesNotExist",
+          "message": "Payment matching query does not exist.",
+          "mutations_before_failure": "unsaved lifecycle snapshot only",
+          "rollback": "model clean dereferences the missing payment and exits before save",
+          "trigger": "payment_id does not identify a payment"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_rejects_missing_optional_foreign_keys_without_audit",
+          "exception": "apps.billing.models.Subscription.DoesNotExist",
+          "message": "Subscription matching query does not exist.",
+          "mutations_before_failure": "unsaved lifecycle snapshot only",
+          "rollback": "model clean dereferences the missing subscription and exits before save",
+          "trigger": "subscription_id does not identify a subscription"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_integrity_error_at_save_escapes_without_audit",
+          "exception": "django.db.IntegrityError",
+          "message": "forced lifecycle save failure",
+          "mutations_before_failure": "full_clean completed for the unsaved lifecycle snapshot",
+          "rollback": "the save exception propagates unchanged and no lifecycle row persists",
+          "trigger": "database constraint or foreign-key race fails at the save seam"
+        }
+      ],
+      "owner": "apps.billing.service_modules.debts",
+      "return_contract": {
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_lifecycle_event_returns_none_and_persists_exact_snapshot",
+        "identity": "Returns None after persisting exactly one DebtLifecycleEvent snapshot."
+      }
+    },
+    "record_debt_settlement_events": {
+      "error_sources": [
+        "apps.billing.service_modules.debts:record_debt_settlement_events"
+      ],
+      "exposed_via_facade": false,
+      "failure_state": {
+        "audit_before_failure": "none on rejection; successful calls create one settlement row per unique debt id",
+        "mutations_before_failure": "tenant payment and debt membership checks precede bulk_create",
+        "rollback": "BusinessLogicError branches persist no settlement rows"
+      },
+      "implicit": [],
+      "owner": "apps.billing.service_modules.debts",
+      "return_contract": {
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_settlement_events_success_returns_none_and_persists_one_event_per_debt",
+        "identity": "Returns None; empty input is a no-op and non-empty input writes one event per unique debt id."
+      }
+    },
+    "assert_payment_reservation_capacity": {
+      "error_sources": [
+        "apps.billing.service_modules.debts:assert_payment_reservation_capacity"
+      ],
+      "exposed_via_facade": false,
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "none; component credits and weekly use are simulated in memory",
+        "rollback": "not applicable; both success and rejection paths are read-only"
+      },
+      "implicit": [],
+      "owner": "apps.billing.service_modules.debts",
+      "return_contract": {
+        "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_capacity_success_returns_none_without_mutation",
+        "identity": "Returns None when all visits fit; otherwise raises the ledgered BusinessLogicError without mutation."
+      }
+    },
+    "is_training_type_kind_locked": {
+      "error_sources": [],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "read-only exists queries",
+        "rollback": "not applicable; interface is read-only"
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_training_type_kind_lock_returns_false_for_missing_and_foreign_rows",
+          "exception": "none",
+          "mutations_before_failure": "none",
+          "rollback": "not applicable",
+          "trigger": "missing or foreign-club training type returns False"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_services.py::TestCreateTrainingType::test_update_training_type_rejects_kind_change_after_use",
+          "exception": "none",
+          "mutations_before_failure": "none",
+          "rollback": "not applicable",
+          "trigger": "Tariff usage returns True at the first branch"
+        },
+        {
+          "audit_before_failure": "none",
+          "exception": "none",
+          "mutations_before_failure": "none",
+          "rollback": "not applicable",
+          "trigger": "Subscription branch",
+          "unreachable_proof": "Every Subscription has a protected non-null Tariff; the preceding same-training-type Tariff exists query is therefore already True."
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_training_type_kind_lock_detects_schedule_usage",
+          "exception": "none",
+          "mutations_before_failure": "none",
+          "rollback": "not applicable",
+          "trigger": "Schedule usage returns True"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_training_type_kind_lock_detects_checkin_usage_without_schedule_match",
+          "exception": "none",
+          "mutations_before_failure": "none",
+          "rollback": "not applicable",
+          "trigger": "Checkin usage returns True when no Schedule branch matches"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_training_type_kind_lock_detects_trainer_rate_usage",
+          "exception": "none",
+          "mutations_before_failure": "none",
+          "rollback": "not applicable",
+          "trigger": "TrainerRate usage returns True"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_training_type_kind_lock_detects_component_package_allocation_usage",
+          "exception": "none",
+          "mutations_before_failure": "none",
+          "rollback": "not applicable",
+          "trigger": "TrainerPackageAllocation usage for a component training type returns True"
+        }
+      ],
+      "owner": "apps.billing.service_modules.catalog"
+    },
+    "update_discount": {
+      "error_sources": [
+        "apps.billing.service_modules._shared:_apply_updates",
+        "apps.billing.service_modules.catalog:_validate_discount_value"
+      ],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "tenant lookup and validation precede field assignment/save",
+        "rollback": "lookup or validation failure leaves the row unchanged"
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_discount_type_missing_rows_and_unknown_fields_are_stable",
+          "exception": "apps.billing.models.Discount.DoesNotExist",
+          "mutations_before_failure": "none",
+          "rollback": "lookup fails before mutation",
+          "trigger": "missing or foreign-club discount"
+        }
+      ],
+      "owner": "apps.billing.service_modules.catalog"
+    },
+    "update_expense": {
+      "error_sources": [
+        "apps.billing.service_modules._shared:_apply_updates",
+        "apps.billing.service_modules._shared:_validate_positive_money"
+      ],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "Invalid-field checks precede assignment; full_clean can see an in-memory update before save.",
+        "rollback": "No database row changes on lookup, validation or full_clean failure."
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_expense_missing_rows_unknown_fields_and_model_validation_are_stable",
+          "exception": "apps.billing.models.Expense.DoesNotExist",
+          "mutations_before_failure": "none",
+          "rollback": "lookup fails before mutation",
+          "trigger": "missing, foreign-club or soft-deleted expense"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_expense_missing_rows_unknown_fields_and_model_validation_are_stable",
+          "exception": "django.core.exceptions.ValidationError",
+          "mutations_before_failure": "in-memory Expense field assignment only",
+          "rollback": "full_clean fails before save; stored row remains unchanged",
+          "trigger": "updated model violates required-field validation"
+        }
+      ],
+      "owner": "apps.billing.service_modules.expenses"
+    },
+    "update_tariff": {
+      "error_sources": [
+        "apps.billing.service_modules._shared:_apply_updates",
+        "apps.billing.service_modules._shared:_validate_positive_money",
+        "apps.billing.service_modules.catalog:_lock_catalog_training_type",
+        "apps.billing.service_modules.catalog:update_tariff",
+        "apps.billing.service_modules.tariff_components:_validate_component_payloads",
+        "apps.billing.service_modules.tariff_components:_validate_payout_policy"
+      ],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "All contract/component comparisons precede save; attempted constrained saves occur inside the outer atomic decorator.",
+        "rollback": "The outer atomic decorator restores the Tariff and active component family."
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_update_tariff_malformed_component_and_constraint_failures_roll_back",
+          "exception": "KeyError | ValueError | decimal.InvalidOperation",
+          "mutations_before_failure": "component normalization only; no save",
+          "rollback": "outer atomic leaves Tariff fields and active components unchanged",
+          "trigger": "missing or malformed component training_type_id/paid_amount_basis"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_update_tariff_malformed_component_and_constraint_failures_roll_back",
+          "exception": "django.db.IntegrityError",
+          "mutations_before_failure": "attempted constrained Tariff update",
+          "rollback": "outer atomic restores the original duration and components",
+          "trigger": "negative duration_days"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_catalog_error_contracts.py::test_negative_component_counts_raise_integrity_error_and_roll_back_create_and_update",
+          "exception": "django.db.IntegrityError",
+          "mutations_before_failure": "existing active components are transiently deactivated before the invalid TariffComponent insert",
+          "rollback": "outer update transaction restores the original active component family",
+          "trigger": "negative finite credits_total or weekly_limit passes truthiness validation and reaches a positive-integer database constraint"
+        }
+      ],
+      "owner": "apps.billing.service_modules.catalog"
+    },
+    "update_training_type": {
+      "error_sources": [
+        "apps.billing.service_modules._shared:_apply_updates",
+        "apps.billing.service_modules._shared:_validate_positive_money",
+        "apps.billing.service_modules.catalog:_resolve_grade_system_id_for_training_type",
+        "apps.billing.service_modules.catalog:_validate_training_type_kind",
+        "apps.billing.service_modules.catalog:update_training_type"
+      ],
+      "failure_state": {
+        "audit_before_failure": "none",
+        "mutations_before_failure": "All characterized failures occur before save.",
+        "rollback": "The atomic decorator leaves the TrainingType row unchanged."
+      },
+      "implicit": [],
+      "owner": "apps.billing.service_modules.catalog"
+    },
+    "write_off_debt": {
+      "error_sources": [
+        "apps.billing.service_modules.debts:write_off_debt"
+      ],
+      "failure_state": {
+        "audit_before_failure": "Reason validation runs before any transaction; all later rejection branches run before a write-off or lifecycle event is persisted.",
+        "mutations_before_failure": "The tenant debt lock is acquired before state changes; payroll, resolved and pending-payment checks precede the DebtWriteOffEvent insert.",
+        "rollback": "The outer atomic block restores the debt and leaves no write-off or lifecycle event if an in-transaction failure occurs."
+      },
+      "implicit": [
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_write_off_rejects_foreign_debt_without_mutation",
+          "exception": "apps.billing.models.Debt.DoesNotExist",
+          "message": "Debt matching query does not exist.",
+          "mutations_before_failure": "none after payroll-scope locking",
+          "rollback": "lookup exits the atomic block without changing the debt or persisting an event",
+          "trigger": "missing or foreign-club debt id"
+        },
+        {
+          "audit_before_failure": "none",
+          "code": "payroll_period_closed",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_write_off_rejects_closed_payroll_with_exact_dynamic_message",
+          "exception": "apps.common.exceptions.BusinessLogicError",
+          "message_pattern": "^Период выплат закрыт: 2026-06-01 — 2026-06-10\\. Новые изменения выплат за этот период недоступны\\.$",
+          "mutations_before_failure": "none after tenant debt locking",
+          "rollback": "the payroll guard exits before debt mutation or audit persistence",
+          "trigger": "the debt check-in date belongs to a closed trainer payroll period"
+        },
+        {
+          "audit_before_failure": "none",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_write_off_missing_actor_validation_rolls_back_debt_and_audits",
+          "exception": "django.core.exceptions.ValidationError",
+          "message": "written_off_by: Значение \"999999\" не является допустимым для поля \"id\" объекта типа пользователь",
+          "message_marker": "объекта типа пользователь",
+          "mutations_before_failure": "the Debt is transiently marked resolved before DebtWriteOffEvent.full_clean",
+          "rollback": "the outer atomic block restores resolved_at and resolution_type and leaves no write-off or lifecycle event",
+          "trigger": "written_off_by_id does not identify a user"
+        },
+        {
+          "audit_before_failure": "one pre-existing DebtWriteOffEvent",
+          "evidence": "apps/billing/tests/test_debt_error_contracts.py::TestDebtErrorContracts::test_write_off_duplicate_audit_validation_rolls_back_debt_and_preserves_existing_audit",
+          "exception": "django.core.exceptions.ValidationError",
+          "message": "__all__: Debt write off event с такими значениями полей Club и Debt уже существует.",
+          "message_marker": "Debt write off event с такими значениями полей Club и Debt уже существует.",
+          "mutations_before_failure": "the Debt is transiently marked resolved before the duplicate audit constraint is validated",
+          "rollback": "the outer atomic block restores the debt, preserves exactly the pre-existing audit, and creates no lifecycle event",
+          "trigger": "a DebtWriteOffEvent already exists for the same club and debt"
+        }
+      ],
+      "owner": "apps.billing.service_modules.debts",
+      "return_contract": {
+        "evidence": "apps/billing/tests/test_services.py::TestWriteOffDebt::test_write_off_debt_records_audit_snapshot",
+        "identity": "Returns the same locked Debt instance after persisting resolved state, write-off audit and lifecycle audit."
+      }
+    }
+  }
+}

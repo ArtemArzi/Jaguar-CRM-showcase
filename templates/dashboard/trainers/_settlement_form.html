@@ -1,0 +1,42 @@
+{% load money %}
+<div class="p-5 sm:p-7" data-settlement-form>
+  {% include 'dashboard/trainers/_settlement_back.html' %}
+  <h2 class="text-[20px] font-bold mb-4">{{ title }}</h2>
+  {% if not success %}
+  {% if kind == 'payout' %}<p class="mb-4 text-[13px]">Запишите деньги, которые уже передали тренеру. Начисления за занятия сохранятся.</p>{% endif %}
+  <form hx-post="{% url 'trainer-settlement-form' trainer.id %}" hx-target="#slide-over">
+    {% csrf_token %}
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <input type="hidden" name="source_key" value="{{ source_key }}">
+    <input type="hidden" name="expected_fingerprint" value="{{ summary.fingerprint }}">
+    {% if reversal %}<input type="hidden" name="reversal_of_id" value="{{ reversal.id }}"><p class="mb-4">Выплата №{{ reversal.id }} · {{ reversal.amount|money }} ₽ · {{ reversal.effective_on|date:'d.m.Y' }}</p>{% endif %}
+    <label class="block mb-4 text-[13px]">Дата записи
+      <input type="date" name="effective_on" required value="{{ effective_on }}" max="{{ today }}"
+             hx-post="{% url 'trainer-settlement-form' trainer.id %}" hx-vals='{"action":"options"}' hx-trigger="change" hx-include="closest form" hx-target="#slide-over"
+             class="block w-full min-h-11 px-3 mt-1" style="border:1px solid var(--branding-border);">
+    </label>
+    {% if kind == 'payout_reversal' %}
+      <p class="mb-4 text-[13px]">Отмена вернёт {{ reversal.amount|money }} ₽ в расчётный остаток с выбранной даты.</p>
+    {% else %}
+    <label class="block mb-4 text-[13px]">{% if kind == 'payout' %}Сумма выплаты, ₽{% elif kind == 'opening' %}Долг или аванс на начало дня, ₽{% else %}Изменение начального остатка, ₽{% endif %}
+      <input name="value" inputmode="decimal" type="number" step="0.01" {% if kind == 'payout' %}min="0.01"{% endif %} required value="{{ value }}"
+             class="block w-full min-h-11 px-3 mt-1" style="border:1px solid var(--branding-border);">
+    </label>
+    {% if kind != 'payout' %}<p class="mb-4 text-[13px]">Положительная сумма — долг клуба. Отрицательная — аванс тренеру. Ноль нужно подтвердить явно.</p>{% endif %}
+    {% endif %}
+    {% if kind == 'payout' %}
+    <label class="block mb-4 text-[13px]">Способ выплаты
+      <select name="payment_method" aria-label="Способ выплаты" class="block w-full min-h-11 px-3 mt-1" style="border:1px solid var(--branding-border);">
+        <option value="cash" {% if payment_method == 'cash' %}selected{% endif %}>Наличные</option><option value="transfer" {% if payment_method == 'transfer' %}selected{% endif %}>Перевод</option>
+      </select>
+    </label>
+    {% if summary.balance is not None %}<p class="mb-4">Остаток на дату: {{ summary.balance|money }} ₽</p>{% endif %}
+    <label class="flex items-start gap-2 mb-4 text-[13px]"><input name="confirm_advance" value="1" type="checkbox" {% if confirm_advance %}checked{% endif %}>Подтверждаю аванс сверх остатка или запись исторической выплаты до начальной сверки</label>
+    {% endif %}
+    <label class="block mb-4 text-[13px]">Основание записи
+      <textarea name="reason" required rows="2" maxlength="1000" class="block w-full p-3 mt-1" style="border:1px solid var(--branding-border);">{{ reason }}</textarea>
+    </label>
+    <button type="submit" class="w-full min-h-11 py-3 px-4 font-semibold" style="background:var(--branding-primary);color:var(--branding-on-primary);">{% if kind == 'payout' %}Записать выплату{% elif kind == 'opening' %}Подтвердить начальный остаток{% elif kind == 'payout_reversal' %}Отменить выплату{% else %}Сохранить исправление{% endif %}</button>
+  </form>
+  {% endif %}
+</div>

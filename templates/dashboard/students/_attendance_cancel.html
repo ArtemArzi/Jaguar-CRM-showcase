@@ -1,0 +1,13 @@
+<div class="p-5 sm:p-7" data-attendance-cancel>
+  {% include 'dashboard/students/_operation_header.html' with title='Отменить отметку' %}
+  <p class="mb-4 text-[14px]">{{ checkin.date|date:'d.m.Y' }} · {{ checkin.schedule.start_time|time:'H:i' }} · {{ checkin.training_type.name }}</p>
+  <p class="mb-4 text-[13px]">Будет отменено только это посещение и его связанные последствия. Кредит возвращается в исходный абонемент, если его состояние допускает отмену.</p>
+  <form hx-disabled-elt="#slide-over form button[type='submit']" hx-post="{% url 'student-attendance-cancel' student.id checkin.id %}" hx-target="#slide-over">
+    {% csrf_token %}<input type="hidden" name="command_key" value="{{ command_key }}">
+    <label class="block mb-5 text-[13px]">Причина отмены
+      <textarea name="reason" required maxlength="1000" rows="2" class="block w-full p-3 mt-1"
+                style="border: 1px solid var(--branding-border);">{{ reason }}</textarea>
+    </label>
+    <button type="submit" class="w-full min-h-11 px-4 py-3 font-semibold" style="background: var(--branding-primary); color: var(--branding-on-primary);">Отменить отметку</button>
+  </form>
+</div>

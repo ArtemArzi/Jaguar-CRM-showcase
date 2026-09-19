@@ -1,0 +1,65 @@
+{% load partials %}
+
+<div class="flex flex-wrap gap-1 mb-6" style="border-bottom: 2px solid var(--branding-border);">
+
+  <a href="{% url 'settings-general' %}"
+     hx-get="{% url 'settings-general' %}"
+     hx-target="#content" hx-push-url="true"
+     class="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 text-[13px] font-medium whitespace-nowrap -mb-[2px] cursor-pointer"
+     title="Название клуба, цвета, часовой пояс, заморозка"
+     style="{% if active_tab == 'general' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}border-bottom: 2px solid transparent; color: var(--branding-text-secondary);{% endif %}">
+    <i data-lucide="settings" class="w-4 h-4"></i>
+    Общие
+  </a>
+
+  <a href="{% url 'settings-billing' %}"
+     hx-get="{% url 'settings-billing' %}"
+     hx-target="#content" hx-push-url="true"
+     class="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 text-[13px] font-medium whitespace-nowrap -mb-[2px] cursor-pointer"
+     title="Типы тренировок, тарифы, скидки, разовые посещения"
+     style="{% if active_tab == 'billing' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}border-bottom: 2px solid transparent; color: var(--branding-text-secondary);{% endif %}">
+    <i data-lucide="receipt-text" class="w-4 h-4"></i>
+    Оплаты и тарифы
+  </a>
+
+  <a href="{% url 'settings-catalog' %}"
+     hx-get="{% url 'settings-catalog' %}"
+     hx-target="#content" hx-push-url="true"
+     class="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 text-[13px] font-medium whitespace-nowrap -mb-[2px] cursor-pointer"
+     title="Залы клуба и система аттестации учеников"
+     style="{% if active_tab == 'catalog' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}border-bottom: 2px solid transparent; color: var(--branding-text-secondary);{% endif %}">
+    <i data-lucide="layers" class="w-4 h-4"></i>
+    Залы и грейды
+  </a>
+
+  <a href="{% url 'settings-documents' %}"
+     hx-get="{% url 'settings-documents' %}"
+     hx-target="#content" hx-push-url="true"
+     class="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 text-[13px] font-medium whitespace-nowrap -mb-[2px] cursor-pointer"
+     title="Типы документов клуба, обязательность и области действия"
+     style="{% if active_tab == 'documents' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}border-bottom: 2px solid transparent; color: var(--branding-text-secondary);{% endif %}">
+    <i data-lucide="file-text" class="w-4 h-4"></i>
+    Документы
+  </a>
+
+  <a href="{% url 'settings-notifications' %}"
+     hx-get="{% url 'settings-notifications' %}"
+     hx-target="#content" hx-push-url="true"
+     class="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 text-[13px] font-medium whitespace-nowrap -mb-[2px] cursor-pointer"
+     title="Push-уведомления, тихие часы, шаблоны сообщений"
+     style="{% if active_tab == 'notifications' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}border-bottom: 2px solid transparent; color: var(--branding-text-secondary);{% endif %}">
+    <i data-lucide="bell" class="w-4 h-4"></i>
+    Уведомления
+  </a>
+
+  <a href="{% url 'settings-kiosk' %}"
+     hx-get="{% url 'settings-kiosk' %}"
+     hx-target="#content" hx-push-url="true"
+     class="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 text-[13px] font-medium whitespace-nowrap -mb-[2px] cursor-pointer"
+     title="Планшет для отметки учеников на занятии"
+     style="{% if active_tab == 'kiosk' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}border-bottom: 2px solid transparent; color: var(--branding-text-secondary);{% endif %}">
+    <i data-lucide="tablet" class="w-4 h-4"></i>
+    Киоск
+  </a>
+
+</div>

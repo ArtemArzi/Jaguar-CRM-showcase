@@ -1,0 +1,79 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">ШАБЛОН УВЕДОМЛЕНИЯ</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="{% url 'notification-template-form' tmpl.id %}" hx-target="#slide-over">
+    {% csrf_token %}
+
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">КОГДА ОТПРАВЛЯЕТСЯ</label>
+        <div class="w-full h-10 px-3 flex items-center text-[13px]"
+             style="border: 1px solid var(--branding-border); color: var(--branding-text); background-color: rgba(0,0,0,0.03);">
+          {{ trigger_label }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ЗАГОЛОВОК *</label>
+        <input type="text" name="title_template" value="{{ tmpl.title_template }}" required
+               maxlength="200"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТЕКСТ УВЕДОМЛЕНИЯ *</label>
+        <textarea name="body_template" required rows="4"
+                  maxlength="500"
+                  class="w-full px-3 py-2 text-[13px] border-2 bg-transparent outline-none resize-y"
+                  style="border-color: var(--branding-border); color: var(--branding-text);">{{ tmpl.body_template }}</textarea>
+      </div>
+
+      {% if supports_days_before %}
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ДНЕЙ ДО ОКОНЧАНИЯ *</label>
+        <input type="number" name="days_before" value="{{ days_before_value }}" required
+               min="1" max="365"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+      {% endif %}
+
+      <div class="p-3 rounded" style="background-color: rgba(0,0,0,0.03); border: 1px solid var(--branding-border);">
+        <p class="text-[11px] font-semibold mb-1" style="color: var(--branding-text-secondary);">ПОДСТАНОВКИ</p>
+        <p class="text-[11px] mb-1" style="color: var(--branding-text-secondary);">Эти значения автоматически заменятся при отправке уведомления; получатель зависит от типа шаблона</p>
+        <p class="text-[12px]" style="color: var(--branding-text-secondary);">{{ placeholder_hint }}</p>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <label class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ОТПРАВЛЯТЬ УВЕДОМЛЕНИЕ</label>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" name="is_enabled" value="on" {% if tmpl.is_enabled %}checked{% endif %}
+                 class="sr-only peer">
+          <div class="w-11 h-6 rounded-full peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+               style="background-color: rgba(0,0,0,0.15);"
+               :style="$el.previousElementSibling.checked ? 'background-color: var(--branding-primary)' : ''">
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      СОХРАНИТЬ
+    </button>
+  </form>
+</div>

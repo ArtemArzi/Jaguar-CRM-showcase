@@ -1,0 +1,33 @@
+{% load money %}
+<section class="mb-6" data-trainer-settlements>
+  <div class="flex flex-wrap gap-2 mb-4">
+    {% for preset in settlement_presets %}<a href="{% url 'trainer-detail' trainer.id %}?period={{ preset.key }}" hx-get="{% url 'trainer-detail' trainer.id %}?period={{ preset.key }}" hx-target="#content" hx-push-url="true" class="min-h-11 px-3 py-3 text-[13px]" style="border:1px solid var(--branding-border);">{{ preset.label }}</a>{% endfor %}
+    <span class="px-3 py-3 text-[13px]">Даты: {{ date_from|date:'d.m.Y' }} — {{ date_to|date:'d.m.Y' }}</span>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+    <div class="p-4" style="border:1px solid var(--branding-border);"><p class="text-[13px] mb-2">Начислено за период</p><strong data-settlement-earned>{{ settlement.earned|money }} ₽</strong></div>
+    <div class="p-4" style="border:1px solid var(--branding-border);"><p class="text-[13px] mb-2">Выдано за период</p><strong data-settlement-paid>{{ settlement.paid|money }} ₽</strong>{% if settlement.reversed %}<p class="text-[13px] mt-2">Отменено: {{ settlement.reversed|money }} ₽</p>{% endif %}</div>
+    <div class="p-4" style="border:1px solid var(--branding-border);"><p class="text-[13px] mb-2">Осталось на {{ date_to|date:'d.m.Y' }}</p>
+      {% if settlement.status == 'known' %}<strong data-settlement-balance>{% if settlement.balance < 0 %}Аванс: {% endif %}{{ settlement.balance|money }} ₽</strong>
+      {% elif settlement.status == 'before_opening' %}<p class="text-[13px]">Расчётный остаток до сверки неизвестен.</p>
+      {% elif settlement.status == 'needs_reconciliation' %}<p class="text-[13px]">Нужно сверить исторические изменения. Новые выплаты заблокированы.</p>
+      {% else %}<p class="text-[13px]">Расчёты до даты перехода не сверены.</p>{% endif %}
+    </div>
+  </div>
+  <div class="flex flex-wrap gap-3 mb-4">
+    {% if not settlement.opening %}{% if settlements_enabled %}<button hx-get="{% url 'trainer-settlement-form' trainer.id %}?kind=opening" hx-target="#slide-over" onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden');document.getElementById('slide-over').classList.remove('translate-x-full')" class="min-h-11 px-4 py-3 font-semibold" style="border:1px solid var(--branding-border);">Начальная сверка</button>{% endif %}
+    {% else %}
+      {% if settlements_enabled and not settlement.unresolved_ids %}<button hx-get="{% url 'trainer-settlement-form' trainer.id %}?kind=payout" hx-target="#slide-over" onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden');document.getElementById('slide-over').classList.remove('translate-x-full')" class="min-h-11 px-4 py-3 font-semibold" style="background:var(--branding-primary);color:var(--branding-on-primary);">Записать выплату</button>{% endif %}
+      <button hx-get="{% url 'trainer-settlement-form' trainer.id %}?kind=opening_correction" hx-target="#slide-over" onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden');document.getElementById('slide-over').classList.remove('translate-x-full')" class="min-h-11 px-4 py-3 text-[13px]" style="border:1px solid var(--branding-border);">Исправить начальную сверку</button>
+    {% endif %}
+  </div>
+  {% for case in settlement_cases %}<div class="p-3 mb-3 text-[13px]" style="border:1px solid #C98A22;">Изменение №{{ case.id }} за {{ case.effective_on|date:'d.m.Y' }}: {{ case.suggested_delta|money }} ₽
+    <button hx-get="{% url 'trainer-settlement-reconciliation' trainer.id case.id %}" hx-target="#slide-over" onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden');document.getElementById('slide-over').classList.remove('translate-x-full')" class="min-h-11 px-3 py-3 font-semibold">Сверить изменение</button>
+  </div>{% endfor %}
+  <details><summary class="cursor-pointer min-h-11 py-3 font-semibold text-[13px]">Журнал расчётов</summary>
+    {% for entry in settlement_entries %}<div class="py-3 text-[13px]" style="border-top:1px solid var(--branding-border);">
+      <p>{{ entry.effective_on|date:'d.m.Y' }} · {{ entry.get_kind_display }} · {{ entry.balance_delta|money }} ₽</p><p>{{ entry.reason }}</p>
+      {% if entry.kind == 'payout' and not entry.reversal %}<button hx-get="{% url 'trainer-settlement-form' trainer.id %}?kind=payout_reversal&amp;reversal_of_id={{ entry.id }}" hx-target="#slide-over" onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden');document.getElementById('slide-over').classList.remove('translate-x-full')" class="min-h-11 py-3 font-semibold">Отменить выплату №{{ entry.id }}</button>{% endif %}
+    </div>{% empty %}<p class="py-3 text-[13px]">Расчётных записей пока нет.</p>{% endfor %}
+  </details>
+</section>

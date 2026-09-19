@@ -1,0 +1,798 @@
+{% extends "base.html" %}
+{% load partials money static %}
+
+{% block title %}Финансовые операции - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+{% now "Y-m-d" as today_iso %}
+
+{% include "dashboard/billing/_nav_tabs.html" %}
+
+<div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+  <div>
+    <h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px]" style="color: var(--branding-text);">Оплаты — финансовые операции</h1>
+    <p class="text-[12px]" style="color: var(--branding-text-secondary);">Верификация оплат и банковских исключений — отдельными очередями.</p>
+  </div>
+</div>
+
+<nav aria-label="Очереди финансовых операций" class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
+  <a href="{{ manual_queue_url }}" hx-get="{{ manual_queue_url }}" hx-target="#content" hx-push-url="true"
+     class="min-h-12 px-4 py-3 flex items-center justify-between text-[12px] font-semibold"
+     style="{% if current_queue == 'manual' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    <span>Требуют подтверждения</span><span>{{ pending_count }}</span>
+  </a>
+  <a href="{{ online_queue_url }}" hx-get="{{ online_queue_url }}" hx-target="#content" hx-push-url="true"
+     class="min-h-12 px-4 py-3 flex items-center justify-between text-[12px] font-semibold"
+     style="{% if current_queue == 'online' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    <span>Проблемы онлайн-оплаты</span><span>{{ online_action_count }}</span>
+  </a>
+  <a href="{{ history_queue_url }}" hx-get="{{ history_queue_url }}" hx-target="#content" hx-push-url="true"
+     class="min-h-12 px-4 py-3 flex items-center justify-between text-[12px] font-semibold"
+     style="{% if current_queue == 'history' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    <span>История</span><span aria-hidden="true">→</span>
+  </a>
+</nav>
+
+<form method="get" action="/dashboard/billing/payments/"
+      hx-get="/dashboard/billing/payments/" hx-target="#content" hx-push-url="true"
+      class="mb-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-2 p-3"
+      style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+  <input type="hidden" name="queue" value="{{ current_queue }}">
+  <select name="trainer_id" class="soft-input soft-select h-11 text-[12px]">
+    <option value="">Все тренеры</option>
+    {% for trainer in trainers %}
+    <option value="{{ trainer.id }}" {% if current_trainer_id == trainer.id|stringformat:"s" %}selected{% endif %}>{{ trainer }}</option>
+    {% endfor %}
+  </select>
+  {% if current_queue == 'online' %}
+  <input type="hidden" name="method" value="online">
+  <div class="h-11 px-3 flex items-center text-[12px]" style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">Метод: онлайн</div>
+  {% else %}
+  <select name="method" class="soft-input soft-select h-11 text-[12px]">
+    <option value="">Все методы</option>
+    <option value="cash" {% if current_method == 'cash' %}selected{% endif %}>Наличные</option>
+    <option value="transfer" {% if current_method == 'transfer' %}selected{% endif %}>Перевод</option>
+    {% if current_queue == 'history' %}
+    <option value="online" {% if current_method == 'online' %}selected{% endif %}>Онлайн</option>
+    {% endif %}
+  </select>
+  {% endif %}
+  <select name="context" class="soft-input soft-select h-11 text-[12px]">
+    <option value="">Любой контекст</option>
+    <option value="group" {% if current_context == 'group' %}selected{% endif %}>Группа</option>
+    <option value="personal" {% if current_context == 'personal' %}selected{% endif %}>Персональная тренировка</option>
+    <option value="renewal" {% if current_context == 'renewal' %}selected{% endif %}>Продление</option>
+    <option value="other" {% if current_context == 'other' %}selected{% endif %}>Другое</option>
+  </select>
+  <input type="date" name="date_from" value="{{ current_date_from }}" aria-label="Дата от" class="soft-input h-11 text-[12px]">
+  <input type="date" name="date_to" value="{{ current_date_to }}" aria-label="Дата до" class="soft-input h-11 text-[12px]">
+  <div class="flex gap-2">
+    <button type="submit" class="h-11 flex-1 px-3 text-[11px] font-semibold" style="background-color: var(--branding-dark); color: var(--branding-on-primary);">ПРИМЕНИТЬ</button>
+    <a href="/dashboard/billing/payments/?queue={{ current_queue }}" hx-get="/dashboard/billing/payments/?queue={{ current_queue }}" hx-target="#content" hx-push-url="true"
+       class="h-11 px-3 inline-flex items-center text-[11px] font-semibold" style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">СБРОСИТЬ</a>
+  </div>
+</form>
+
+{% if current_queue == 'history' %}
+<div class="flex flex-wrap gap-2 mb-5">
+  <a href="{{ history_all_url }}" hx-get="{{ history_all_url }}" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold" style="{% if not current_status %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">ВСЕ</a>
+  <a href="{{ history_confirmed_url }}" hx-get="{{ history_confirmed_url }}" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold" style="{% if current_status == 'confirmed' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">ПОДТВЕРЖДЕНЫ</a>
+  <a href="{{ history_rejected_url }}" hx-get="{{ history_rejected_url }}" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold" style="{% if current_status == 'rejected' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">ОТКЛОНЕНЫ</a>
+</div>
+{% endif %}
+
+{% if payment_error %}
+<div role="alert"
+     class="mb-4 px-4 py-3 text-[13px] font-semibold"
+     style="background-color: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A;">
+  {{ payment_error }}
+</div>
+{% endif %}
+
+{% if standalone_refund_cases %}
+<section class="mb-5" style="border: 1.5px solid #C62828; background-color: #FFEBEE;">
+  <div class="px-4 py-3" style="border-bottom: 1px solid #EF9A9A;">
+    <h2 class="text-[15px] font-bold" style="color: #8E0000;">Возвраты без бухгалтерского завершения</h2>
+    <p class="text-[12px]" style="color: #8E0000;">Провайдер уже сообщил о возврате. Проверьте сумму и явно решите судьбу оставшихся посещений.</p>
+  </div>
+  <div class="divide-y" style="border-color: #EF9A9A;">
+    {% for refund_case in standalone_refund_cases %}
+    <div class="px-4 py-3">
+      <div class="mb-2 text-[13px] font-semibold" style="color: var(--branding-text);">
+        Кейс #{{ refund_case.id }} · заказ #{{ refund_case.order_id }} · {{ refund_case.order.student }}
+      </div>
+      <form hx-post="/dashboard/billing/payment-refund-cases/{{ refund_case.id }}/approve/"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+            hx-target="#content"
+            hx-disabled-elt="button"
+            class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[120px_180px_180px_130px_minmax(180px,1fr)_auto] gap-2">
+        <input type="hidden" name="refund_kind" value="{{ refund_case.refund_kind }}">
+        <input name="amount"
+               required
+               inputmode="decimal"
+               value="{% if refund_case.detected_amount %}{{ refund_case.detected_amount }}{% endif %}"
+               placeholder="Сумма"
+               class="h-10 px-2 text-[12px] outline-none"
+               style="border: 1px solid #EF9A9A; background-color: #FFFFFF;">
+        {% if refund_case.refund_kind == "full" %}
+        <select name="entitlement_action" required class="h-10 px-2 text-[12px]" style="border: 1px solid #EF9A9A; background-color: #FFFFFF;">
+          <option value="">Права посещений…</option>
+          <option value="keep_club_absorbs">Сохранить, расход клуба</option>
+          <option value="revoke_remaining">Отозвать остаток</option>
+        </select>
+        <select name="legacy_enrollment_action" class="h-10 px-2 text-[12px]" style="border: 1px solid #EF9A9A; background-color: #FFFFFF;">
+          <option value="">Связь с группой точная</option>
+          <option value="leave_unlinked">Старую запись не менять</option>
+          <option value="cancel_selected">Отменить выбранную запись</option>
+        </select>
+        <input name="legacy_enrollment_id"
+               inputmode="numeric"
+               placeholder="ID записи"
+               class="h-10 px-2 text-[12px] outline-none"
+               style="border: 1px solid #EF9A9A; background-color: #FFFFFF;">
+        {% else %}
+        <div class="sm:col-span-3 text-[12px] flex items-center" style="color: #8E0000;">Частичный возврат сохраняет текущие права и историю долга.</div>
+        {% endif %}
+        <input name="reason"
+               required
+               maxlength="500"
+               placeholder="Основание по выписке провайдера"
+               class="h-10 px-2 text-[12px] outline-none"
+               style="border: 1px solid #EF9A9A; background-color: #FFFFFF;">
+        <button type="submit" class="h-10 px-3 text-[11px] font-semibold" style="background-color: #C62828; color: #FFFFFF;">
+          ПРОВЕСТИ ВОЗВРАТ
+        </button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% if refund_previous_url or refund_next_url %}
+  <nav aria-label="Страницы возвратов без бухгалтерского завершения" class="px-4 py-3 flex items-center justify-between gap-3" style="border-top: 1px solid #EF9A9A;">
+    {% if refund_previous_url %}<a href="{{ refund_previous_url }}" hx-get="{{ refund_previous_url }}" hx-target="#content" hx-push-url="true" class="min-h-11 px-4 inline-flex items-center text-[12px] font-semibold" style="border: 1px solid #EF9A9A; color: #8E0000;">← Назад</a>{% else %}<span></span>{% endif %}
+    {% if refund_next_url %}<a href="{{ refund_next_url }}" hx-get="{{ refund_next_url }}" hx-target="#content" hx-push-url="true" class="min-h-11 px-4 inline-flex items-center text-[12px] font-semibold" style="border: 1px solid #EF9A9A; color: #8E0000;">Дальше →</a>{% else %}<span></span>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if payroll_action_refunds %}
+<section class="mb-5" style="border: 1.5px solid #6A1B9A; background-color: #F3E5F5;">
+  <div class="px-4 py-3" style="border-bottom: 1px solid #CE93D8;">
+    <h2 class="text-[15px] font-bold" style="color: #4A148C;">Возврат проведён — нужна дата корректировки зарплаты</h2>
+    <p class="text-[12px]" style="color: #6A1B9A;">Исходный payroll-период закрыт. Выберите конкретную открытую дату; система не переносит её автоматически.</p>
+  </div>
+  {% for refund in payroll_action_refunds %}
+  <form hx-post="/dashboard/billing/payment-refunds/{{ refund.id }}/complete-payroll/"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        hx-target="#content"
+        hx-disabled-elt="button"
+        class="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2">
+    <div class="text-[13px] flex-1" style="color: var(--branding-text);">
+      Возврат #{{ refund.id }} · {{ refund.payment.student }} · {{ refund.amount|money }}₽ · учтён {{ refund.accounting_date|date:"d.m.Y" }}
+    </div>
+    <input type="date" name="effective_date" required value="{{ today_iso }}"
+           class="h-10 px-2 text-[12px]" style="border: 1px solid #CE93D8; background-color: #FFFFFF;">
+    <button type="submit" class="h-10 px-3 text-[11px] font-semibold" style="background-color: #6A1B9A; color: #FFFFFF;">
+      СОЗДАТЬ КОРРЕКТИРОВКУ
+    </button>
+  </form>
+  {% endfor %}
+  {% if payroll_previous_url or payroll_next_url %}
+  <nav aria-label="Страницы зарплатных корректировок возвратов" class="px-4 py-3 flex items-center justify-between gap-3" style="border-top: 1px solid #CE93D8;">
+    {% if payroll_previous_url %}<a href="{{ payroll_previous_url }}" hx-get="{{ payroll_previous_url }}" hx-target="#content" hx-push-url="true" class="min-h-11 px-4 inline-flex items-center text-[12px] font-semibold" style="border: 1px solid #CE93D8; color: #4A148C;">← Назад</a>{% else %}<span></span>{% endif %}
+    {% if payroll_next_url %}<a href="{{ payroll_next_url }}" hx-get="{{ payroll_next_url }}" hx-target="#content" hx-push-url="true" class="min-h-11 px-4 inline-flex items-center text-[12px] font-semibold" style="border: 1px solid #CE93D8; color: #4A148C;">Дальше →</a>{% else %}<span></span>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if live_bank_payment_orders %}
+<section aria-labelledby="active-sbp-links-title"
+         class="mb-5"
+         style="border: 1.5px solid #1565C0; background-color: #E3F2FD;">
+  <div class="px-4 py-3" style="border-bottom: 1px solid #90CAF9;">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+      <div>
+        <h2 id="active-sbp-links-title" class="text-[15px] font-bold tracking-[0.4px]" style="color: #0D47A1;">Активные ссылки СБП</h2>
+        <p class="text-[12px]" style="color: #1565C0;">Отправьте ссылку ученику или откройте предпросмотр в новой вкладке.</p>
+      </div>
+      <span class="self-start sm:self-auto px-2.5 py-1 text-[11px] font-semibold" style="background-color: #FFFFFF; color: #1565C0;">
+        {{ live_bank_payment_order_count }} активных
+      </span>
+    </div>
+  </div>
+  <div class="divide-y" style="border-color: #90CAF9;">
+    {% for order in live_bank_payment_orders %}
+    <div class="px-4 py-3 grid grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-3 xl:items-center"
+         data-bank-payment-order-id="{{ order.id }}"
+         data-payment-url="{{ order.safe_staff_payment_url }}"
+         x-data="{
+           message: '',
+           qrSvg: '',
+           qrVisible: false,
+           qrLoading: false,
+           async copyLink(url) {
+             if (!url) { this.message = 'Ссылка ещё создаётся. Обновите страницу через несколько секунд.'; return false; }
+             try { await navigator.clipboard.writeText(url); this.message = 'Ссылка скопирована'; return true; }
+             catch (_) { this.message = 'Не удалось скопировать ссылку. Откройте предпросмотр и скопируйте адрес из браузера.'; return false; }
+           },
+           async shareLink(url) {
+             if (!url) { this.message = 'Ссылка ещё создаётся. Обновите страницу через несколько секунд.'; return; }
+             if (navigator.share) {
+               try { await navigator.share({ title: 'Ссылка на оплату через СБП', text: 'Ссылка на оплату через СБП', url: url }); this.message = 'Ссылка отправлена'; return; }
+               catch (error) { if (error && error.name === 'AbortError') return; }
+             }
+             await this.copyLink(url);
+           },
+           scrollQrIntoView(regionId) {
+             this.$nextTick(() => requestAnimationFrame(() => {
+               document.getElementById(regionId)?.scrollIntoView({
+                 block: 'end',
+                 inline: 'nearest',
+                 behavior: 'auto'
+               });
+             }));
+           },
+           async toggleQr(url, regionId) {
+             if (this.qrVisible) { this.qrVisible = false; return; }
+             if (!url) { this.message = 'Ссылка ещё создаётся. Обновите страницу через несколько секунд.'; return; }
+             this.qrVisible = true;
+             this.scrollQrIntoView(regionId);
+             if (this.qrSvg || this.qrLoading) return;
+             this.qrLoading = true;
+             try {
+               const { renderSVG } = await import('{% static "vendor/uqr.mjs" %}');
+               this.qrSvg = renderSVG(url, { ecc: 'M', border: 1 });
+               this.scrollQrIntoView(regionId);
+             } catch (_) {
+               this.qrVisible = false;
+               this.message = 'Не удалось показать QR. Используйте ссылку или предпросмотр.';
+             } finally {
+               this.qrLoading = false;
+             }
+           }
+         }">
+      <div class="min-w-0">
+        <div class="text-[13px] font-semibold truncate" style="color: var(--branding-text);">
+          {{ order.student }} · {{ order.amount_snapshot|money }}₽
+        </div>
+        <div class="text-[12px] truncate" style="color: var(--branding-text-secondary);">
+          {{ order.purpose_snapshot }}
+        </div>
+      </div>
+      <div class="text-[12px]" style="color: var(--branding-text-secondary);">
+        <div class="font-semibold" style="color: #0D47A1;">{{ order.admin_status_label }}</div>
+        <div>Действует до {{ order.expires_at|date:"d.m.Y H:i" }}</div>
+        <div role="status" aria-live="polite" class="mt-1 min-h-[18px]" x-text="message"></div>
+      </div>
+      <div class="flex flex-col sm:flex-row xl:flex-col gap-2">
+        {% if order.safe_staff_payment_url %}
+        <button type="button"
+                x-on:click="shareLink($el.closest('[data-payment-url]').dataset.paymentUrl)"
+                class="min-h-11 px-3 text-[11px] font-semibold"
+                style="background-color: #1565C0; color: #FFFFFF;">
+          ОТПРАВИТЬ ССЫЛКУ
+        </button>
+        <button type="button"
+                x-on:click="copyLink($el.closest('[data-payment-url]').dataset.paymentUrl)"
+                class="min-h-11 px-3 text-[11px] font-semibold"
+                style="background-color: #FFFFFF; color: #1565C0; border: 1px solid #90CAF9;">
+          СКОПИРОВАТЬ ССЫЛКУ
+        </button>
+        <button type="button"
+                x-on:click="toggleQr($el.closest('[data-payment-url]').dataset.paymentUrl, 'staff-payment-qr-{{ order.id }}')"
+                x-bind:aria-expanded="qrVisible.toString()"
+                aria-controls="staff-payment-qr-{{ order.id }}"
+                class="min-h-11 px-3 text-[11px] font-semibold"
+                style="background-color: #FFFFFF; color: #1565C0; border: 1px solid #90CAF9;">
+          <span x-text="qrVisible ? 'СКРЫТЬ QR' : 'ПОКАЗАТЬ QR'">ПОКАЗАТЬ QR</span>
+        </button>
+        <a href="{{ order.safe_staff_payment_url }}"
+           target="_blank"
+           rel="noreferrer"
+           class="min-h-11 px-3 inline-flex items-center justify-center text-[11px] font-semibold"
+           style="background-color: #FFFFFF; color: #1565C0; border: 1px solid #90CAF9;">
+          ОТКРЫТЬ ПРЕДПРОСМОТР
+        </a>
+        {% else %}
+        <span class="min-h-11 px-3 inline-flex items-center text-[11px] font-semibold" style="color: #1565C0;">
+          Ссылка ещё создаётся
+        </span>
+        {% endif %}
+      </div>
+      {% if order.safe_staff_payment_url %}
+      <div id="staff-payment-qr-{{ order.id }}"
+           x-show="qrVisible"
+           x-cloak
+           class="xl:col-span-3 flex justify-center sm:justify-end">
+        <div class="w-36 min-h-36 p-2 flex items-center justify-center text-center text-[11px]"
+             style="background-color: #FFFFFF; border: 1px solid #90CAF9; color: #1565C0;">
+          <span x-show="qrLoading">QR готовится</span>
+          <div x-show="qrSvg"
+               role="img"
+               aria-label="QR-код ссылки на оплату"
+               class="w-32 h-32 [&_svg]:w-full [&_svg]:h-full"
+               x-html="qrSvg"></div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if manual_review_orders %}
+<section aria-labelledby="manual-review-orders-title"
+         class="mb-5"
+         style="border: 1.5px solid #FFB300; background-color: #FFF8E1;">
+  <div class="px-4 py-3" style="border-bottom: 1px solid #FFE082;">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+      <div>
+        <h2 id="manual-review-orders-title" class="text-[15px] font-bold tracking-[0.4px]" style="color: #6D4C00;">Спорные онлайн-оплаты</h2>
+        <p class="text-[12px]" style="color: #8A5A00;">Сверьте оплату с банком или обработайте подтверждённый возврат</p>
+      </div>
+      <span class="self-start sm:self-auto px-2.5 py-1 text-[11px] font-semibold" style="background-color: #FFFFFF; color: #8A5A00;">
+        {{ manual_review_count }} на проверке
+      </span>
+    </div>
+  </div>
+  <div class="divide-y" style="border-color: #FFE082;">
+    {% for order in manual_review_orders %}
+    <div id="bank-order-{{ order.id }}"
+         class="px-4 py-3 grid grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-3 xl:items-center"
+         data-manual-review-order-id="{{ order.id }}">
+      <div class="min-w-0">
+        <div class="text-[13px] font-semibold truncate" style="color: var(--branding-text);">
+          #{{ order.id }} · {{ order.student }} · {{ order.amount_snapshot|money }}₽
+        </div>
+        <div class="text-[12px]" style="color: var(--branding-text-secondary);">
+          {{ order.purpose_snapshot }}
+        </div>
+        <div class="text-[12px] font-semibold" style="color: var(--branding-text);">
+          {{ order.workspace_context_label }} · {{ order.workspace_service_label }}
+        </div>
+        <div class="text-[12px]" style="color: var(--branding-text-secondary);">
+          Срок ссылки до {{ order.expires_at|date:"d.m.Y H:i" }} · источник: {{ order.get_source_display }}
+        </div>
+        <div class="text-[12px]" style="color: var(--branding-text-secondary);">
+          Создал: {{ order.created_by.get_full_name|default:order.created_by.username }} · {{ order.created_at|date:"d.m.Y H:i" }}
+        </div>
+        <div class="mt-1 text-[12px]" style="color: #8A5A00;">
+          {{ order.admin_review_summary }}
+        </div>
+        <div class="mt-2 px-3 py-2 text-[11px]" aria-label="Данные провайдера"
+             style="background-color: #F5F7FA; border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+          <div class="font-semibold" style="color: var(--branding-text);">Провайдер: {{ order.workspace_provider_name }}</div>
+          {% if order.workspace_provider_evidence_available %}
+          <div>Статус банка: {{ order.workspace_provider_status_label|default:"Не определён" }}</div>
+          {% if order.workspace_provider_reference %}<div>Референс: {{ order.workspace_provider_reference }}</div>{% endif %}
+          {% if order.workspace_provider_evidence_at %}<div>Получено: {{ order.workspace_provider_evidence_at|date:"d.m.Y H:i" }}</div>{% endif %}
+          {% else %}
+          <div>Подтверждённых данных провайдера нет. Запросите безопасную сверку.</div>
+          {% endif %}
+        </div>
+        <div class="mt-2 flex flex-wrap gap-2 text-[11px]">
+          <a href="{{ order.workspace_student_path }}" hx-get="{{ order.workspace_student_path }}" hx-target="#slide-over"
+             onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+             style="color: #1565C0;">Карточка ученика</a>
+          {% if order.workspace_schedule_path %}
+          <a href="{{ order.workspace_schedule_path }}" hx-get="{{ order.workspace_schedule_path }}" hx-target="#slide-over"
+             onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+             style="color: #1565C0;">Занятие</a>
+          {% endif %}
+          <a href="{{ order.workspace_resource_path }}" hx-get="{{ order.workspace_resource_path }}" hx-target="#content" hx-push-url="true" style="color: #1565C0;">{{ order.workspace_resource_label }}</a>
+        </div>
+      </div>
+      <div class="text-[12px]" style="color: var(--branding-text-secondary);">
+        {% if order.personal_payment_reservation %}
+        <div class="font-semibold" style="color: var(--branding-text);">Персональная бронь</div>
+        <div>{{ order.personal_payment_reservation.starts_at|date:"d.m.Y H:i" }}–{{ order.personal_payment_reservation.ends_at|date:"H:i" }} · {{ order.personal_payment_reservation.trainer }}</div>
+        <div>{{ order.personal_payment_reservation.location }} · {{ order.personal_payment_reservation.training_type }}</div>
+        <div>Статус: {{ order.personal_payment_reservation.get_status_display }}</div>
+        {% elif order.workspace_personal_booking %}
+        <div class="font-semibold" style="color: var(--branding-text);">Персональная запись</div>
+        <div>
+          {{ order.workspace_personal_booking.enrollment.starts_on|date:"d.m.Y" }} ·
+          {{ order.workspace_personal_booking.enrollment.schedule.start_time|time:"H:i" }}–{{ order.workspace_personal_booking.enrollment.schedule.end_time|time:"H:i" }} ·
+          {{ order.workspace_personal_booking.enrollment.schedule.trainer }}
+        </div>
+        <div>
+          {{ order.workspace_personal_booking.terms_snapshot.location_name_snapshot|default:order.workspace_personal_booking.enrollment.schedule.location }} ·
+          {{ order.workspace_personal_booking.terms_snapshot.training_type_name_snapshot|default:order.workspace_personal_booking.enrollment.schedule.training_type }}
+        </div>
+        <div>Статус: {{ order.workspace_personal_booking.get_state_display }}</div>
+        {% elif order.payment.target_schedule_id %}
+        <div class="font-semibold" style="color: var(--branding-text);">
+          {% if order.payment.target_training_group_id %}Каноническая группа{% else %}Группа{% endif %}:
+          {{ order.payment.target_group_name_snapshot|default:order.payment.target_schedule.group_name }}
+        </div>
+        <div>
+          {{ order.payment.target_location_name_snapshot }}
+          {% if order.payment.target_start_date %} · старт {{ order.payment.target_start_date|date:"d.m.Y" }}{% endif %}
+        </div>
+        <div>Время: {{ order.payment.target_schedule.start_time|time:"H:i" }}–{{ order.payment.target_schedule.end_time|time:"H:i" }}</div>
+        <div>Тренер занятия: {{ order.payment.target_trainer_name_snapshot|default:order.payment.target_schedule.trainer }}</div>
+        {% else %}
+        <div>Точный контекст услуги не найден</div>
+        {% endif %}
+      </div>
+      <div class="flex flex-col gap-2">
+        {% if order.is_full_refund_review %}
+        <form hx-post="/dashboard/billing/bank-payment-orders/{{ order.id }}/review/"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              hx-target="#content"
+              hx-disabled-elt="button"
+              class="flex flex-col sm:flex-row gap-2">
+          <input type="hidden" name="resolution" value="mark_refunded">
+          <select name="entitlement_action"
+                  required
+                  class="h-9 min-w-0 w-[220px] px-2 text-[12px]"
+                  style="border: 1px solid #FFE082; color: var(--branding-text); background-color: #FFFFFF;">
+            <option value="">Права посещений…</option>
+            <option value="keep_club_absorbs">Сохранить, расход клуба</option>
+            <option value="revoke_remaining">Отозвать остаток</option>
+          </select>
+          <select name="legacy_enrollment_action"
+                  class="h-9 min-w-0 w-[210px] px-2 text-[12px]"
+                  style="border: 1px solid #FFE082; color: var(--branding-text); background-color: #FFFFFF;">
+            <option value="">Связь с группой точная</option>
+            <option value="leave_unlinked">Старую запись не менять</option>
+            <option value="cancel_selected">Отменить запись по ID</option>
+          </select>
+          <input name="legacy_enrollment_id"
+                 inputmode="numeric"
+                 placeholder="ID записи"
+                 class="h-9 min-w-0 w-[100px] px-2 text-[12px] outline-none"
+                 style="border: 1px solid #FFE082; color: var(--branding-text); background-color: #FFFFFF;">
+          <input name="reason"
+                 required
+                 maxlength="500"
+                 placeholder="Комментарий"
+                 class="h-9 min-w-0 w-[180px] px-2 text-[12px] outline-none"
+                 style="border: 1px solid #FFE082; color: var(--branding-text); background-color: #FFFFFF;">
+          <button type="submit"
+                  class="h-9 px-3 text-[11px] font-semibold disabled:opacity-50"
+                  style="background-color: #E3F2FD; color: #1565C0;">
+            ОТМЕТИТЬ ВОЗВРАТ
+          </button>
+        </form>
+        {% elif order.is_partial_refund_review %}
+        <form hx-post="/dashboard/billing/bank-payment-orders/{{ order.id }}/review/"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              hx-target="#content"
+              hx-disabled-elt="button"
+              class="flex flex-col sm:flex-row gap-2">
+          <input type="hidden" name="resolution" value="mark_refunded_partially">
+          <input name="refund_amount"
+                 required
+                 inputmode="decimal"
+                 placeholder="Сумма"
+                 class="h-9 min-w-0 w-[100px] px-2 text-[12px] outline-none"
+                 style="border: 1px solid #FFE082; color: var(--branding-text); background-color: #FFFFFF;">
+          <input name="reason"
+                 required
+                 maxlength="500"
+                 placeholder="Комментарий"
+                 class="h-9 min-w-0 w-[180px] px-2 text-[12px] outline-none"
+                 style="border: 1px solid #FFE082; color: var(--branding-text); background-color: #FFFFFF;">
+          <button type="submit"
+                  class="h-9 px-3 text-[11px] font-semibold disabled:opacity-50"
+                  style="background-color: #E3F2FD; color: #1565C0;">
+            ЧАСТИЧНЫЙ ВОЗВРАТ
+          </button>
+        </form>
+        {% elif order.provider == "tochka" %}
+        <form hx-post="/dashboard/billing/bank-payment-orders/{{ order.id }}/reconcile/"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              hx-target="#content"
+              hx-disabled-elt="button">
+          <button type="submit"
+                  class="min-h-11 px-3 text-[11px] font-semibold disabled:opacity-50"
+                  style="background-color: #1565C0; color: #FFFFFF;">
+            СВЕРИТЬ С БАНКОМ
+          </button>
+        </form>
+        {% else %}
+        <form hx-post="/dashboard/billing/bank-payment-orders/{{ order.id }}/review/"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              hx-target="#content"
+              hx-disabled-elt="button"
+              class="flex flex-col sm:flex-row gap-2">
+          <input type="hidden" name="resolution" value="confirm_paid">
+          <input name="reason"
+                 required
+                 maxlength="500"
+                 placeholder="Комментарий"
+                 class="h-9 min-w-0 w-[180px] px-2 text-[12px] outline-none"
+                 style="border: 1px solid #FFE082; color: var(--branding-text); background-color: #FFFFFF;">
+          <button type="submit"
+                  class="h-9 px-3 text-[11px] font-semibold disabled:opacity-50"
+                  style="background-color: #E8F5E9; color: #2E7D32;">
+            ПОДТВЕРДИТЬ
+          </button>
+        </form>
+        <form hx-post="/dashboard/billing/bank-payment-orders/{{ order.id }}/review/"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              hx-target="#content"
+              hx-disabled-elt="button"
+              class="flex flex-col sm:flex-row gap-2">
+          <input type="hidden" name="resolution" value="reject">
+          <input name="reason"
+                 required
+                 maxlength="500"
+                 placeholder="Причина"
+                 class="h-9 min-w-0 w-[180px] px-2 text-[12px] outline-none"
+                 style="border: 1px solid #FFE082; color: var(--branding-text); background-color: #FFFFFF;">
+          <button type="submit"
+                  class="h-9 px-3 text-[11px] font-semibold disabled:opacity-50"
+                  style="background-color: #FFEBEE; color: #C62828;">
+            ОТКЛОНИТЬ
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if current_queue != 'online' %}
+<div class="flex flex-col gap-3">
+  {% for payment in page_obj %}
+  <div id="payment-{{ payment.id }}" class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+       style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="flex items-center gap-4 sm:gap-5 flex-1 min-w-0">
+      <!-- Amount prominent -->
+      <div class="text-center min-w-[80px]">
+        <div class="text-[20px] font-bold" style="color: var(--branding-text);">{{ payment.amount|money }}₽</div>
+        {% if payment.prefetched_applied_discounts %}
+        <div class="mt-1 text-[10px]" style="color: var(--branding-text-secondary);">Итоговая сумма</div>
+        {% endif %}
+        <span class="inline-flex px-2 py-0.5 mt-1 text-[10px] font-semibold"
+              style="{% if payment.payment_method == 'cash' %}background-color: #E8F5E9; color: #2E7D32;{% else %}background-color: #E3F2FD; color: #1565C0;{% endif %}">
+          {{ payment.get_payment_method_display }}
+        </span>
+      </div>
+      <!-- Details -->
+      <div class="flex-1">
+        <div class="text-[15px] font-bold mb-0.5" style="color: var(--branding-text);">{{ payment.student }}</div>
+        <div class="text-[12px] font-semibold" style="color: var(--branding-text);">{{ payment.workspace_context_label }}</div>
+        <div class="text-[12px] mb-1" style="color: var(--branding-text-secondary);">{{ payment.workspace_service_label }}</div>
+        {% if payment.prefetched_applied_discounts %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Базовая сумма: {{ payment.original_amount|money }}₽
+        </div>
+        {% for discount in payment.prefetched_applied_discounts %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Скидка: {{ discount.name }}
+        </div>
+        {% endfor %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Фактически вычтено: {{ payment.applied_discount_amount|money }}₽
+        </div>
+        <div class="text-[11px] mb-1 font-semibold" style="color: var(--branding-text);">
+          Итог: {{ payment.amount|money }}₽
+        </div>
+        {% endif %}
+        {% if payment.seller_trainer %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Продавец: {{ payment.seller_trainer }}
+        </div>
+        {% endif %}
+        {% if payment.subscription %}
+          {% with allocation=payment.subscription.active_trainer_allocations.0 %}
+            {% if allocation %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Владелец пакета: {{ allocation.owner_trainer }}
+        </div>
+            {% elif payment.package_owner_trainer %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Пакет закрепится за: {{ payment.package_owner_trainer }}
+        </div>
+            {% elif payment.seller_trainer and payment.tariff.training_type.kind != "group" %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Пакет закрепится за: {{ payment.seller_trainer }}
+        </div>
+            {% endif %}
+          {% endwith %}
+        {% elif payment.package_owner_trainer %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Пакет закрепится за: {{ payment.package_owner_trainer }}
+        </div>
+        {% elif payment.seller_trainer and payment.tariff.training_type.kind != "group" %}
+        <div class="text-[11px] mb-0.5" style="color: var(--branding-text-secondary);">
+          Пакет закрепится за: {{ payment.seller_trainer }}
+        </div>
+        {% endif %}
+        {% if payment.workspace_personal_booking %}
+        <div class="mt-2 mb-1 px-3 py-2 text-[11px]" aria-label="Точная персональная запись"
+             style="background-color: #E8F5E9; border: 1px solid #A5D6A7; color: var(--branding-text);">
+          <div class="font-semibold">Персональная запись #{{ payment.workspace_personal_booking.id }}</div>
+          <div>
+            {{ payment.workspace_personal_booking.enrollment.starts_on|date:"d.m.Y" }} ·
+            {{ payment.workspace_personal_booking.enrollment.schedule.start_time|time:"H:i" }}–{{ payment.workspace_personal_booking.enrollment.schedule.end_time|time:"H:i" }} ·
+            {{ payment.workspace_personal_booking.enrollment.schedule.trainer }}
+          </div>
+          <div>
+            {{ payment.workspace_personal_terms.location_name_snapshot|default:payment.workspace_personal_booking.enrollment.schedule.location }} ·
+            {{ payment.workspace_personal_terms.training_type_name_snapshot|default:payment.workspace_personal_booking.enrollment.schedule.training_type }}
+          </div>
+          <div>Статус записи: {{ payment.workspace_personal_booking.get_state_display }}</div>
+        </div>
+        {% endif %}
+        {% if payment.target_schedule_id %}
+        <div class="mt-2 mb-1 px-3 py-2 text-[11px]" style="background-color: #FFF8E1; border: 1px solid #FFE082; color: var(--branding-text);">
+          <div class="font-semibold">
+            {% if payment.target_training_group_id %}
+            Каноническая группа: {{ payment.target_group_name_snapshot|default:payment.target_training_group.name }}
+            {% else %}
+            Постоянная группа: {{ payment.target_group_name_snapshot }}
+            {% endif %}
+          </div>
+          <div>
+            {{ payment.target_location_name_snapshot }}
+            {% if payment.target_start_date %} · старт {{ payment.target_start_date|date:"d.m.Y" }}{% if payment.target_training_group_id %} (точное первое занятие){% endif %}{% endif %}
+          </div>
+          <div>Время: {{ payment.target_schedule.start_time|time:"H:i" }}–{{ payment.target_schedule.end_time|time:"H:i" }}</div>
+          {% if payment.target_training_group_id %}
+          <div>
+            Тренер занятия:
+            {{ payment.target_trainer_name_snapshot }}
+          </div>
+          <div>
+            Ответственный: {{ payment.target_training_group.responsible_trainer }} · продажа: {{ payment.seller_trainer|default:payment.target_training_group.responsible_trainer }}
+          </div>
+          {% if payment.target_group_membership_id %}
+          <div>Каноническое членство #{{ payment.target_group_membership_id }}</div>
+          {% endif %}
+          {% else %}
+          <div>
+            Тренер группы / продажа:
+            {{ payment.target_trainer_name_snapshot }}
+          </div>
+          {% endif %}
+          {% if payment.status == 'pending' %}
+          <div class="mt-1" style="color: #8A5A00;">{% if payment.target_training_group_id %}Статус оплаты: ожидает подтверждения.{% else %}Подтверждение создаст постоянное зачисление в эту группу.{% endif %}</div>
+          {% endif %}
+        </div>
+        {% endif %}
+        <div class="text-[11px]" style="color: var(--branding-text-secondary);">
+          Принял: {{ payment.recorded_by.get_full_name|default:payment.recorded_by.username }} &bull; {{ payment.created_at|date:"d.m.Y H:i" }}
+        </div>
+        <div class="mt-2 flex flex-wrap gap-2 text-[11px]">
+          <a href="{{ payment.workspace_student_path }}" hx-get="{{ payment.workspace_student_path }}" hx-target="#slide-over"
+             onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+             style="color: #1565C0;">Карточка ученика</a>
+          {% if payment.workspace_schedule_path %}
+          <a href="{{ payment.workspace_schedule_path }}" hx-get="{{ payment.workspace_schedule_path }}" hx-target="#slide-over"
+             onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+             style="color: #1565C0;">Занятие</a>
+          {% endif %}
+          {% if payment.workspace_resource_path %}
+          <a href="{{ payment.workspace_resource_path }}" hx-get="{{ payment.workspace_resource_path }}" hx-target="#content" hx-push-url="true" style="color: #1565C0;">{{ payment.workspace_resource_label }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% if current_queue == 'manual' and payment.status == 'pending' and payment.payment_method == 'online' %}
+    <div class="sm:ml-4 sm:text-right max-w-[260px]">
+      <span class="px-3 py-1.5 text-[11px] font-semibold" style="background-color: #E3F2FD; color: #1565C0;">Ссылка на оплату</span>
+      <div class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">
+        Подтверждается банком. Отмена и спорные случаи — в ссылках на оплату.
+      </div>
+    </div>
+    {% elif current_queue == 'manual' and payment.status == 'pending' %}
+    <div x-data="{ action: null }" class="flex gap-2 sm:ml-4 items-center flex-wrap">
+      <!-- Default buttons -->
+      <template x-if="!action">
+        <div class="flex gap-2">
+          <button @click="action = 'confirm'"
+                  class="px-4 py-2.5 text-[12px] font-semibold transition-opacity hover:opacity-80"
+                  style="background-color: #2E7D32; color: #FFFFFF;">
+            Подтвердить
+          </button>
+          <button @click="action = 'reject'"
+                  class="px-4 py-2.5 text-[12px] font-semibold transition-opacity hover:opacity-80"
+                  style="background-color: #C62828; color: #FFFFFF;">
+            Отклонить
+          </button>
+        </div>
+      </template>
+      <!-- Confirm: are you sure? -->
+      <div x-show="action === 'confirm'" x-cloak class="flex items-center gap-2">
+        <span class="text-[12px] font-medium" style="color: #2E7D32;">Подтвердить?</span>
+        <button @click="action = null"
+                class="px-3 py-1.5 text-[11px] font-semibold"
+                style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+          Нет
+        </button>
+        <button hx-post="/dashboard/billing/payments/{{ payment.id }}/verify/"
+                hx-vals='{"action":"confirm"}'
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                hx-target="#content"
+                hx-disabled-elt="this"
+                @click="$nextTick(() => htmx.process($el))"
+                class="px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                style="background-color: #2E7D32; color: #FFFFFF;">
+          Да, подтвердить
+        </button>
+      </div>
+      <!-- Reject: are you sure? -->
+      <form x-show="action === 'reject'" x-cloak
+            hx-post="/dashboard/billing/payments/{{ payment.id }}/verify/"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+            hx-target="#content"
+            hx-disabled-elt="button[type='submit']"
+            class="flex items-center gap-2 flex-wrap">
+        <input type="hidden" name="action" value="reject">
+        <span class="text-[12px] font-medium" style="color: #C62828;">Отклонить?</span>
+        <input name="rejection_reason"
+               type="text"
+               placeholder="Причина"
+               aria-label="Причина отклонения"
+               required
+               class="px-3 py-1.5 text-[12px] border"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+        <button type="button"
+                @click="action = null"
+                class="px-3 py-1.5 text-[11px] font-semibold"
+                style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+          Нет
+        </button>
+        <button type="submit"
+                class="px-3 py-1.5 text-[11px] font-semibold disabled:opacity-50"
+                style="background-color: #C62828; color: #FFFFFF;">
+          Да, отклонить
+        </button>
+      </form>
+    </div>
+    {% else %}
+    <div class="sm:ml-4 sm:text-right">
+      {% if payment.status == 'confirmed' %}
+      <span class="px-3 py-1.5 text-[11px] font-semibold" style="background-color: #E8F5E9; color: #2E7D32;">Подтверждён</span>
+      {% elif payment.status == 'rejected' %}
+      <span class="px-3 py-1.5 text-[11px] font-semibold" style="background-color: #FFCDD2; color: #C62828;">Отклонён</span>
+      {% elif payment.status == 'pending' %}
+      <span class="px-3 py-1.5 text-[11px] font-semibold" style="background-color: #FFF8E1; color: #8A5A00;">Ожидает</span>
+      {% endif %}
+      {% if payment.verified_at %}
+      <div class="text-[10px] mt-1" style="color: var(--branding-text-secondary);">{{ payment.verified_at|timesince }} назад</div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="py-16 text-center">
+    <i data-lucide="check-circle" class="w-12 h-12 mx-auto mb-3" style="color: #2E7D32; opacity: 0.3;"></i>
+    <div class="text-[14px] font-medium" style="color: var(--branding-text-secondary);">Все оплаты проверены</div>
+  </div>
+  {% endfor %}
+</div>
+{% elif not manual_review_orders and not live_bank_payment_orders and not standalone_refund_cases and not payroll_action_refunds %}
+<div class="py-16 text-center">
+  <div class="text-[14px] font-medium" style="color: var(--branding-text-secondary);">Нет онлайн-операций, требующих действий</div>
+</div>
+{% endif %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Страницы финансовых операций" class="mt-5 flex items-center justify-between gap-3">
+  {% if previous_url %}
+  <a href="{{ previous_url }}" hx-get="{{ previous_url }}" hx-target="#content" hx-push-url="true"
+     class="min-h-11 px-4 inline-flex items-center text-[12px] font-semibold" style="border: 1px solid var(--branding-border); color: var(--branding-text);">← Назад</a>
+  {% else %}<span></span>{% endif %}
+  <span class="text-[12px]" style="color: var(--branding-text-secondary);">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+  {% if next_url %}
+  <a href="{{ next_url }}" hx-get="{{ next_url }}" hx-target="#content" hx-push-url="true"
+     class="min-h-11 px-4 inline-flex items-center text-[12px] font-semibold" style="border: 1px solid var(--branding-border); color: var(--branding-text);">Дальше →</a>
+  {% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+
+{% endpartialdef %}
+{% endblock %}

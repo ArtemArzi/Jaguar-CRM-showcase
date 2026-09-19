@@ -1,0 +1,21 @@
+<!-- Billing sub-navigation tabs -->
+<div class="flex gap-1 mb-6 border-b overflow-x-auto whitespace-nowrap -mx-4 px-4 sm:mx-0 sm:px-0" style="border-color: var(--branding-border); scrollbar-width: none;">
+  <a href="/dashboard/billing/"
+     hx-get="/dashboard/billing/" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2.5 text-[12px] font-semibold tracking-[0.5px] -mb-px transition-colors"
+     style="{% if active_tab == 'debtors' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}color: var(--branding-text-secondary);{% endif %}">
+    Должники
+  </a>
+  <a href="/dashboard/billing/payments/"
+     hx-get="/dashboard/billing/payments/" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2.5 text-[12px] font-semibold tracking-[0.5px] -mb-px transition-colors"
+     style="{% if active_tab == 'payments' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}color: var(--branding-text-secondary);{% endif %}">
+    Верификация оплат
+  </a>
+  <a href="/dashboard/billing/subscriptions/"
+     hx-get="/dashboard/billing/subscriptions/" hx-target="#content" hx-push-url="true"
+     class="px-4 py-2.5 text-[12px] font-semibold tracking-[0.5px] -mb-px transition-colors"
+     style="{% if active_tab == 'subscriptions' %}border-bottom: 2px solid var(--branding-primary); color: var(--branding-text);{% else %}color: var(--branding-text-secondary);{% endif %}">
+    Абонементы
+  </a>
+</div>

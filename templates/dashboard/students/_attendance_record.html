@@ -1,0 +1,51 @@
+{% load money %}
+<div class="p-5 sm:p-7" data-attendance-record>
+  {% include 'dashboard/students/_operation_header.html' with title='Отметить посещение' %}
+  {% if not enabled %}<p class="mb-4 text-[13px]" role="status">Новые исправления временно отключены.</p>{% endif %}
+  <form hx-disabled-elt="#slide-over form button[type='submit']" hx-post="{% url 'student-attendance-record' student.id %}" hx-target="#slide-over"
+        x-data="{ready: {% if preview and can_apply %}true{% else %}false{% endif %}}">
+    {% csrf_token %}
+    <input type="hidden" name="command_key" value="{{ command_key }}">
+    <input type="hidden" name="expected_fingerprint" value="{{ preview.fingerprint }}">
+    <label class="block mb-4 text-[13px]">Дата занятия
+      <input name="date" type="date" required value="{{ date }}" max="{{ today }}"
+             hx-post="{% url 'student-attendance-record' student.id %}" hx-vals='{"action":"options"}' hx-trigger="change" hx-include="closest form" hx-target="#slide-over"
+             class="block w-full h-11 px-3 mt-1" style="border: 1px solid var(--branding-border);">
+    </label>
+    <label class="block mb-4 text-[13px]">Занятие
+      <select name="schedule_id" aria-label="Занятие" required @change="ready=false" class="block w-full min-h-11 px-3 mt-1"
+              style="border: 1px solid var(--branding-border);">
+        <option value="">Выберите занятие</option>
+        {% for occurrence in occurrences %}<option value="{{ occurrence.schedule_id }}" {% if schedule_id == occurrence.schedule_id %}selected{% endif %}>{{ occurrence.effective_start_time|time:'H:i' }} · {{ occurrence.group_name }} · {{ occurrence.trainer_name }}</option>{% endfor %}
+      </select>
+    </label>
+    {% if not occurrences %}<p class="mb-4 text-[13px]">На эту дату нет подтверждённой записи ученика. Сверьте группу или бронь.</p>{% endif %}
+    <label class="block mb-4 text-[13px]">Списать занятие из
+      <select name="entitlement" required @change="ready=false" class="block w-full min-h-11 px-3 mt-1"
+              style="border: 1px solid var(--branding-border);">
+        <option value="">Выберите точный абонемент</option>
+        {% for component in components %}<option value="{{ component.id }}" {% if entitlement == component.id|stringformat:'s' %}selected{% endif %}>{{ component.subscription.tariff.name }} · {{ component.training_type.name }} · остаток {{ component.credits_left|default_if_none:'без лимита' }} · №{{ component.subscription_id }}</option>{% endfor %}
+        <option value="debt" {% if entitlement == 'debt' %}selected{% endif %}>Занятие в долг — подтверждаю отдельно</option>
+      </select>
+    </label>
+    <label class="block mb-4 text-[13px]">Причина исправления
+      <textarea name="reason" required maxlength="1000" rows="2" class="block w-full p-3 mt-1"
+                style="border: 1px solid var(--branding-border);">{{ reason }}</textarea>
+    </label>
+    {% if student.is_child %}<label class="flex gap-2 items-start mb-4 text-[13px]"><input type="checkbox" name="notify_parent" value="1" {% if notify_parent %}checked{% endif %}>Сообщить родителю об исправлении с фактической датой занятия</label>{% endif %}
+    {% if preview %}
+    <div data-attendance-preview class="p-4 mb-4 text-[13px]" style="background: var(--branding-surface); border: 1px solid var(--branding-border);">
+      {% if before_remaining is not None %}<p>Остаток: {{ before_remaining }} → {{ after_remaining }}</p>{% endif %}
+      {% if entitlement == 'debt' %}<p>Будет создан долг: {{ preview.evidence.financial.price|money }} ₽.</p>
+      {% elif salary_amount is not None %}<p>Персональное начисление: {{ salary_amount|money }} ₽.</p>
+      {% else %}<p>Групповая зарплата и начисления с оплаты не меняются.</p>{% endif %}
+      <p class="mt-2">Одна отметка ученика. Сессия группы остаётся в текущем состоянии.</p>
+    </div>
+    {% endif %}
+    <button name="action" value="preview" type="submit" class="w-full min-h-11 px-4 py-3 mb-3 font-semibold"
+            style="border: 1px solid var(--branding-dark);">Проверить посещение</button>
+    {% if can_apply %}<button name="action" value="apply" type="submit" :disabled="!ready" class="w-full min-h-11 px-4 py-3 font-semibold disabled:opacity-50"
+            style="background: var(--branding-primary); color: var(--branding-on-primary);">Отметить посещение</button>{% endif %}
+  </form>
+  {% if exact_session_url %}<button hx-get="{{ exact_session_url }}" hx-target="#slide-over" class="mt-4 px-3 py-3 font-semibold">Открыть разовое персональное занятие</button>{% endif %}
+</div>

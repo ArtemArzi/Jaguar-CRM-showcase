@@ -1,0 +1,46 @@
+{% load money %}
+<div class="p-5 sm:p-7" data-subscription-correction>
+  {% include 'dashboard/students/_operation_header.html' with title='Исправить абонемент' %}
+  <p class="font-semibold mb-3">{{ subscription.tariff.name }}{% if component %} · {{ component.training_type.name }}{% endif %}</p>
+  {% if not enabled %}<p role="status" class="mb-4 text-[13px]">Новые исправления временно отключены.</p>{% endif %}
+  <form hx-disabled-elt="#slide-over form button[type='submit']" hx-post="{% url 'student-subscription-correction' student.id subscription.id %}" hx-target="#slide-over"
+        data-remaining="{{ remaining }}" data-expiry="{{ expires_on }}" data-reason="{{ reason }}"
+        x-data="{remaining: $el.dataset.remaining, expiry: $el.dataset.expiry, reason: $el.dataset.reason}">
+    {% csrf_token %}
+    <input type="hidden" name="component_id" value="{{ component_id|default_if_none:'' }}">
+    <input type="hidden" name="expected_fingerprint" value="{{ fingerprint }}">
+    <input type="hidden" name="initial_expires_on" value="{{ initial_expires_on }}">
+    <input type="hidden" name="command_key" value="{{ command_key }}">
+    {% if finite %}
+    <label class="block mb-4 text-[13px]">Осталось занятий
+      <input name="remaining" type="number" min="0" step="1" required x-model="remaining" value="{{ remaining }}"
+             class="block w-full h-11 px-3 mt-1" style="border: 1px solid var(--branding-border);">
+    </label>
+    <p data-balance-diff class="mb-4 font-semibold" aria-live="polite">Остаток: {{ current_remaining }} → <span x-text="remaining">{{ remaining }}</span></p>
+    {% else %}<p class="mb-4 text-[13px]">Остаток этого абонемента здесь не редактируется. Можно исправить срок.</p>{% endif %}
+    <label class="block mb-4 text-[13px]">Действует по
+      <input name="expires_on" type="date" x-model="expiry" value="{{ expires_on }}"
+             class="block w-full h-11 px-3 mt-1" style="border: 1px solid var(--branding-border);">
+    </label>
+    <p class="mb-4 text-[13px]" aria-live="polite">Срок: {{ current_expires_on|default:'без ограничения' }} → <span x-text="expiry || 'без изменения'">{{ expires_on }}</span></p>
+    <label class="block mb-3 text-[13px]">Причина
+      <select aria-label="Выбрать причину исправления" @change="reason = $event.target.value"
+              class="block w-full h-11 px-3 mt-1" style="border: 1px solid var(--branding-border);">
+        <option value="">Выбрать причину или написать ниже</option>
+        <option>Сверено с журналом</option><option>Ошибка при вводе остатка</option><option>Согласовано с владельцем</option>
+      </select>
+      <textarea name="reason" required maxlength="1000" rows="2" x-model="reason" class="block w-full p-3 mt-2"
+                style="border: 1px solid var(--branding-border);">{{ reason }}</textarea>
+    </label>
+    {% if component %}
+    <p class="mb-5 text-[12px]" style="color: var(--branding-text-secondary);">Исходно: {{ component.credits_total|default_if_none:'без лимита' }} занятий · денежная база {{ component.paid_amount_basis_snapshot|money }} ₽{% if component.unit_amount_basis_snapshot %} · {{ component.unit_amount_basis_snapshot|money }} ₽ за занятие{% endif %}. Эти значения сохраняются.</p>
+    {% endif %}
+    <button type="submit" {% if not can_save %}disabled{% endif %} class="w-full min-h-11 px-4 py-3 font-semibold disabled:opacity-50"
+            style="background: var(--branding-primary); color: var(--branding-on-primary);">Сохранить исправление</button>
+  </form>
+  <div class="flex gap-3 flex-wrap mt-5 text-[13px]">
+    <a href="{% url 'subscription-list' %}?student_id={{ student.id }}">Оплаты и абонементы</a>
+    <button hx-get="{% url 'student-operation-history' student.id %}?kind=corrections" hx-target="#slide-over">История изменений</button>
+    <button hx-get="{% url 'subscription-freeze' subscription.id %}?student_context=1" hx-target="#slide-over">{% if subscription.status == 'frozen' or card.subscription.status == 'frozen' %}Разморозить{% else %}Заморозить{% endif %}</button>
+  </div>
+</div>

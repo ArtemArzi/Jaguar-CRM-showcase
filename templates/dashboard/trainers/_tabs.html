@@ -1,0 +1,18 @@
+{% comment %}
+Sub-tabs for the Тренеры section. Include with {% include "dashboard/trainers/_tabs.html" %}.
+Expects `active_tab` in context: "list" or "sessions".
+{% endcomment %}
+<div class="flex gap-1 mb-5" style="border-bottom: 2px solid var(--branding-dark);">
+  <a href="/dashboard/trainers/"
+     hx-get="/dashboard/trainers/" hx-target="#content" hx-push-url="true"
+     class="px-5 py-2.5 text-[11px] font-semibold tracking-[1.5px] transition-colors"
+     style="{% if active_tab == 'list' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}color: var(--branding-text-secondary); background-color: transparent;{% endif %}">
+    СПИСОК ТРЕНЕРОВ
+  </a>
+  <a href="/dashboard/trainers/sessions/"
+     hx-get="/dashboard/trainers/sessions/" hx-target="#content" hx-push-url="true"
+     class="px-5 py-2.5 text-[11px] font-semibold tracking-[1.5px] transition-colors"
+     style="{% if active_tab == 'sessions' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}color: var(--branding-text-secondary); background-color: transparent;{% endif %}">
+    ТРЕНИРОВКИ
+  </a>
+</div>

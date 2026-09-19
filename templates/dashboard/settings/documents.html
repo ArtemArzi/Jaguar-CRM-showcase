@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Настройки — Документы{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px] mb-6 sm:mb-7" style="color: var(--branding-text);">Настройки</h1>
+
+{% include "dashboard/settings/_tabs.html" %}
+
+{% partialdef settings-tab-content inline %}
+
+{% if saved %}
+<div class="flex items-center gap-2 px-5 py-3 mb-5" style="background-color: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.3);">
+  <i data-lucide="check-circle" class="w-4 h-4" style="color: #2E7D32;"></i>
+  <span class="text-[13px] font-medium" style="color: #2E7D32;">Настройки документов сохранены</span>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="flex items-center gap-2 px-5 py-3 mb-5" style="background-color: rgba(198, 40, 40, 0.08); border: 1px solid rgba(198, 40, 40, 0.3);">
+  <i data-lucide="alert-circle" class="w-4 h-4" style="color: #C62828;"></i>
+  <span class="text-[13px] font-medium" style="color: #C62828;">{{ error }}</span>
+</div>
+{% endif %}
+
+<div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+  <div class="flex items-center justify-between mb-2 flex-wrap gap-3">
+    <div class="flex items-center gap-2">
+      <i data-lucide="file-badge-2" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Документы клуба</h2>
+    </div>
+    <button type="button"
+            hx-get="{% url 'document-type-form' %}"
+            hx-target="#slide-over"
+            onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+            class="flex items-center gap-1.5 h-8 px-3 text-[11px] font-semibold tracking-[0.5px] cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+      Добавить документ
+    </button>
+  </div>
+
+  <p class="text-[12px] mb-5" style="color: var(--branding-text-secondary);">
+    Здесь задаются типы документов, которые ученики должны предоставить. После настройки они автоматически появятся в карточке ученика и в student PWA.
+  </p>
+
+  {% for document_type in document_types %}
+  <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 py-3"
+       style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-[13px] font-medium" style="color: var(--branding-text);">{{ document_type.name }}</span>
+        {% if document_type.is_required %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(46, 125, 50, 0.12); color: #2E7D32;">Обязательный</span>
+        {% else %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(0, 0, 0, 0.06); color: var(--branding-text-secondary);">Необязательный</span>
+        {% endif %}
+        {% if document_type.scope == "all" %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(21, 101, 192, 0.12); color: #1565C0;">Для всех</span>
+        {% elif document_type.scope == "children" %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(123, 31, 162, 0.12); color: #7B1FA2;">Только детям</span>
+        {% else %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(239, 108, 0, 0.12); color: #EF6C00;">Только взрослым</span>
+        {% endif %}
+        {% if not document_type.is_active %}
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded" style="background-color: rgba(158,158,158,0.15); color: #9E9E9E;">Неактивен</span>
+        {% endif %}
+      </div>
+      {% if document_type.description %}
+      <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">{{ document_type.description }}</p>
+      {% else %}
+      <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">Описание не добавлено.</p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <form class="inline"
+            hx-post="{% url 'document-type-toggle' document_type.id %}"
+            hx-target="#content"
+            hx-swap="innerHTML show:none"
+            {% if document_type.is_active %}hx-confirm="Выключить документ «{{ document_type.name }}»? Новые ученики перестанут видеть его в обязательном списке."{% endif %}>
+        {% csrf_token %}
+        <button type="submit"
+                class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+                aria-pressed="{% if document_type.is_active %}true{% else %}false{% endif %}"
+                style="border: 1px solid var(--branding-border); color: {% if document_type.is_active %}#C62828{% else %}#2E7D32{% endif %};">
+          {% if document_type.is_active %}Выключить{% else %}Включить{% endif %}
+        </button>
+      </form>
+      <button type="button"
+              hx-get="{% url 'document-type-edit' document_type.id %}"
+              hx-target="#slide-over"
+              onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+              class="px-3 py-1 text-[11px] font-medium cursor-pointer rounded"
+              style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+        Изменить
+      </button>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-[12px]" style="color: var(--branding-text-secondary);">
+    Типы документов ещё не настроены. Добавьте первый документ, чтобы он появился в чеклисте учеников.
+  </p>
+  {% endfor %}
+</div>
+
+<div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+  <div class="flex items-center gap-2 mb-2">
+    <i data-lucide="info" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+    <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Как это работает</h2>
+  </div>
+  <div class="space-y-2 text-[12px]" style="color: var(--branding-text-secondary);">
+    <p>1. Создайте тип документа и укажите, кому он нужен: всем, детям или взрослым.</p>
+    <p>2. Если документ обязательный, он попадёт в чеклист ученика как незакрытый пункт.</p>
+    <p>3. Ученик сможет загрузить PDF, JPG, PNG или WEBP до 10 МБ.</p>
+    <p>4. Если тип выключен, новые ученики перестанут видеть его в своём списке.</p>
+  </div>
+</div>
+
+{% endpartialdef %}
+{% endpartialdef %}
+{% endblock %}

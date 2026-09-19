@@ -1,0 +1,57 @@
+{% load partials %}
+
+<div id="kiosk-status">
+  {% if kiosk_pin %}
+  <div class="p-5 mb-4" style="background-color: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.3);">
+    <p class="text-[12px] font-semibold mb-2" style="color: #2E7D32;">PIN-код для активации киоска:</p>
+    <div class="flex items-center gap-4">
+      <span class="text-[36px] font-bold tracking-[8px] font-mono" style="color: var(--branding-text);">{{ kiosk_pin }}</span>
+      <button type="button"
+              data-pin="{{ kiosk_pin }}"
+              onclick="navigator.clipboard.writeText(this.dataset.pin); this.textContent='Скопировано!'; setTimeout(()=>this.textContent='Копировать',1500)"
+              class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+              style="border: 1px solid var(--branding-border); color: var(--branding-text);">
+        Копировать
+      </button>
+    </div>
+    <p class="text-[11px] mt-2" style="color: var(--branding-text-secondary);">Введите этот PIN на планшете киоска. Откройте на планшете адрес приложения и введите этот код для активации.</p>
+    <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">PIN одноразовый. Если не использован, можно сгенерировать новый.</p>
+  </div>
+  {% endif %}
+
+  {% if kiosk_device %}
+  <div class="flex items-center gap-3 mb-4">
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
+          style="background-color: rgba(46, 125, 50, 0.12); color: #2E7D32;">
+      <span class="w-1.5 h-1.5 rounded-full" style="background-color: #2E7D32;"></span>
+      Активен
+    </span>
+    <span class="text-[12px]" style="color: var(--branding-text-secondary);">
+      с {{ kiosk_device.activated_at|date:"d.m.Y H:i" }}
+    </span>
+  </div>
+  <button hx-post="{% url 'kiosk-deactivate' %}"
+          hx-target="#kiosk-status"
+          hx-confirm="Деактивировать киоск? Отметка учеников на планшете перестанет работать. Вы сможете подключить его заново."
+          class="px-4 py-2 text-[12px] font-medium cursor-pointer"
+          style="border: 1px solid #C62828; color: #C62828;">
+    <i data-lucide="power-off" class="w-3.5 h-3.5 inline-block mr-1"></i>
+    Деактивировать киоск
+  </button>
+  {% else %}
+  <div class="flex items-center gap-3 mb-4">
+    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-full"
+          style="background-color: rgba(0,0,0,0.06); color: var(--branding-text-secondary);">
+      <span class="w-1.5 h-1.5 rounded-full" style="background-color: var(--branding-text-secondary);"></span>
+      Неактивен
+    </span>
+  </div>
+  <button hx-post="{% url 'kiosk-generate-pin' %}"
+          hx-target="#kiosk-status"
+          class="px-4 py-2 text-[12px] font-semibold cursor-pointer"
+          style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+    <i data-lucide="key" class="w-3.5 h-3.5 inline-block mr-1"></i>
+    Сгенерировать PIN
+  </button>
+  {% endif %}
+</div>

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}{% load partials %}
+{% block title %}Исходные данные абонемента{% endblock %}
+{% block content %}{% partialdef content inline %}
+<div class="max-w-4xl mx-auto" data-import-item-form>
+  <a class="inline-block py-3 text-[13px]" href="{% if batch %}{% url 'student-opening-batch' batch.id %}{% else %}{% url 'student-opening-home' %}{% endif %}">← Назад к таблице</a>
+  <h1 class="font-bold text-[24px] mb-3">{% if single %}Перенести один абонемент{% else %}Уточнить запись · строка {{ item.source_row }}{% endif %}</h1>
+  <p class="mb-4 text-[13px]">Введите подтверждённые исходные данные. Пустая сумма не означает ноль. После сохранения увидите проверку; применение — отдельным действием. Названия и ID можно взять из справочников шаблона.</p>
+  {% if error %}<p role="alert" class="mb-4 p-3" style="background:#FDF2EF;color:#9F3D28;">{{ error }}</p>{% endif %}
+  {% if readonly %}<p class="mb-4 text-[13px]">Принятую или применяемую запись нельзя редактировать.</p>{% endif %}
+  <form method="post" class="space-y-5">
+    {% csrf_token %}<fieldset {% if readonly %}disabled{% endif %} class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% for field in fields %}<div class="text-[13px]"><label for="opening-field-{{ forloop.counter }}" class="block">{{ field.label }}</label>
+      {% if field.options %}<select id="opening-field-{{ forloop.counter }}" class="input w-full" name="{{ field.label }}"><option value="">Не указано</option>{% for option in field.options %}<option value="{{ option.value }}" {% if field.value == option.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}</select>
+      {% else %}<input id="opening-field-{{ forloop.counter }}" class="input w-full" type="text" name="{{ field.label }}" value="{{ field.value }}" {% if field.placeholder %}placeholder="{{ field.placeholder }}"{% endif %}>{% endif %}
+    </div>{% endfor %}
+    </fieldset>
+    {% if not readonly %}<button type="submit" class="btn btn-primary w-full sm:w-auto">Сохранить и проверить</button>{% endif %}
+  </form>
+</div>
+{% endpartialdef %}{% endblock %}

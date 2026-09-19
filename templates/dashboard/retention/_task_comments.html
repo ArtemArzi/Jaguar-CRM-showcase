@@ -1,0 +1,13 @@
+{% if comments %}
+<div class="flex flex-col gap-2 mt-2">
+  {% for comment in comments %}
+  <div class="flex items-start gap-2 text-[12px]">
+    <span class="font-medium" style="color: var(--branding-text);">{{ comment.author.email|truncatechars:20 }}</span>
+    <span style="color: var(--branding-text-secondary);">{{ comment.created_at|date:"d M H:i" }}</span>
+  </div>
+  <p class="text-[12px]" style="color: var(--branding-text);">{{ comment.text }}</p>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-[12px] mt-2" style="color: var(--branding-text-secondary);">Нет комментариев</p>
+{% endif %}

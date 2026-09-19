@@ -1,0 +1,422 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">ДЕТАЛИ ЗАНЯТИЯ</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+  {% if success %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #DCFCE7; color: #166534;">{{ success }}</div>
+  {% endif %}
+
+  <div class="space-y-3 mb-6">
+    <div class="flex items-center">
+      <span class="text-[11px] font-semibold tracking-[1px] w-24" style="color: var(--branding-text-secondary);">ГРУППА</span>
+      <span class="text-[13px] font-semibold" style="color: var(--branding-text);">{% if schedule.training_group_id %}{{ schedule.training_group.name }}{% else %}{{ schedule.group_name }}{% endif %}</span>
+    </div>
+    <div class="flex items-center">
+      <span class="text-[11px] font-semibold tracking-[1px] w-24" style="color: var(--branding-text-secondary);">ДАТА</span>
+      <span class="text-[13px]" style="color: var(--branding-text);">{{ session_date_display }}</span>
+    </div>
+    <div class="flex items-center">
+      <span class="text-[11px] font-semibold tracking-[1px] w-24" style="color: var(--branding-text-secondary);">ВРЕМЯ</span>
+      <span class="text-[13px]" style="color: var(--branding-text);">{{ display_start_time|time:"H:i" }} — {{ display_end_time|time:"H:i" }}</span>
+    </div>
+    <div class="flex items-center">
+      <span class="text-[11px] font-semibold tracking-[1px] w-24" style="color: var(--branding-text-secondary);">ТРЕНЕР</span>
+      <span class="text-[13px]" style="color: var(--branding-text);">{{ display_trainer }}</span>
+    </div>
+    <div class="flex items-center">
+      <span class="text-[11px] font-semibold tracking-[1px] w-24" style="color: var(--branding-text-secondary);">ЛОКАЦИЯ</span>
+      <span class="text-[13px]" style="color: var(--branding-text);">{{ display_location }}</span>
+    </div>
+  </div>
+
+  <!-- Edit schedule button -->
+  <div class="mb-6">
+    <button hx-get="/dashboard/schedule/{{ schedule.id }}/edit/"
+            hx-target="#slide-over" hx-swap="innerHTML"
+            class="w-full h-10 text-[11px] font-semibold tracking-[1px]"
+            style="border: 1.5px solid var(--branding-dark); color: var(--branding-text);">
+      РЕДАКТИРОВАТЬ РАСПИСАНИЕ
+    </button>
+  </div>
+
+  {% if personal_drop_in_attendance %}
+  <section data-personal-attendance-panel
+           class="border-t pt-5 mb-6"
+           style="border-color: var(--branding-border);"
+           x-data="{ confirmingAttendance: false }">
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <h4 class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ПОСЕЩЕНИЕ</h4>
+      {% if personal_drop_in_attendance.is_checked_in %}
+        <span data-attendance-correction-status="checked-in"
+              class="px-2 py-1 text-[10px] font-semibold tracking-[0.5px]"
+              style="background-color: #DCFCE7; color: #166534;">
+          ОТМЕЧЕН
+        </span>
+      {% else %}
+        <span data-attendance-correction-status="not-checked-in"
+              class="px-2 py-1 text-[10px] font-semibold tracking-[0.5px]"
+              style="background-color: #F3F4F6; color: var(--branding-text-secondary);">
+          НЕ ОТМЕЧЕН
+        </span>
+      {% endif %}
+    </div>
+
+    <div class="p-4 space-y-3" style="background-color: #FAF8F4;">
+      <div>
+        <p class="text-[13px] font-semibold" style="color: var(--branding-text);">
+          {{ personal_drop_in_attendance.student }}
+        </p>
+        <p class="text-[11px] mt-1" style="color: var(--branding-text-secondary);">
+          {{ session_date|date:"d.m.Y" }} · {{ display_start_time|time:"H:i" }}–{{ display_end_time|time:"H:i" }}
+        </p>
+      </div>
+
+      {% if personal_drop_in_attendance.is_checked_in %}
+        <p class="text-[12px]" style="color: #166534;">
+          Посещение уже зачтено. Повторного списания не будет.
+        </p>
+      {% else %}
+        <div class="flex gap-2">
+          <i data-lucide="receipt-text" class="w-4 h-4 shrink-0 mt-0.5" style="color: var(--branding-primary);"></i>
+          <p class="text-[12px] leading-5" style="color: var(--branding-text);">
+            {{ personal_drop_in_attendance.financial_message }}
+          </p>
+        </div>
+
+        {% if personal_drop_in_attendance.can_record %}
+          <button type="button"
+                  x-show="!confirmingAttendance"
+                  @click="confirmingAttendance = true"
+                  data-attendance-correction-open
+                  class="w-full h-10 text-[11px] font-semibold tracking-[1px]"
+                  style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+            ЗАЧЕСТЬ ПОСЕЩЕНИЕ
+          </button>
+
+          <form x-show="confirmingAttendance" x-cloak
+                hx-post="/dashboard/schedule/personal-drop-ins/{{ personal_drop_in_attendance.booking.id }}/attendance/"
+                hx-target="#slide-over" hx-swap="innerHTML"
+                class="border-t pt-3 space-y-3"
+                style="border-color: var(--branding-border);">
+            {% csrf_token %}
+            <p class="text-[12px] font-semibold" style="color: var(--branding-text);">
+              Подтвердить посещение и применить указанное последствие?
+            </p>
+            <div>
+              <label for="attendance-reason-{{ personal_drop_in_attendance.booking.id }}"
+                     class="block text-[11px] font-semibold tracking-[1px] mb-1"
+                     style="color: var(--branding-text-secondary);">
+                ПРИЧИНА
+              </label>
+              <input id="attendance-reason-{{ personal_drop_in_attendance.booking.id }}"
+                     type="text"
+                     name="reason"
+                     required
+                     maxlength="500"
+                     value="{{ personal_drop_in_attendance.default_reason }}"
+                     class="w-full h-10 px-3 text-[13px] border-2 bg-white outline-none"
+                     style="border-color: var(--branding-border); color: var(--branding-text);">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button"
+                      @click="confirmingAttendance = false"
+                      class="h-10 text-[11px] font-semibold tracking-[1px]"
+                      style="border: 1.5px solid var(--branding-border); color: var(--branding-text-secondary);">
+                ОТМЕНА
+              </button>
+              <button type="submit"
+                      data-attendance-correction-submit
+                      class="h-10 text-[11px] font-semibold tracking-[1px]"
+                      style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+                ДА, ЗАЧЕСТЬ
+              </button>
+            </div>
+          </form>
+        {% else %}
+          <div data-attendance-correction-blocked
+               class="p-3 text-[12px] leading-5"
+               style="background-color: #FFF8E1; color: #92400E;">
+            {{ personal_drop_in_attendance.block_reason }}
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="border-t pt-5 mb-6 space-y-4" style="border-color: var(--branding-border);">
+    <div class="flex items-center justify-between gap-3">
+      <h4 class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ЗАПИСЬ УЧЕНИКОВ</h4>
+      <span class="text-[11px]" style="color: var(--branding-text-secondary);">{{ enrollment_rows|length }} в группе</span>
+    </div>
+
+    {% if enrollment_rows %}
+      <div class="space-y-2">
+        {% for row in enrollment_rows %}
+          <div class="p-3 border" style="border-color: var(--branding-border);" x-data="{ transferOpen: false }">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 space-y-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <p class="text-[13px] font-semibold break-words" style="color: var(--branding-text);">{{ row.enrollment.student }}</p>
+                  {% if row.is_checked_in %}
+                    <span data-checkin-status="checked-in"
+                          class="px-2 py-0.5 text-[10px] font-semibold tracking-[0.5px]"
+                          style="background-color: #DCFCE7; color: #166534;">
+                      ОТМЕЧЕН
+                    </span>
+                  {% else %}
+                    <span data-checkin-status="not-checked-in"
+                          class="px-2 py-0.5 text-[10px] font-semibold tracking-[0.5px]"
+                          style="background-color: #F3F4F6; color: var(--branding-text-secondary);">
+                      НЕ ОТМЕЧЕН
+                    </span>
+                  {% endif %}
+                  {% if row.checkin_blocked_badge_label %}
+                    <span class="px-2 py-0.5 text-[10px] font-semibold tracking-[0.5px]" style="background-color: #FEF3C7; color: #92400E;">
+                      {{ row.checkin_blocked_badge_label }}
+                    </span>
+                  {% endif %}
+                </div>
+                <p class="text-[11px]" style="color: var(--branding-text-secondary);">
+                  {{ row.status_label }}{% if row.enrollment.starts_on %} · с {{ row.enrollment.starts_on|date:"d.m.Y" }}{% endif %}
+                </p>
+                {% if row.checkin_blocked_label %}
+                  <p class="text-[11px] font-medium" style="color: #991B1B;">
+                    {{ row.checkin_blocked_label }}
+                  </p>
+                {% endif %}
+                {% if row.alerts %}
+                  <div class="flex flex-wrap gap-1">
+                    {% for alert in row.alerts %}
+                      <span class="px-1.5 py-0.5 text-[10px] font-semibold" style="background-color: #F3F4F6; color: var(--branding-text-secondary);">
+                        {{ alert.message }}
+                      </span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="flex shrink-0 gap-1">
+                {% if row.can_transfer %}
+                  <button type="button"
+                          @click="transferOpen = !transferOpen"
+                          class="h-8 px-2 text-[10px] font-semibold tracking-[1px]"
+                          style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+                    ПЕРЕВЕСТИ
+                  </button>
+                {% endif %}
+                {% if row.can_freeze %}
+                  <form hx-post="/dashboard/schedule/enrollments/{{ row.enrollment.id }}/freeze/" hx-target="#slide-over" hx-swap="innerHTML">
+                    {% csrf_token %}
+                    <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+                    <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+                    <button type="submit" class="h-8 px-2 text-[10px] font-semibold tracking-[1px]"
+                            style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+                      ПАУЗА
+                    </button>
+                  </form>
+                {% endif %}
+                {% if row.can_unfreeze %}
+                  <form hx-post="/dashboard/schedule/enrollments/{{ row.enrollment.id }}/unfreeze/" hx-target="#slide-over" hx-swap="innerHTML">
+                    {% csrf_token %}
+                    <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+                    <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+                    <button type="submit" class="h-8 px-2 text-[10px] font-semibold tracking-[1px]"
+                            style="border: 1px solid var(--branding-border); color: var(--branding-text-secondary);">
+                      ВЕРНУТЬ
+                    </button>
+                  </form>
+                {% endif %}
+                <form hx-post="/dashboard/schedule/enrollments/{{ row.enrollment.id }}/cancel/" hx-target="#slide-over" hx-swap="innerHTML">
+                  {% csrf_token %}
+                  <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+                  <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+                  <button type="submit" class="h-8 px-2 text-[10px] font-semibold tracking-[1px]"
+                          style="background-color: #FEE2E2; color: #991B1B;">
+                    СНЯТЬ
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% if row.can_transfer %}
+              <form x-show="transferOpen" x-cloak
+                    hx-post="/dashboard/schedule/enrollments/{{ row.enrollment.id }}/transfer/"
+                    hx-target="#slide-over" hx-swap="innerHTML"
+                    hx-confirm="Перевести ученика в выбранную группу с указанной даты?"
+                    class="mt-3 pt-3 border-t space-y-2"
+                    style="border-color: var(--branding-border);">
+                {% csrf_token %}
+                <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+                <input type="hidden" name="schedule_id" value="{{ schedule.id }}">
+                <div>
+                  <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НОВАЯ ГРУППА</label>
+                  <select name="target_schedule_id" required
+                          class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                          style="border-color: var(--branding-border); color: var(--branding-text);">
+                    <option value="">Выберите группу...</option>
+                    {% for target_schedule in transfer_schedules %}
+                      <option value="{{ target_schedule.id }}">{{ target_schedule.label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ДАТА ПЕРЕХОДА</label>
+                  <input type="date" name="transfer_date" required value="{{ session_date|date:'Y-m-d' }}"
+                         class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                         style="border-color: var(--branding-border); color: var(--branding-text);">
+                </div>
+                <button type="submit"
+                        class="w-full h-10 text-[11px] font-semibold tracking-[1px]"
+                        style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+                  ПЕРЕВЕСТИ
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-[13px]" style="color: var(--branding-text-secondary);">На эту дату пока никто не записан.</p>
+    {% endif %}
+
+    <form hx-post="/dashboard/schedule/{{ schedule.id }}/enroll/" hx-target="#slide-over" hx-swap="innerHTML"
+          class="space-y-2">
+      {% csrf_token %}
+      <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+      <div class="grid grid-cols-[1fr_auto] gap-2">
+        <select name="student_id" required
+                class="min-w-0 h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">Выберите ученика...</option>
+          {% for student in available_students %}
+            <option value="{{ student.id }}">{{ student }}</option>
+          {% endfor %}
+        </select>
+        <select name="status"
+                class="h-10 px-2 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="active">Активно</option>
+          <option value="trial">Пробное</option>
+        </select>
+      </div>
+      <button type="submit"
+              class="w-full h-10 text-[11px] font-semibold tracking-[1px]"
+              style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+        ЗАПИСАТЬ УЧЕНИКА
+      </button>
+    </form>
+  </div>
+
+  {% if has_exception %}
+  <div class="p-3 mb-6 text-[13px]"
+       style="{% if exception_display_type == 'cancelled' %}background-color: #FEE2E2; color: #991B1B;{% elif exception_display_type == 'substitute' %}background-color: #FFF8E1; color: #F57F17;{% elif exception_display_type == 'rescheduled' %}background-color: #E3F2FD; color: #1565C0;{% endif %}">
+    {{ exception_display_message }}
+  </div>
+
+  <div x-data="{ confirming: false }" class="mb-6">
+    <button x-show="!confirming" @click="confirming = true"
+            class="w-full h-10 text-[11px] font-semibold tracking-[1px]"
+            style="border: 1.5px solid var(--branding-dark); color: var(--branding-text);">
+      ОТМЕНИТЬ ИЗМЕНЕНИЕ
+    </button>
+    <div x-show="confirming" x-cloak class="space-y-2">
+      <p class="text-[12px] text-center py-2" style="color: var(--branding-text);">Вернуть расписание как было?</p>
+      <div class="flex gap-2">
+        <button @click="confirming = false"
+                class="flex-1 h-10 text-[11px] font-semibold tracking-[1px]"
+                style="border: 1.5px solid var(--branding-border); color: var(--branding-text-secondary);">
+          НЕТ
+        </button>
+        <form hx-post="/dashboard/schedule/{{ schedule.id }}/revert/" hx-target="#slide-over" hx-swap="innerHTML" class="flex-1">
+          {% csrf_token %}
+          <input type="hidden" name="date" value="{{ exception_action_date|date:'Y-m-d' }}">
+          <button type="submit"
+                  class="w-full h-10 text-[11px] font-semibold tracking-[1px]"
+                  style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+            ДА, ОТМЕНИТЬ
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not has_exception %}
+  <div class="border-t pt-5 space-y-5" style="border-color: var(--branding-border);">
+    <h4 class="text-[11px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ДЕЙСТВИЯ</h4>
+
+    <!-- Отмена -->
+    <form hx-post="/dashboard/schedule/{{ schedule.id }}/cancel/" hx-target="#slide-over" hx-swap="innerHTML" class="space-y-2">
+      {% csrf_token %}
+      <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ПРИЧИНА (НЕОБЯЗАТЕЛЬНО)</label>
+        <input type="text" name="reason" placeholder="Напр. Тренер болен"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+      <button type="submit"
+              class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+              style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+        ОТМЕНИТЬ ЗАНЯТИЕ
+      </button>
+    </form>
+
+    <!-- Перенос -->
+    <form hx-post="/dashboard/schedule/{{ schedule.id }}/reschedule/" hx-target="#slide-over" hx-swap="innerHTML"
+          class="space-y-2 border-t pt-5" style="border-color: var(--branding-border);">
+      {% csrf_token %}
+      <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НОВАЯ ДАТА</label>
+          <input type="date" name="new_date" required
+                 class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                 style="border-color: var(--branding-border); color: var(--branding-text);">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ВРЕМЯ</label>
+          <input type="time" name="new_time"
+                 class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                 style="border-color: var(--branding-border); color: var(--branding-text);">
+        </div>
+      </div>
+      <button type="submit"
+              class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+              style="border: 1.5px solid var(--branding-dark); color: var(--branding-text);">
+        ПЕРЕНЕСТИ ЗАНЯТИЕ
+      </button>
+    </form>
+
+    <!-- Замена тренера -->
+    <form hx-post="/dashboard/schedule/{{ schedule.id }}/substitute/" hx-target="#slide-over" hx-swap="innerHTML"
+          class="space-y-2 border-t pt-5" style="border-color: var(--branding-border);">
+      {% csrf_token %}
+      <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ЗАМЕНЯЮЩИЙ ТРЕНЕР</label>
+        <select name="substitute_trainer_id" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">Выберите тренера...</option>
+          {% for trainer in trainers %}{% if trainer.id != schedule.trainer_id %}<option value="{{ trainer.id }}">{{ trainer }}</option>{% endif %}{% endfor %}
+        </select>
+      </div>
+      <button type="submit"
+              class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+              style="background-color: #E65100; color: var(--branding-on-primary);">
+        ЗАМЕНИТЬ ТРЕНЕРА
+      </button>
+    </form>
+  </div>
+  {% endif %}
+</div>

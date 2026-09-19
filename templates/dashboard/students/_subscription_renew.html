@@ -1,0 +1,20 @@
+{% load money l10n %}
+<div class="p-5 sm:p-7" data-subscription-renew>
+  {% include 'dashboard/students/_operation_header.html' with title='Продлить абонемент' %}
+  <p class="mb-2 font-semibold">{{ subscription.tariff.name }} · источник №{{ subscription.id }}</p>
+  <p class="mb-4 text-[13px]">Текущее предложение: <strong>{{ renewal_offer.target_tariff_name }}</strong> · {{ renewal_offer.target_price|money }} ₽</p>
+  {% if error %}<p class="mb-4 text-sm text-red-700" role="alert">{{ error }}</p>{% endif %}
+  <p class="mb-5 text-[13px]">Продление связано с этим абонементом. Перенос остатка и начисления проверяются при подтверждении оплаты.</p>
+  {% if renewal_offer.is_available %}<form hx-disabled-elt="#slide-over form button[type='submit']" hx-post="{% url 'student-subscription-renew' student.id subscription.id %}" hx-target="#slide-over">
+    {% csrf_token %}<input type="hidden" name="command_key" value="{{ command_key }}">
+    <input type="hidden" name="expected_target_tariff_id" value="{{ renewal_offer.target_tariff_id }}">
+    <input type="hidden" name="expected_target_price" value="{{ renewal_offer.target_price|unlocalize }}">
+    <label class="block mb-5 text-[13px]">Способ оплаты
+      <select name="payment_method" required class="block w-full h-11 px-3 mt-1" style="border: 1px solid var(--branding-border);">
+        <option value="">Выберите способ</option><option value="cash">Наличные</option><option value="transfer">Перевод</option>
+        {% if online_available %}<option value="online">Ссылка на онлайн-оплату</option>{% endif %}
+      </select>
+    </label>
+    <button type="submit" class="w-full min-h-11 px-4 py-3 font-semibold" style="background: var(--branding-primary); color: var(--branding-on-primary);">Записать продление</button>
+  </form>{% endif %}
+</div>

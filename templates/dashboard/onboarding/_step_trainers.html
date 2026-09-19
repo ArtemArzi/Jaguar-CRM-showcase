@@ -1,0 +1,55 @@
+<div class="space-y-6" data-onboarding-draft-id="{{ draft.id }}" x-data="{ rows: JSON.parse('{{ rows_json|escapejs }}') }">
+  <div>
+    <h3 class="text-lg font-semibold">Шаг 2: Тренеры</h3>
+    <p class="text-sm text-gray-500 mt-1">Добавьте тренеров, чтобы затем точно назначить их в расписание.</p>
+  </div>
+
+  <form
+    hx-post="/dashboard/onboarding/step/2/"
+    hx-target="#wizard-content"
+    class="space-y-4"
+  >
+    {% csrf_token %}
+
+    <div class="space-y-3">
+      <div class="hidden sm:grid grid-cols-12 gap-2 text-xs font-medium text-gray-500">
+        <div class="col-span-4">Имя</div>
+        <div class="col-span-4">Фамилия</div>
+        <div class="col-span-4">Телефон</div>
+      </div>
+
+      <template x-for="(row, idx) in rows" :key="row.client_ref">
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+          <input type="hidden" x-model="row.client_ref" :name="'trainers[' + idx + '].client_ref'">
+          <input type="text" x-model="row.first_name" :name="'trainers[' + idx + '].first_name'" placeholder="Имя" class="sm:col-span-4 border rounded px-2 py-1.5 text-sm">
+          <input type="text" x-model="row.last_name" :name="'trainers[' + idx + '].last_name'" placeholder="Фамилия" class="sm:col-span-4 border rounded px-2 py-1.5 text-sm">
+          <input type="tel" x-model="row.phone" :name="'trainers[' + idx + '].phone'" placeholder="+7..." class="sm:col-span-4 border rounded px-2 py-1.5 text-sm">
+        </div>
+      </template>
+    </div>
+
+    <button
+      type="button"
+      @click="rows.push({ client_ref: crypto.randomUUID(), first_name: '', last_name: '', phone: '' })"
+      class="text-sm text-blue-600 hover:text-blue-800"
+    >+ Добавить ещё тренера</button>
+
+    {% if error %}
+    <div class="text-sm text-red-600 bg-red-50 p-3 rounded" data-error-code="{{ error_code }}">{{ error }}</div>
+    {% endif %}
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
+      <button
+        type="button"
+        hx-post="/dashboard/onboarding/skip/2/"
+        hx-target="#wizard-content"
+        class="text-sm text-gray-500 hover:text-gray-700"
+      >Пропустить</button>
+      <button
+        type="submit"
+        class="px-6 py-2 text-white text-sm font-semibold tracking-[1px]"
+        style="background-color: var(--branding-accent, #22c55e)"
+      >Далее</button>
+    </div>
+  </form>
+</div>

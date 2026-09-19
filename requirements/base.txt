@@ -1,0 +1,14 @@
+django==5.2.*
+django-ninja==1.6.*
+django-allauth[headless]==65.*
+django-q2==1.7.*
+django-cors-headers==4.*
+django-environ==0.11.*
+django-htmx==1.*
+django-template-partials==24.*
+psycopg[binary]==3.*
+redis==5.*
+openpyxl==3.1.*
+Pillow==12.*
+PyJWT[crypto]==2.*
+pywebpush==2.3.*

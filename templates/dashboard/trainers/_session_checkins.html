@@ -1,0 +1,52 @@
+{% if error %}
+<div class="py-2 px-5 text-[12px]" style="color: #B42318; background-color: rgba(220, 38, 38, 0.08);">
+  {{ error }}
+</div>
+{% endif %}
+{% if checkins %}
+<div class="py-2 px-5" style="background-color: rgba(0,0,0,0.025);">
+  {% for checkin in checkins %}
+  <div class="flex items-center justify-between py-2"
+       style="{% if not forloop.last %}border-bottom: 1px solid rgba(0,0,0,0.06);{% endif %}"
+       x-data="{ confirm: false }">
+    <div class="flex items-center gap-3">
+      <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0"
+           style="background-color: var(--branding-dark); color: var(--branding-on-primary);">
+        {{ checkin.student.first_name|truncatechars:1 }}{{ checkin.student.last_name|truncatechars:1 }}
+      </div>
+      <span class="text-[13px]" style="color: var(--branding-text);">
+        {{ checkin.student.last_name }} {{ checkin.student.first_name }}
+      </span>
+    </div>
+    <div>
+      <button x-show="!confirm" @click.stop="confirm = true"
+              class="text-[11px] px-2 py-1 cursor-pointer opacity-40 hover:opacity-100 transition-opacity"
+              style="color: var(--branding-text-secondary);">
+        ✕
+      </button>
+      <div x-show="confirm" x-cloak class="flex items-center gap-1" @click.stop>
+        <span class="text-[11px] mr-1" style="color: var(--branding-text-secondary);">Отменить?</span>
+        <button @click="confirm = false" class="text-[11px] px-2 py-1"
+                style="color: var(--branding-text-secondary);">нет</button>
+        <form hx-post="/dashboard/checkin/{{ checkin.id }}/cancel/"
+              hx-target="closest [id^='checkins-']"
+              hx-swap="innerHTML"
+              class="inline">
+          {% csrf_token %}
+          <input type="hidden" name="schedule_id" value="{{ schedule_id }}">
+          <input type="hidden" name="date" value="{{ session_date|date:'Y-m-d' }}">
+          <button type="submit" class="text-[11px] px-2 py-1"
+                  style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+            да
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="py-3 px-5 text-center text-[12px]" style="color: var(--branding-text-secondary); background-color: rgba(0,0,0,0.025);">
+  Нет посещений
+</div>
+{% endif %}

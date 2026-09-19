@@ -1,0 +1,55 @@
+# Secrets and credentials
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Public CA certificates required by the Tochka API TLS chain. Keep the broad
+# certificate exclusion above for secrets and allow only this audited pair.
+!deploy/production/ca/*.crt
+
+# Git and local agent/tool state
+.git/
+.gitignore
+.claude/
+.codex/
+.agents/
+
+# Private or generated runtime data
+media/
+tmp/
+temp/
+*.tmp
+*.log
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+
+# Node dependencies and frontend build/test output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+playwright-report/
+test-results/
+screenshots/
+
+# OS/editor local files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load partials %}
+{% block content %}
+{% partialdef content inline %}
+<div class="fixed inset-0 z-50 flex flex-col" style="background-color: var(--branding-bg);">
+
+  <!-- Top bar with logo -->
+  <div class="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 flex-shrink-0 gap-3" style="background-color: var(--branding-dark);">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div class="w-8 h-8 rounded flex items-center justify-center flex-shrink-0" style="background-color: var(--branding-primary);">
+        <i data-lucide="swords" class="w-4 h-4" style="color: var(--branding-on-primary);"></i>
+      </div>
+      <span class="text-[12px] sm:text-[13px] font-bold tracking-[1px] sm:tracking-[2px] truncate" style="color: var(--branding-on-primary);">
+        {{ club_settings.club_name_display|default:"CRM JAGUAR"|upper }}
+      </span>
+    </div>
+    <a href="/dashboard/" class="text-[11px] sm:text-[12px] font-medium flex-shrink-0" style="color: var(--branding-text-secondary);">
+      Пропустить →
+    </a>
+  </div>
+
+  <!-- Main content centered -->
+  <div class="flex-1 flex items-start justify-center overflow-y-auto pt-8 sm:pt-12 pb-8">
+    <div class="w-full max-w-[560px] px-4">
+      <!-- Welcome message -->
+      <h1 class="text-[22px] sm:text-[28px] font-bold text-center mb-2" style="color: var(--branding-text);">
+        Добро пожаловать, {{ request.user.first_name|default:"" }}!
+      </h1>
+      <p class="text-[14px] text-center mb-10" style="color: var(--branding-text-secondary);">
+        Настройте клуб за несколько шагов.
+      </p>
+
+      <!-- Step list -->
+      <div class="flex flex-col" style="border: 2px solid var(--branding-dark); background-color: var(--branding-surface);">
+        {% for s in steps %}
+        <div class="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5 flex-wrap {% if not forloop.last %}{% endif %}"
+             style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+          <!-- Step indicator -->
+          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+               style="{% if s.done %}background-color: #2E7D32;{% elif s.current %}background-color: var(--branding-primary);{% else %}background-color: transparent; border: 2px solid var(--branding-border);{% endif %}">
+            {% if s.done %}
+            <i data-lucide="check" class="w-4 h-4" style="color: #FFFFFF;"></i>
+            {% elif s.current %}
+            <span class="text-[13px] font-bold" style="color: var(--branding-on-primary);">{{ s.number }}</span>
+            {% else %}
+            <span class="text-[13px] font-semibold" style="color: var(--branding-text-secondary);">{{ s.number }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Step info -->
+          <div class="flex-1">
+            <div class="text-[14px] font-semibold" style="color: {% if s.done %}#2E7D32{% elif s.current %}var(--branding-text){% else %}var(--branding-text-secondary){% endif %};">
+              {{ s.label }}
+            </div>
+            <div class="text-[12px]" style="color: var(--branding-text-secondary);">{{ s.description }}</div>
+          </div>
+
+          <!-- Action button for current step -->
+          {% if s.current %}
+          <a hx-get="/dashboard/onboarding/step/{{ s.number }}/"
+             hx-target="#wizard-content"
+             class="px-4 py-2 text-[11px] font-semibold tracking-[0.5px] cursor-pointer"
+             style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+            Настроить
+          </a>
+          {% elif s.done %}
+          <span class="text-[12px] font-medium" style="color: #2E7D32;">Готово</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Skip link -->
+      <div class="text-center mt-6">
+        <a href="/dashboard/" class="text-[12px]" style="color: var(--branding-text-secondary);">
+          Пропустить настройку →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step content (loaded inline on first visit, then via HTMX) -->
+  <div id="wizard-content" class="fixed inset-0 z-[60] bg-white flex items-center justify-center {% if not step_template %}hidden{% endif %}">
+    <div class="w-full max-w-2xl p-4 sm:p-8 overflow-y-auto max-h-screen">
+      {% if step_template %}{% include step_template %}{% endif %}
+    </div>
+  </div>
+</div>
+{% endpartialdef %}
+{% endblock %}

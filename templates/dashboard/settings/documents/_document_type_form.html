@@ -1,0 +1,92 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">
+      {% if document_type %}РЕДАКТИРОВАТЬ ДОКУМЕНТ{% else %}НОВЫЙ ТИП ДОКУМЕНТА{% endif %}
+    </h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded cursor-pointer"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="flex items-center gap-2 px-4 py-2.5 mb-4" style="background-color: rgba(198, 40, 40, 0.08); border: 1px solid rgba(198, 40, 40, 0.3);">
+    <span class="text-[12px]" style="color: #C62828;">{{ error }}</span>
+  </div>
+  {% endif %}
+
+  <form hx-post="{% if document_type %}{{ edit_path }}{% else %}{{ create_path }}{% endif %}"
+        hx-target="#slide-over"
+        hx-swap="innerHTML">
+    {% csrf_token %}
+
+    <div class="space-y-5 mb-6">
+      <div>
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Название
+        </label>
+        <input type="text"
+               name="name"
+               value="{{ initial_name }}"
+               required
+               placeholder="Например: Паспорт, Медсправка, Согласие родителей"
+               class="w-full h-11 px-4 text-[13px] outline-none"
+               style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Описание
+        </label>
+        <textarea name="description"
+                  rows="4"
+                  placeholder="Коротко опишите, что именно нужно загрузить и в каком виде."
+                  class="w-full px-4 py-3 text-[13px] outline-none resize-none"
+                  style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">{{ initial_description }}</textarea>
+      </div>
+
+      <div>
+        <label class="block text-[12px] font-semibold tracking-[0.5px] mb-2" style="color: var(--branding-text-secondary);">
+          Для кого нужен документ
+        </label>
+        {% with selected_scope=initial_scope %}
+        <select name="scope"
+                class="w-full h-11 px-4 text-[13px] outline-none"
+                style="border: 1px solid var(--branding-border-input); color: var(--branding-text);">
+          <option value="all" {% if selected_scope == "all" %}selected{% endif %}>Для всех учеников</option>
+          <option value="children" {% if selected_scope == "children" %}selected{% endif %}>Только для детей</option>
+          <option value="adults" {% if selected_scope == "adults" %}selected{% endif %}>Только для взрослых</option>
+        </select>
+        {% endwith %}
+      </div>
+
+      <label class="flex items-start gap-3 p-4" style="border: 1px solid var(--branding-border);">
+        <input type="checkbox"
+               name="is_required"
+               class="w-4 h-4 mt-0.5"
+               {% if required_checked %}checked{% endif %}>
+        <span>
+          <span class="block text-[13px] font-medium" style="color: var(--branding-text);">Документ обязательный</span>
+          <span class="block text-[11px] mt-1" style="color: var(--branding-text-secondary);">
+            Если включено, документ будет считаться незакрытым пунктом в чеклисте ученика, пока его не загрузят или не отметят вручную.
+          </span>
+        </span>
+      </label>
+
+      <div class="p-4" style="background-color: rgba(0, 0, 0, 0.03); border: 1px solid var(--branding-border);">
+        <p class="text-[11px] font-semibold tracking-[0.5px] mb-1" style="color: var(--branding-text);">Форматы для учеников</p>
+        <p class="text-[11px]" style="color: var(--branding-text-secondary);">
+          Загрузка разрешена в PDF, JPG, PNG и WEBP. Максимальный размер файла — 10 МБ.
+        </p>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      {% if document_type %}СОХРАНИТЬ{% else %}СОЗДАТЬ ДОКУМЕНТ{% endif %}
+    </button>
+  </form>
+</div>

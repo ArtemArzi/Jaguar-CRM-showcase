@@ -1,0 +1,154 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">РЕДАКТИРОВАТЬ</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="/dashboard/schedule/{{ schedule.id }}/edit/" hx-target="#slide-over" hx-swap="innerHTML">
+    {% csrf_token %}
+
+    <div class="space-y-4 mb-6">
+      {% if schedule.training_group_id %}
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТРЕНИРОВОЧНАЯ ГРУППА</label>
+        <div class="h-10 px-3 flex items-center text-[13px] border-2" style="border-color: var(--branding-border); color: var(--branding-text);">{{ schedule.training_group.name }}</div>
+        <input type="hidden" name="group_name" value="{{ schedule.group_name }}">
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТИП ТРЕНИРОВКИ</label>
+        <div class="h-10 px-3 flex items-center text-[13px] border-2" style="border-color: var(--branding-border); color: var(--branding-text);">{{ schedule.training_type.name }}</div>
+        <input type="hidden" name="training_type_id" value="{{ schedule.training_type_id }}">
+      </div>
+      {% else %}
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НАЗВАНИЕ ГРУППЫ *</label>
+        <input type="text" name="group_name" required value="{{ schedule.group_name }}"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТИП ТРЕНИРОВКИ *</label>
+        <select name="training_type_id" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">— выберите —</option>
+          {% for training_type in training_types %}
+          <option value="{{ training_type.id }}" {% if schedule.training_type_id == training_type.id %}selected{% endif %}>{{ training_type.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      {% if schedule.one_time_date %}
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ДАТА (РАЗОВОЕ)</label>
+        <div class="h-10 px-3 flex items-center text-[13px] border-2"
+             style="border-color: var(--branding-border); color: var(--branding-text); opacity: 0.7;">
+          {{ schedule.one_time_date|date:"d.m.Y" }}
+        </div>
+        <input type="hidden" name="day_of_week" value="{{ schedule.day_of_week }}">
+      </div>
+      {% else %}
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ДЕНЬ НЕДЕЛИ *</label>
+        <select name="day_of_week" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          {% for value, label in days %}
+          <option value="{{ value }}" {% if schedule.day_of_week == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НАЧАЛО *</label>
+          <input type="time" name="start_time" required value="{{ schedule.start_time|time:'H:i' }}"
+                 class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                 style="border-color: var(--branding-border); color: var(--branding-text);">
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">КОНЕЦ *</label>
+          <input type="time" name="end_time" required value="{{ schedule.end_time|time:'H:i' }}"
+                 class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                 style="border-color: var(--branding-border); color: var(--branding-text);">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТРЕНЕР *</label>
+        <select name="trainer_id" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">— выберите —</option>
+          {% for trainer in trainers %}
+          <option value="{{ trainer.id }}" {% if schedule.trainer_id == trainer.id %}selected{% endif %}>{{ trainer }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if schedule.training_group_id %}
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ЛОКАЦИЯ</label>
+        <div class="h-10 px-3 flex items-center text-[13px] border-2" style="border-color: var(--branding-border); color: var(--branding-text);">{{ schedule.location.name }}</div>
+        <input type="hidden" name="location_id" value="{{ schedule.location_id }}">
+      </div>
+      {% else %}
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ЛОКАЦИЯ *</label>
+        <select name="location_id" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">— выберите —</option>
+          {% for loc in locations %}
+          <option value="{{ loc.id }}" {% if schedule.location_id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      СОХРАНИТЬ ИЗМЕНЕНИЯ
+    </button>
+  </form>
+
+  <div class="mt-4" x-data="{ confirming: false }">
+    <button x-show="!confirming" @click="confirming = true"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px] bg-transparent"
+            style="border: 1.5px solid #C45A3B; color: #C45A3B;">
+      УБРАТЬ ИЗ РАСПИСАНИЯ
+    </button>
+    <div x-show="confirming" x-cloak class="space-y-2">
+      <p class="text-[12px] text-center py-2" style="color: #C45A3B;">Занятие перестанет отображаться в сетке</p>
+      <div class="flex gap-2">
+        <button @click="confirming = false"
+                class="flex-1 h-10 text-[11px] font-semibold tracking-[1px]"
+                style="border: 1.5px solid var(--branding-border); color: var(--branding-text-secondary);">
+          НЕТ
+        </button>
+        <form hx-post="/dashboard/schedule/{{ schedule.id }}/edit/" hx-target="#slide-over" hx-swap="innerHTML" class="flex-1">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="deactivate">
+          <button type="submit"
+                  class="w-full h-10 text-[11px] font-semibold tracking-[1px]"
+                  style="background-color: #C45A3B; color: var(--branding-on-primary);">
+            ДА, УБРАТЬ
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

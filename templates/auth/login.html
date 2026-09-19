@@ -1,0 +1,57 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Вход - CRM Jaguar</title>
+    <link rel="icon" type="image/svg+xml" sizes="any" href="{% static 'admin/favicon.svg' %}" />
+    <link rel="stylesheet" href="{% static 'css/output-v2.css' %}" />
+    <style>
+      :root {
+        --branding-primary: {{ club_settings.primary_color|default:"#000000" }};
+        --branding-accent: {{ club_settings.accent_color|default:"#FF6B00" }};
+      }
+    </style>
+  </head>
+  <body class="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+    <form method="post" class="bg-white p-6 sm:p-8 rounded-lg shadow-md w-full max-w-sm">
+      {% csrf_token %}
+      <h1 class="text-2xl font-bold mb-6 text-center">CRM Jaguar</h1>
+      {% if error %}
+      <div class="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm">
+        {{ error }}
+      </div>
+      {% endif %}
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-1" for="email">Эл. почта</label>
+        <input
+          type="email"
+          name="email"
+          id="email"
+          required
+          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-1" for="password"
+          >Пароль</label
+        >
+        <input
+          type="password"
+          name="password"
+          id="password"
+          required
+          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <button
+        type="submit"
+        class="w-full py-2 rounded text-white font-medium"
+        style="background-color: var(--branding-primary)"
+      >
+        Войти
+      </button>
+    </form>
+  </body>
+</html>

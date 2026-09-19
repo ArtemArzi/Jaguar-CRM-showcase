@@ -1,0 +1,78 @@
+<section id="freeze-approval-inbox" class="mb-5" style="border: 1.5px solid var(--branding-border); background-color: var(--branding-surface);">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-4 py-3" style="border-bottom: 1px solid var(--branding-border);">
+    <div>
+      <h2 class="text-[15px] font-bold tracking-[0.4px]" style="color: var(--branding-text);">Заявки на заморозку</h2>
+      <p class="text-[12px]" style="color: var(--branding-text-secondary);">Новые запросы от тренеров</p>
+    </div>
+    <span class="self-start sm:self-auto px-2.5 py-1 text-[11px] font-semibold" style="background-color: #FFF8E1; color: #8A5A00;">
+      {{ pending_freezes|length }} заявок
+    </span>
+  </div>
+
+  {% if freeze_inbox_error %}
+  <div class="mx-4 mt-3 px-3 py-2 text-[12px] font-medium" style="background-color: #FFEBEE; color: #B71C1C;">
+    {{ freeze_inbox_error }}
+  </div>
+  {% endif %}
+
+  {% if pending_freezes %}
+  <div class="divide-y" style="border-color: var(--branding-border);">
+    {% for freeze in pending_freezes %}
+    <div class="px-4 py-3 grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-3 lg:items-center">
+      <div class="min-w-0">
+        <div class="text-[13px] font-semibold truncate" style="color: var(--branding-text);">{{ freeze.subscription.student }}</div>
+        <div class="text-[12px] truncate" style="color: var(--branding-text-secondary);">{{ freeze.subscription.tariff.name }}</div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 text-[12px]">
+        <div>
+          <div class="text-[10px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">ДНЕЙ</div>
+          <div style="color: var(--branding-text);">{{ freeze.days }} дн.</div>
+        </div>
+        <div>
+          <div class="text-[10px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">ПРИЧИНА</div>
+          <div style="color: var(--branding-text);">{{ freeze.get_reason_display }}</div>
+        </div>
+        <div>
+          <div class="text-[10px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">ЗАПРОСИЛ</div>
+          <div style="color: var(--branding-text);">{{ freeze.frozen_by.get_username }}</div>
+        </div>
+        <div>
+          <div class="text-[10px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">СОЗДАНО</div>
+          <div style="color: var(--branding-text);">{{ freeze.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-2">
+        <button hx-post="/dashboard/billing/freezes/{{ freeze.id }}/approve/"
+                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                hx-target="#freeze-approval-inbox"
+                hx-swap="outerHTML"
+                hx-disabled-elt="this"
+                class="h-9 px-3 text-[11px] font-semibold disabled:opacity-50"
+                style="background-color: #E8F5E9; color: #2E7D32;">
+          ОДОБРИТЬ
+        </button>
+        <form hx-post="/dashboard/billing/freezes/{{ freeze.id }}/reject/"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              hx-target="#freeze-approval-inbox"
+              hx-swap="outerHTML"
+              class="flex gap-2">
+          <input name="decision_reason"
+                 maxlength="500"
+                 placeholder="Причина"
+                 class="h-9 min-w-0 w-[140px] px-2 text-[12px] outline-none"
+                 style="border: 1px solid var(--branding-border); color: var(--branding-text);">
+          <button type="submit"
+                  hx-disabled-elt="this"
+                  class="h-9 px-3 text-[11px] font-semibold disabled:opacity-50"
+                  style="background-color: #FFEBEE; color: #C62828;">
+            ОТКЛОНИТЬ
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="px-4 py-6 text-[13px]" style="color: var(--branding-text-secondary);">Новых заявок нет</div>
+  {% endif %}
+</section>

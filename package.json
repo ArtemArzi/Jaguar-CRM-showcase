@@ -1,0 +1,23 @@
+{
+  "name": "reserch",
+  "version": "1.0.0",
+  "description": "CRM for a sports club: Django admin workspace and React PWA",
+  "scripts": {
+    "e2e:devices": "env TMPDIR=/tmp NO_PROXY=127.0.0.1,localhost,::1 npm --prefix frontend run e2e:devices --",
+    "e2e:real-stack": "bash scripts/run-real-stack-e2e.sh",
+    "e2e:real-stack:pack": "bash scripts/run-real-stack-e2e-pack.sh",
+    "lint": "npm --prefix frontend run lint",
+    "test": "npm --prefix frontend run test",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "build:admin-css": "tailwindcss -i static/css/input.css -o static/css/output-v2.css && lightningcss --targets \"iOS >= 14, Safari >= 14\" static/css/output-v2.css -o static/css/output-v2.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
+    "lightningcss-cli": "1.33.0",
+    "tailwindcss": "^4.2.2"
+  }
+}

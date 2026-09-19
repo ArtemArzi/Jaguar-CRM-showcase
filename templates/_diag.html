@@ -1,0 +1,78 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DIAG</title>
+<link rel="stylesheet" href="{% static 'css/output-v2.css' %}?d={% now 'U' %}" />
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; padding: 12px; font-size: 14px; line-height: 1.4; background: #fff; color: #000; }
+  pre { background: #f0f0f0; padding: 8px; white-space: pre-wrap; word-break: break-all; font-size: 11px; }
+  .test-box { border: 2px solid red; padding: 8px; margin: 8px 0; }
+  .ok { color: green; font-weight: bold; }
+  .bad { color: red; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>DIAG PAGE</h1>
+  <div id="ua-info"></div>
+
+  <h2>1. CSS test (these MUST be pink and 200px wide):</h2>
+  <div class="bg-pink-200 w-[200px] h-[40px]">If pink+200px → Tailwind WORKS</div>
+
+  <h2>2. Responsive test:</h2>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+    <div class="bg-blue-200 p-2">A</div>
+    <div class="bg-blue-200 p-2">B</div>
+    <div class="bg-blue-200 p-2">C</div>
+    <div class="bg-blue-200 p-2">D</div>
+  </div>
+  <p>↑ MUST be 2 columns on phone, 4 on desktop</p>
+
+  <h2>3. lg:hidden test:</h2>
+  <div class="lg:hidden bg-yellow-200 p-2">VISIBLE on phone, HIDDEN on desktop</div>
+  <div class="hidden lg:block bg-green-200 p-2">HIDDEN on phone, VISIBLE on desktop</div>
+
+  <h2>4. Asset checks:</h2>
+  <pre id="asset-status">checking...</pre>
+
+  <h2>5. Headers / network:</h2>
+  <pre id="net-info"></pre>
+
+  <script>
+    const ua = navigator.userAgent;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const dpr = devicePixelRatio;
+    document.getElementById('ua-info').innerHTML =
+      '<pre>UA: ' + ua + '\nViewport: ' + vw + 'x' + vh + '\nDPR: ' + dpr + '</pre>';
+
+    async function checkAsset(url) {
+      try {
+        const r = await fetch(url, {cache: 'no-store'});
+        return url + ': ' + r.status + ' (' + (r.headers.get('content-length') || '?') + ' bytes)';
+      } catch(e) { return url + ': FAILED ' + e.message; }
+    }
+
+    Promise.all([
+      checkAsset('/static/css/output-v2.css'),
+      checkAsset('/static/vendor/htmx.min.js'),
+      checkAsset('/static/vendor/alpine.min.js'),
+      checkAsset('/static/vendor/lucide.min.js'),
+    ]).then(results => {
+      document.getElementById('asset-status').textContent = results.join('\n');
+    });
+
+    // computed style check
+    setTimeout(() => {
+      const test = document.querySelector('.bg-pink-200');
+      const cs = getComputedStyle(test);
+      document.getElementById('net-info').textContent =
+        'pink box bg: ' + cs.backgroundColor + '\n' +
+        'pink box width: ' + cs.width + '\n' +
+        'pink box has Tailwind: ' + (cs.backgroundColor.includes('251') || cs.backgroundColor.includes('pink') ? 'YES' : 'NO');
+    }, 500);
+  </script>
+</body>
+</html>

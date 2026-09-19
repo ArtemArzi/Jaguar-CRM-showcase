@@ -1,0 +1,6 @@
+<button type="button" hx-get="{% url 'trainer-detail' trainer.id %}" hx-target="#content" hx-push-url="true"
+        onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full')"
+        class="mb-4 min-h-11 px-2 py-3 font-semibold">← Назад к тренеру</button>
+<p class="mb-4 text-[13px]">{{ trainer.first_name }} {{ trainer.last_name }}</p>
+{% if error %}<div role="alert" class="mb-4 p-3 text-[13px]" style="background:#FDF2EF;color:#9F3D28;">{{ error }}</div>{% endif %}
+{% if success %}<div role="status" class="mb-4 p-3 text-[13px]" style="background:#EAF5ED;">{{ success }}</div>{% endif %}

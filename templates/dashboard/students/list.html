@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Ученики - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<!-- Title row -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+  <h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px]" style="color: var(--branding-text);">УЧЕНИКИ</h1>
+  <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+    <div class="relative">
+      <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style="color: var(--branding-text-secondary);"></i>
+      <input type="text" name="q" value="{{ search_query }}"
+             placeholder="Поиск по имени или телефону..."
+             hx-get="/dashboard/students/"
+             hx-trigger="keyup changed delay:300ms"
+             hx-target="#content"
+             hx-push-url="true"
+             class="h-10 pl-10 pr-4 text-[13px] w-full sm:w-[260px] outline-none"
+             style="border: 1.5px solid var(--branding-dark);" />
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <button hx-get="/dashboard/students/create/"
+              hx-target="#slide-over"
+              onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+              class="h-10 px-4 flex items-center gap-2 text-[11px] font-semibold tracking-[1px]"
+              style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        ДОБАВИТЬ
+      </button>
+      <a href="{% url 'student-opening-home' %}" class="inline-block px-4 py-3 text-[12px] font-semibold" style="border:1.5px solid var(--branding-dark);">Загрузить из Excel</a>
+      <button hx-get="/dashboard/students/import/"
+              hx-target="#slide-over"
+              onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+              class="h-10 px-4 flex items-center gap-2 text-[11px] font-semibold tracking-[1px]"
+              style="border: 1.5px solid var(--branding-dark); color: var(--branding-text);">
+        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+        ИМПОРТ КОНТАКТОВ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Status filter (mobile: native select) -->
+<div class="sm:hidden mb-5">
+  <select name="status"
+          hx-get="/dashboard/students/"
+          hx-trigger="change"
+          hx-target="#content"
+          hx-push-url="true"
+          hx-vals='js:{q: "{{ search_query|escapejs }}"}'
+          class="soft-input soft-select w-full font-semibold">
+    <option value="" {% if not current_status %}selected{% endif %}>Все ({{ page_obj.paginator.count|default:"0" }})</option>
+    {% for value, label in statuses %}
+    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- Status filter tabs (desktop) -->
+<div class="hidden sm:flex sm:flex-wrap gap-2 mb-5">
+  <a href="?q={{ search_query|urlencode }}"
+     hx-get="/dashboard/students/?q={{ search_query|urlencode }}"
+     hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px]
+            {% if not current_status %}text-[#F5F2ED]{% else %}{% endif %}"
+     style="{% if not current_status %}background-color: var(--branding-dark);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    ВСЕ {{ page_obj.paginator.count|default:"" }}
+  </a>
+  {% for value, label in statuses %}
+  <a href="?status={{ value }}&q={{ search_query|urlencode }}"
+     hx-get="/dashboard/students/?status={{ value }}&q={{ search_query|urlencode }}"
+     hx-target="#content" hx-push-url="true"
+     class="flex items-center gap-1.5 px-4 py-2 text-[11px] font-semibold tracking-[1px]
+            {% if current_status == value %}{% else %}{% endif %}"
+     style="{% if current_status == value %}border: 1.5px solid {% if value == 'active' %}#6B8E5E{% elif value == 'at_risk' %}var(--branding-primary){% elif value == 'trial' %}#E8C84B{% else %}var(--branding-border){% endif %}; color: {% if value == 'active' %}#6B8E5E{% elif value == 'at_risk' %}var(--branding-primary){% else %}var(--branding-text){% endif %};{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    <span class="w-2 h-2 rounded-full" style="background-color: {% if value == 'active' %}#6B8E5E{% elif value == 'at_risk' %}#C45A3B{% elif value == 'trial' %}#E8C84B{% elif value == 'frozen' %}#5B9BD5{% else %}#888888{% endif %};"></span>
+    {{ label|upper }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Table -->
+<div id="student-table"
+     hx-get="/dashboard/students/?q={{ search_query|urlencode }}{% if current_status %}&status={{ current_status }}{% endif %}"
+     hx-trigger="studentUpdated from:body"
+     hx-target="#content">
+  {% partialdef student-table inline %}
+  <!-- Mobile cards -->
+  <div class="md:hidden flex flex-col gap-2.5">
+    {% for student in page_obj %}
+    <div role="button" tabindex="0" data-student-opener aria-haspopup="dialog"
+         aria-label="Открыть карточку: {{ student.first_name }} {{ student.last_name }}"
+         hx-get="/dashboard/students/{{ student.id }}/card/"
+         hx-target="#slide-over"
+         onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+         class="p-4 cursor-pointer transition-colors"
+         style="background-color: rgba(255,255,255,0.6); border: 1px solid var(--branding-border);">
+      <!-- Top row: name + status badge -->
+      <div class="flex items-start justify-between gap-3 mb-2">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: {% if student.status == 'active' %}#6B8E5E{% elif student.status == 'at_risk' %}#C45A3B{% elif student.status == 'trial' %}#E8C84B{% elif student.status == 'frozen' %}#5B9BD5{% else %}#888888{% endif %};"></span>
+          <span class="text-[14px] font-semibold truncate" style="color: var(--branding-text);">{{ student.first_name }} {{ student.last_name }}</span>
+        </div>
+        <span class="inline-flex px-2 py-0.5 text-[9px] font-semibold tracking-[1px] flex-shrink-0"
+              style="{% if student.status == 'active' %}background-color: #6B8E5E; color: var(--branding-on-primary);{% elif student.status == 'at_risk' %}background-color: #C45A3B; color: var(--branding-on-primary);{% elif student.status == 'trial' %}background-color: #E8C84B; color: #1A1A1A;{% elif student.status == 'frozen' %}background-color: #5B9BD5; color: var(--branding-on-primary);{% elif student.status == 'lead' %}background-color: #888888; color: var(--branding-on-primary);{% else %}background-color: #666666; color: var(--branding-on-primary);{% endif %}">
+          {{ student.get_status_display|upper }}
+        </span>
+      </div>
+      <!-- Info rows -->
+      <div class="flex flex-col gap-1">
+        {% if student.subscription_name %}
+        <div class="flex items-center gap-2 text-[12px]">
+          <i data-lucide="credit-card" class="w-3.5 h-3.5 flex-shrink-0" style="color: var(--branding-text-secondary);"></i>
+          <span class="truncate" style="color: var(--branding-text);">{{ student.subscription_name }}</span>
+        </div>
+        {% endif %}
+        {% if student.group_name %}
+        <div class="flex items-center gap-2 text-[12px]">
+          <i data-lucide="users" class="w-3.5 h-3.5 flex-shrink-0" style="color: var(--branding-text-secondary);"></i>
+          <span class="truncate" style="color: var(--branding-text);">{{ student.group_name }}</span>
+        </div>
+        {% endif %}
+        {% if student.trainer_name %}
+        <div class="flex items-center gap-2 text-[12px]">
+          <i data-lucide="dumbbell" class="w-3.5 h-3.5 flex-shrink-0" style="color: var(--branding-text-secondary);"></i>
+          <span class="truncate" style="color: var(--branding-text-secondary);">{{ student.trainer_name }}</span>
+        </div>
+        {% endif %}
+      </div>
+      <!-- Last visit -->
+      <div class="mt-2 pt-2 text-[11px]" style="color: var(--branding-text-secondary); border-top: 1px solid var(--branding-border);">
+        Последний визит: {{ student.last_visit|date:"d.m.Y"|default:"—" }}
+      </div>
+    </div>
+    {% empty %}
+    <div class="py-12 text-center text-[13px]" style="color: var(--branding-text-secondary);">Ученики не найдены</div>
+    {% endfor %}
+  </div>
+
+  <!-- Desktop table -->
+  <div class="hidden md:block overflow-x-auto border-2" style="border-color: var(--branding-dark);">
+    <table class="w-full min-w-[860px]">
+      <thead>
+        <tr style="background-color: var(--branding-dark); height: 44px;">
+          <th class="w-8 px-5"></th>
+          <th class="w-[200px] px-0 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ИМЯ</th>
+          <th class="w-[120px] px-0 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">СТАТУС</th>
+          <th class="w-[160px] px-0 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">АБОНЕМЕНТ</th>
+          <th class="w-[130px] px-0 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ГРУППА</th>
+          <th class="w-[110px] px-0 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ПОСЛ. ВИЗИТ</th>
+          <th class="px-0 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ТРЕНЕР</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in page_obj %}
+        <tr hx-get="/dashboard/students/{{ student.id }}/card/"
+            hx-target="#slide-over"
+            onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+            class="cursor-pointer transition-colors"
+            style="height: 48px; border-bottom: 1px solid var(--branding-border);"
+            data-hover-color="rgba(255,255,255,0.5)"
+            data-default-color="transparent"
+            onmouseover="this.style.backgroundColor=this.dataset.hoverColor"
+            onmouseout="this.style.backgroundColor=this.dataset.defaultColor">
+          <td class="px-5">
+            <span class="w-2 h-2 rounded-full inline-block" style="background-color: {% if student.status == 'active' %}#6B8E5E{% elif student.status == 'at_risk' %}#C45A3B{% elif student.status == 'trial' %}#E8C84B{% elif student.status == 'frozen' %}#5B9BD5{% else %}#888888{% endif %};"></span>
+          </td>
+          <td class="text-[13px] font-medium" style="color: var(--branding-text);">
+            <button type="button" data-student-opener aria-haspopup="dialog"
+                    hx-get="/dashboard/students/{{ student.id }}/card/" hx-target="#slide-over"
+                    onclick="event.stopPropagation(); document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                    class="py-3 text-left" aria-label="Открыть карточку: {{ student.first_name }} {{ student.last_name }}">{{ student.first_name }} {{ student.last_name }}</button>
+          </td>
+          <td>
+            <span class="inline-flex px-2.5 py-1 text-[9px] font-semibold tracking-[1px]"
+                  style="{% if student.status == 'active' %}background-color: #6B8E5E; color: var(--branding-on-primary);{% elif student.status == 'at_risk' %}background-color: #C45A3B; color: var(--branding-on-primary);{% elif student.status == 'trial' %}background-color: #E8C84B; color: #1A1A1A;{% elif student.status == 'frozen' %}background-color: #5B9BD5; color: var(--branding-on-primary);{% elif student.status == 'lead' %}background-color: #888888; color: var(--branding-on-primary);{% else %}background-color: #666666; color: var(--branding-on-primary);{% endif %}">
+              {{ student.get_status_display|upper }}
+            </span>
+          </td>
+          <td class="text-[12px]" style="color: var(--branding-text);">{{ student.subscription_name|default:"—" }}</td>
+          <td class="text-[12px]" style="color: var(--branding-text);">{{ student.group_name|default:"—" }}</td>
+          <td class="text-[12px]" style="color: var(--branding-text-secondary);">{{ student.last_visit|date:"d.m.Y"|default:"—" }}</td>
+          <td class="text-[12px]" style="color: var(--branding-text);">{{ student.trainer_name|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="px-5 py-8 text-center text-[13px]" style="color: var(--branding-text-secondary);">Ученики не найдены</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div class="flex items-center justify-between mt-4">
+    <span class="text-[12px]" style="color: var(--branding-text-secondary);">
+      Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} всего)
+    </span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}
+      <a hx-get="/dashboard/students/?page={{ page_obj.previous_page_number }}&q={{ search_query|urlencode }}&status={{ current_status }}"
+         hx-target="#content" hx-push-url="true"
+         class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+         style="border: 1px solid var(--branding-border); color: var(--branding-text);">Назад</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a hx-get="/dashboard/students/?page={{ page_obj.next_page_number }}&q={{ search_query|urlencode }}&status={{ current_status }}"
+         hx-target="#content" hx-push-url="true"
+         class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+         style="border: 1px solid var(--branding-border); color: var(--branding-text);">Далее</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% endpartialdef %}
+</div>
+
+<script>
+document.body.addEventListener("closeSlideOver", function() {
+  document.getElementById('slide-over-backdrop').classList.add('hidden');
+  document.getElementById('slide-over').classList.add('translate-x-full');
+});
+</script>
+
+{% endpartialdef %}
+{% endblock %}

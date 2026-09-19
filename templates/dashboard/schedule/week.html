@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Расписание - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6 sm:mb-7">
+  <h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px]" style="color: var(--branding-text);">РАСПИСАНИЕ</h1>
+  <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+    <button hx-get="/dashboard/schedule/create/"
+            hx-target="#slide-over"
+            onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+            class="h-10 px-4 flex items-center gap-2 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+      ДОБАВИТЬ
+    </button>
+    <a hx-get="/dashboard/schedule/?week_offset={{ prev_week_offset }}"
+       hx-target="#content" hx-push-url="true"
+       class="w-8 h-8 flex items-center justify-center cursor-pointer border"
+       style="border-color: var(--branding-dark); color: var(--branding-dark);">
+      <i data-lucide="chevron-left" class="w-4 h-4"></i>
+    </a>
+    <span class="text-[13px] font-semibold px-3" style="color: var(--branding-text);">
+      {{ week_label }}
+    </span>
+    <a hx-get="/dashboard/schedule/?week_offset={{ next_week_offset }}"
+       hx-target="#content" hx-push-url="true"
+       class="w-8 h-8 flex items-center justify-center cursor-pointer border"
+       style="border-color: var(--branding-dark); color: var(--branding-dark);">
+      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+    </a>
+  </div>
+</div>
+
+<!-- Mobile day stack -->
+<div class="lg:hidden flex flex-col gap-3">
+  {% for col in columns %}
+  <div class="border-2" style="border-color: var(--branding-dark); {% if col.is_today %}background-color: rgba(196,90,59,0.05);{% endif %}">
+    <!-- Day header -->
+    <div class="flex items-center justify-between px-4 py-3" style="{% if col.is_today %}background-color: var(--branding-primary);{% else %}background-color: var(--branding-dark);{% endif %}">
+      <span class="text-[12px] font-semibold tracking-[1px]" style="color: {% if col.is_today %}var(--branding-on-primary){% else %}var(--branding-text-secondary){% endif %};">
+        {{ col.label|upper }}
+      </span>
+      <span class="text-[11px]" style="color: {% if col.is_today %}var(--branding-on-primary){% else %}var(--branding-text-secondary){% endif %}; opacity: 0.8;">
+        {{ col.date|date:"d.m" }}
+      </span>
+    </div>
+    <!-- Sessions for the day -->
+    {% if col.sessions %}
+    <div class="flex flex-col">
+      {% for item in col.sessions %}
+      <div class="flex cursor-pointer transition-all"
+           style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}"
+           hx-get="/dashboard/schedule/{{ item.schedule_id }}/detail/?date={{ col.date|date:'Y-m-d' }}"
+           hx-target="#slide-over"
+           onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full');">
+        <div class="w-1 flex-shrink-0" style="background-color: {{ item.trainer_color }};"></div>
+        <div class="flex-1 p-3 min-w-0">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <span class="text-[13px] font-bold" style="color: var(--branding-text);">
+              {{ item.effective_start_time|time:"H:i" }}–{{ item.effective_end_time|time:"H:i" }}
+            </span>
+            <div class="flex items-center gap-1 flex-shrink-0">
+              {% if item.is_rescheduled %}
+              <span class="px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.5px]"
+                    style="background-color: #E3F2FD; color: #1565C0;">
+                ПЕРЕНОС
+              </span>
+              {% endif %}
+              {% if item.is_substitute %}
+              <span class="px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.5px]"
+                    style="background-color: #FFF8E1; color: #F57F17;">
+                ЗАМЕНА
+              </span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="text-[14px] font-semibold truncate" style="color: var(--branding-text);">
+            {{ item.group_name }}
+          </div>
+          {% if item.one_time_date %}
+          <span class="inline-block px-1.5 py-0.5 mt-1 text-[9px] font-semibold tracking-[0.5px]" style="background-color: var(--branding-border); color: var(--branding-text-secondary);">РАЗОВОЕ</span>
+          {% endif %}
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background-color: {{ item.trainer_color }};"></span>
+            <span class="text-[11px] truncate" style="color: {% if item.is_substitute %}#E8C84B{% else %}var(--branding-text-secondary){% endif %};">
+              {{ item.trainer_name }}
+            </span>
+            <span class="text-[10px] ml-auto flex-shrink-0 truncate" style="color: var(--branding-text-secondary); opacity: 0.6;">
+              {{ item.location_name }}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="px-4 py-6 text-center text-[11px]" style="color: var(--branding-text-secondary); opacity: 0.6;">Нет занятий</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="hidden lg:block overflow-x-auto border-2" data-week-offset="{{ next_week_offset|add:-1 }}" style="border-color: var(--branding-dark);">
+  <table class="w-full min-w-[800px] border-collapse">
+    <thead>
+      <tr style="background-color: var(--branding-dark); height: 44px;">
+        {% for col in columns %}
+        <th class="px-3 text-left text-[10px] font-semibold tracking-[1px] w-1/6
+                   {% if col.is_today %}{% endif %}"
+            style="color: {% if col.is_today %}var(--branding-on-primary){% else %}var(--branding-text-secondary){% endif %};
+                   {% if col.is_today %}background-color: var(--branding-primary);{% endif %}">
+          {{ col.label|upper }}
+          <span class="ml-1 text-[10px] opacity-70">{{ col.date|date:"d.m" }}</span>
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="align-top">
+        {% for col in columns %}
+        <td class="px-2 py-3 align-top"
+            style="border-right: 1px solid var(--branding-border); {% if col.is_today %}background-color: rgba(196,90,59,0.05);{% endif %}">
+          {% if col.sessions %}
+          <div class="flex flex-col gap-2">
+            {% for item in col.sessions %}
+            <div class="flex cursor-pointer transition-all hover:shadow-md"
+                 style="background-color: var(--branding-dark);"
+                 hx-get="/dashboard/schedule/{{ item.schedule_id }}/detail/?date={{ col.date|date:'Y-m-d' }}"
+                 hx-target="#slide-over"
+                 onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full');">
+              <!-- Color stripe -->
+              <div class="w-1 flex-shrink-0" style="background-color: {{ item.trainer_color }};"></div>
+              <div class="p-2 flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-0.5">
+                  <span class="text-[11px] font-bold"
+                        style="color: #F5F2ED;">
+                    {{ item.effective_start_time|time:"H:i" }}–{{ item.effective_end_time|time:"H:i" }}
+                  </span>
+                  <div class="flex items-center gap-1">
+                    {% if item.is_rescheduled %}
+                    <span class="px-1.5 py-0.5 text-[8px] font-semibold tracking-[0.5px]"
+                          style="background-color: #E3F2FD; color: #1565C0;">
+                      ПЕРЕНОС
+                    </span>
+                    {% endif %}
+                    {% if item.is_substitute %}
+                    <span class="px-1.5 py-0.5 text-[8px] font-semibold tracking-[0.5px]"
+                          style="background-color: #FFF8E1; color: #F57F17;">
+                      ЗАМЕНА
+                    </span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="text-[12px] font-semibold truncate"
+                     style="color: #F5F2ED;">
+                  {{ item.group_name }}
+                </div>
+                {% if item.one_time_date %}
+                <span class="inline-block px-1.5 py-0.5 text-[8px] font-semibold tracking-[0.5px]"
+                      style="background-color: rgba(255,255,255,0.15); color: var(--branding-on-primary);">РАЗОВОЕ</span>
+                {% endif %}
+                <div class="flex items-center gap-1 mt-1">
+                  <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background-color: {{ item.trainer_color }};"></span>
+                  <span class="text-[10px] truncate"
+                        style="color: {% if item.is_substitute %}#E8C84B{% else %}var(--branding-text-secondary){% endif %};">
+                    {{ item.trainer_name }}
+                  </span>
+                </div>
+                <div class="text-[9px] mt-0.5 truncate" style="color: var(--branding-text-secondary); opacity: 0.6;">
+                  {{ item.location_name }}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="py-8 text-center">
+            <div class="text-[10px]" style="color: var(--branding-border);">Нет занятий</div>
+          </div>
+          {% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.body.addEventListener("closeSlideOver", function() {
+  document.getElementById('slide-over-backdrop').classList.add('hidden');
+  document.getElementById('slide-over').classList.add('translate-x-full');
+});
+document.body.addEventListener("scheduleUpdated", function() {
+  var offset = document.querySelector('[data-week-offset]')?.dataset.weekOffset || '0';
+  htmx.ajax('GET', '/dashboard/schedule/?week_offset=' + offset, {target: '#content', swap: 'innerHTML'});
+});
+</script>
+
+{% endpartialdef %}
+{% endblock %}

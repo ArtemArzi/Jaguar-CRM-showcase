@@ -1,0 +1,50 @@
+{% load l10n %}
+
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">ИЗМЕНИТЬ ЦЕНУ</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <div class="mb-5 p-3" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+    <div class="text-[12px]" style="color: var(--branding-text-secondary);">Текущий тариф</div>
+    <div class="mt-1 text-[15px] font-semibold" style="color: var(--branding-text);">{{ tariff.name }}</div>
+    <div class="mt-1 text-[12px]" style="color: var(--branding-text-secondary);">{{ tariff.price }} ₽ · {{ tariff.duration_days }} дней</div>
+    <p class="mt-3 text-[11px]" style="color: var(--branding-text-secondary);">
+      Оплаченные абонементы сохранят прежнюю цену и условия. Новые покупки и следующие продления увидят новую цену.
+    </p>
+  </div>
+
+  <form hx-post="{% url 'tariff-price-revision' tariff_id=tariff.id %}"
+        hx-target="#slide-over" hx-swap="innerHTML">
+    {% csrf_token %}
+    <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+    <div class="space-y-4 mb-6">
+      <div>
+        <label for="tariff-revision-name" class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НОВОЕ НАЗВАНИЕ *</label>
+        <input id="tariff-revision-name" type="text" name="new_name" required maxlength="200" value="{{ new_name }}"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+      <div>
+        <label for="tariff-revision-price" class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НОВАЯ ЦЕНА (&#8381;) *</label>
+        <input id="tariff-revision-price" type="number" name="new_price" step="1" min="1" required value="{{ new_price|unlocalize }}"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+    </div>
+    <button type="submit" class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      СОХРАНИТЬ НОВУЮ ЦЕНУ
+    </button>
+  </form>
+</div>

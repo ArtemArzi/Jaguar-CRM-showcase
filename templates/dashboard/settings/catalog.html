@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% load partials %}
+
+{% block title %}Настройки — Каталог{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+<h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px] mb-6 sm:mb-7" style="color: var(--branding-text);">Настройки</h1>
+
+{% include "dashboard/settings/_tabs.html" %}
+
+{% partialdef settings-tab-content inline %}
+
+{# ═══════════════════════════════════════════════════════ #}
+{# ЛОКАЦИИ                                                  #}
+{# ═══════════════════════════════════════════════════════ #}
+<div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+  <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+    <div class="flex items-center gap-2">
+      <i data-lucide="map-pin" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Залы</h2>
+    </div>
+    <button hx-get="{% url 'location-form' %}"
+            hx-target="#slide-over"
+            onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+            class="flex items-center gap-1.5 h-8 px-3 text-[11px] font-semibold tracking-[0.5px] cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+      Добавить зал
+    </button>
+  </div>
+  <p class="text-[12px] mb-5" style="color: var(--branding-text-secondary);">
+    Залы и площадки клуба. Используются в расписании и для привязки тренеров.
+  </p>
+
+  {% for loc in locations %}
+  <div class="flex items-center justify-between py-3"
+       style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+    <div>
+      <span class="text-[13px] font-medium" style="color: var(--branding-text);">{{ loc.name }}</span>
+      {% if loc.address %}
+      <p class="text-[11px] mt-0.5" style="color: var(--branding-text-secondary);">{{ loc.address }}</p>
+      {% endif %}
+    </div>
+    <div class="flex items-center gap-2">
+      <button hx-get="{% url 'location-edit' loc.id %}"
+              hx-target="#slide-over"
+              onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+              class="w-7 h-7 flex items-center justify-center rounded cursor-pointer"
+              style="color: var(--branding-text-secondary);"
+              title="Редактировать">
+        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+      </button>
+      <button hx-post="{% url 'location-delete' loc.id %}"
+              hx-swap="none"
+              hx-confirm="Удалить зал «{{ loc.name }}»? Если к залу привязано расписание или тренеры, удаление будет отклонено."
+              class="w-7 h-7 flex items-center justify-center rounded cursor-pointer"
+              style="color: #C62828;"
+              title="Удалить">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-[12px]" style="color: var(--branding-text-secondary);">Нет локаций. Добавьте первую локацию для работы с расписанием.</p>
+  {% endfor %}
+</div>
+
+{# ═══════════════════════════════════════════════════════ #}
+{# СИСТЕМЫ АТТЕСТАЦИИ                                       #}
+{# ═══════════════════════════════════════════════════════ #}
+<div class="p-5 sm:p-7 mb-5" style="background-color: var(--branding-surface); border: 1px solid var(--branding-border);">
+  <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+    <div class="flex items-center gap-2">
+      <i data-lucide="award" class="w-5 h-5" style="color: var(--branding-primary);"></i>
+      <h2 class="text-[18px] font-bold" style="color: var(--branding-text);">Системы аттестации</h2>
+    </div>
+    <button hx-get="{% url 'grade-system-form' %}"
+            hx-target="#slide-over"
+            onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+            class="flex items-center gap-1.5 h-8 px-3 text-[11px] font-semibold tracking-[0.5px] cursor-pointer"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+      Добавить систему
+    </button>
+  </div>
+  <p class="text-[12px] mb-5" style="color: var(--branding-text-secondary);">
+    Уровни и пояса для каждой дисциплины. Используются для отслеживания прогресса учеников.
+  </p>
+
+  {% for gs in grade_systems %}
+  <div class="mb-4 border" style="border-color: var(--branding-border);">
+    <div class="flex items-center justify-between px-4 py-3"
+         style="background-color: var(--branding-dark);">
+      <span class="text-[13px] font-semibold tracking-[0.5px]" style="color: var(--branding-on-primary);">{{ gs.discipline }}</span>
+      <div class="flex items-center gap-2">
+        <button hx-get="{% url 'grade-form' gs.id %}"
+                hx-target="#slide-over"
+                onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                class="flex items-center gap-1 h-6 px-2 text-[10px] font-semibold tracking-[0.5px] cursor-pointer"
+                style="background-color: rgba(245,242,237,0.15); color: var(--branding-on-primary);"
+                title="Добавить уровень">
+          <i data-lucide="plus" class="w-3 h-3"></i>
+          Уровень
+        </button>
+        <button hx-post="{% url 'grade-system-delete' gs.id %}"
+                hx-swap="none"
+                hx-confirm="Удалить систему аттестации «{{ gs.discipline }}» и все уровни в ней? Это действие нельзя отменить."
+                class="w-6 h-6 flex items-center justify-center rounded cursor-pointer"
+                style="color: #EF9A9A;"
+                title="Удалить систему">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+
+    {% for grade in gs.grades.all %}
+    <div class="flex items-center justify-between px-4 py-2.5"
+         style="{% if not forloop.last %}border-bottom: 1px solid var(--branding-border);{% endif %}">
+      <div class="flex items-center gap-3">
+        <span class="text-[11px] font-mono w-6 text-center" style="color: var(--branding-text-secondary);">Ур. {{ grade.order }}</span>
+        <span class="text-[13px]" style="color: var(--branding-text);">{{ grade.name }}</span>
+        {% if grade.min_trainings > 0 %}
+        <span class="text-[10px] px-1.5 py-0.5 rounded"
+              style="background-color: rgba(0,0,0,0.06); color: var(--branding-text-secondary);">
+          {{ grade.min_trainings }} тренировок
+        </span>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button hx-get="{% url 'grade-edit' gs.id grade.id %}"
+                hx-target="#slide-over"
+                onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                class="w-6 h-6 flex items-center justify-center rounded cursor-pointer"
+                style="color: var(--branding-text-secondary);"
+                title="Редактировать">
+          <i data-lucide="pencil" class="w-3 h-3"></i>
+        </button>
+        <button hx-post="{% url 'grade-delete' gs.id grade.id %}"
+                hx-swap="none"
+                hx-confirm="Удалить уровень «{{ grade.name }}»? Ученики с этим уровнем потеряют его."
+                class="w-6 h-6 flex items-center justify-center rounded cursor-pointer"
+                style="color: #C62828;"
+                title="Удалить">
+          <i data-lucide="trash-2" class="w-3 h-3"></i>
+        </button>
+      </div>
+    </div>
+    {% empty %}
+    <div class="px-4 py-3">
+      <p class="text-[11px]" style="color: var(--branding-text-secondary);">Нет уровней. Добавьте первый (например: Котёнок, Белый пояс).</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% empty %}
+  <p class="text-[12px]" style="color: var(--branding-text-secondary);">Нет систем аттестации. Создайте систему, чтобы отслеживать уровни (пояса, разряды) учеников.</p>
+  {% endfor %}
+</div>
+
+{% endpartialdef %}
+{% endpartialdef %}
+{% endblock %}

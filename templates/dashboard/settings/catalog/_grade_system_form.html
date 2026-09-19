@@ -1,0 +1,39 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">НОВАЯ СИСТЕМА АТТЕСТАЦИИ</h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  <p class="text-[12px] mb-4" style="color: var(--branding-text-secondary);">
+    Система аттестации — набор уровней (поясов, разрядов) по дисциплине. Ученики продвигаются по уровням по мере обучения.
+  </p>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="{% url 'grade-system-form' %}"
+        hx-target="#slide-over" hx-swap="innerHTML">
+    {% csrf_token %}
+
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ДИСЦИПЛИНА *</label>
+        <input type="text" name="discipline" required placeholder="Например: Муай-тай, Бокс, Борьба, ММА"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      СОЗДАТЬ СИСТЕМУ
+    </button>
+  </form>
+</div>

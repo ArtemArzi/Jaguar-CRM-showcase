@@ -1,0 +1,81 @@
+<div class="space-y-6" data-onboarding-draft-id="{{ draft.id }}" x-data="{ rows: JSON.parse('{{ rows_json|escapejs }}') }">
+  <div>
+    <h3 class="text-lg font-semibold">Шаг 3: Расписание</h3>
+    <p class="text-sm text-gray-500 mt-1">Настройте недельное расписание тренировок. Позже можно добавить ещё.</p>
+  </div>
+
+  <form
+    hx-post="/dashboard/onboarding/step/3/"
+    hx-target="#wizard-content"
+    class="space-y-4"
+  >
+    {% csrf_token %}
+
+    <div class="space-y-3">
+      <div class="hidden sm:grid grid-cols-12 gap-2 text-xs font-medium text-gray-500">
+        <div class="col-span-2">День</div>
+        <div class="col-span-2">Начало</div>
+        <div class="col-span-2">Конец</div>
+        <div class="col-span-2">Группа</div>
+        <div class="col-span-2">Тренер</div>
+        <div class="col-span-2">Локация</div>
+      </div>
+
+      <template x-for="(row, idx) in rows" :key="idx">
+        <div class="grid grid-cols-2 sm:grid-cols-12 gap-2 p-3 sm:p-0 border sm:border-0 rounded">
+          <select x-model="row.day" :name="'schedules[' + idx + '].day'" class="col-span-2 sm:col-span-2 border rounded px-2 py-1.5 text-sm">
+            <option value="0">Пн</option>
+            <option value="1">Вт</option>
+            <option value="2">Ср</option>
+            <option value="3">Чт</option>
+            <option value="4">Пт</option>
+            <option value="5">Сб</option>
+          </select>
+          <input type="time" x-model="row.start" :name="'schedules[' + idx + '].start'" class="sm:col-span-2 border rounded px-2 py-1.5 text-sm">
+          <input type="time" x-model="row.end" :name="'schedules[' + idx + '].end'" class="sm:col-span-2 border rounded px-2 py-1.5 text-sm">
+          <input type="text" x-model="row.group" :name="'schedules[' + idx + '].group'" placeholder="Название группы" class="col-span-2 sm:col-span-2 border rounded px-2 py-1.5 text-sm">
+          <select x-model="row.trainer_choice" :name="'schedules[' + idx + '].trainer_choice'" class="col-span-2 sm:col-span-2 border rounded px-2 py-1.5 text-sm">
+            <option value="">Выберите тренера</option>
+            {% for trainer in trainer_choices %}
+            <option value="{{ trainer.value }}">{{ trainer.label }}</option>
+            {% endfor %}
+          </select>
+          <select x-model="row.location_id" :name="'schedules[' + idx + '].location_id'" class="col-span-2 sm:col-span-2 border rounded px-2 py-1.5 text-sm">
+            <option value="">Выберите локацию</option>
+            {% for location in locations %}
+            <option value="{{ location.id }}">{{ location.name }} · #{{ location.id }}</option>
+            {% endfor %}
+          </select>
+          <input type="hidden" x-model="row.legacy_trainer_name" :name="'schedules[' + idx + '].legacy_trainer_name'">
+          <p x-show="row.legacy_trainer_name && !row.trainer_choice" class="col-span-2 sm:col-span-12 text-xs text-amber-700">
+            Ранее был указан тренер «<span x-text="row.legacy_trainer_name"></span>». Выберите точного тренера из списка.
+          </p>
+        </div>
+      </template>
+    </div>
+
+    <button
+      type="button"
+      @click="rows.push({ day: '0', start: '10:00', end: '11:30', group: '', trainer_choice: '', location_id: '', legacy_trainer_name: '' })"
+      class="text-sm text-blue-600 hover:text-blue-800"
+    >+ Добавить ещё занятие</button>
+
+    {% if error %}
+    <div class="text-sm text-red-600 bg-red-50 p-3 rounded" data-error-code="{{ error_code }}">{{ error }}</div>
+    {% endif %}
+
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
+      <button
+        type="button"
+        hx-post="/dashboard/onboarding/skip/3/"
+        hx-target="#wizard-content"
+        class="text-sm text-gray-500 hover:text-gray-700"
+      >Пропустить</button>
+      <button
+        type="submit"
+        class="px-6 py-2 text-white text-sm font-semibold tracking-[1px]"
+        style="background-color: var(--branding-accent, #22c55e)"
+      >Далее</button>
+    </div>
+  </form>
+</div>

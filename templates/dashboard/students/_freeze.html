@@ -1,0 +1,23 @@
+<div class="p-5 sm:p-7">
+  {% include 'dashboard/students/_operation_header.html' with title='Заморозка абонемента' %}
+  <p>{{ subscription.tariff.name }} · {{ subscription.get_status_display }} · до {{ subscription.expires_at|date:'d.m.Y' }}</p>
+  <form hx-post="{% url 'subscription-freeze' subscription.id %}" hx-target="#slide-over" hx-disabled-elt="#slide-over form button[type='submit']">
+    {% csrf_token %}<input type="hidden" name="student_context" value="1">
+    {% if subscription.status == 'frozen' %}
+      <p class="py-3">Действующая заморозка будет завершена штатным перерасчётом срока.</p>
+      <button type="submit" name="action" value="thaw" class="px-3 py-3">Разморозить</button>
+    {% else %}
+      <label for="freeze-reason" class="block py-3">Причина заморозки</label>
+      <select id="freeze-reason" name="reason" class="w-full min-h-11">
+        <option value="vacation" {% if reason == 'vacation' %}selected{% endif %}>Отпуск</option>
+        <option value="injury" {% if reason == 'injury' %}selected{% endif %}>Травма</option>
+        <option value="illness" {% if reason == 'illness' %}selected{% endif %}>Болезнь</option>
+        <option value="other" {% if reason == 'other' %}selected{% endif %}>Другое</option>
+      </select>
+      <label for="freeze-days" class="block py-3">Количество дней</label>
+      <input id="freeze-days" name="days" type="number" min="1" max="30" required value="{{ days }}" class="w-full min-h-11">
+      <p class="py-3">Максимум 30 дней. Действуют ограничения абонемента; срок продлевается через штатную заморозку.</p>
+      <button type="submit" class="px-3 py-3">Заморозить</button>
+    {% endif %}
+  </form>
+</div>

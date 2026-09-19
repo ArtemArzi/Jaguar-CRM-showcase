@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+{% load partials money %}
+
+{% block title %}Должники - {{ club_settings.club_name_display|default:"CRM" }}{% endblock %}
+
+{% block content %}
+{% partialdef content inline %}
+
+{% include "dashboard/billing/_nav_tabs.html" %}
+
+<!-- Title row -->
+<div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+  <div class="flex items-end gap-3 sm:gap-4 flex-wrap">
+    <h1 class="text-[22px] sm:text-[28px] font-bold tracking-[1px]" style="color: var(--branding-text);">ДОЛЖНИКИ</h1>
+    {% if total_debt %}
+    <span class="text-[18px] font-bold mb-0.5" style="color: var(--branding-primary);">{{ total_debt|money }}₽</span>
+    {% endif %}
+    <span class="text-[13px] mb-1" style="color: var(--branding-text-secondary);">{{ page_obj.paginator.count }} чел</span>
+  </div>
+  <a href="{{ debtor_export_url }}"
+     class="flex items-center gap-2 px-5 h-10 text-[11px] font-semibold tracking-[1px]"
+     style="border: 1.5px solid var(--branding-dark); color: var(--branding-dark);"
+     title="Экспорт должников">
+    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+    ЭКСПОРТ
+  </a>
+</div>
+
+{% if debtor_error %}
+<div class="mb-5 px-4 py-3 text-[13px] font-medium"
+     style="border: 1px solid #EF9A9A; background-color: #FFEBEE; color: #C62828;">
+  {{ debtor_error }}
+</div>
+{% endif %}
+
+<!-- Filter (mobile: native select) -->
+<div class="sm:hidden mb-5">
+  <select name="filter"
+          hx-get="/dashboard/billing/"
+          hx-trigger="change"
+          hx-target="#content"
+          hx-push-url="true"
+          class="soft-input soft-select w-full font-semibold">
+    <option value="" {% if not current_filter %}selected{% endif %}>Все долги</option>
+    <option value="week" {% if current_filter == 'week' %}selected{% endif %}>Более 7 дней</option>
+    <option value="large" {% if current_filter == 'large' %}selected{% endif %}>Более 5 000₽</option>
+  </select>
+</div>
+
+<!-- Filter tabs (desktop) -->
+<div class="hidden sm:flex sm:flex-wrap gap-2 mb-5">
+  <a hx-get="/dashboard/billing/"
+     hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if not current_filter %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    ВСЕ ДОЛГИ
+  </a>
+  <a hx-get="/dashboard/billing/?filter=week"
+     hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if current_filter == 'week' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    > 7 ДНЕЙ
+  </a>
+  <a hx-get="/dashboard/billing/?filter=large"
+     hx-target="#content" hx-push-url="true"
+     class="px-4 py-2 text-[11px] font-semibold tracking-[1px] cursor-pointer"
+     style="{% if current_filter == 'large' %}background-color: var(--branding-dark); color: var(--branding-on-primary);{% else %}border: 1px solid var(--branding-border); color: var(--branding-text);{% endif %}">
+    > 5 000₽
+  </a>
+</div>
+
+<!-- Extended filters (collapsible) -->
+<details class="mb-5" x-data="{ open: false }" :open="open">
+  <summary @click.prevent="open = !open"
+           class="flex items-center gap-2 px-4 py-2 text-[11px] font-semibold tracking-[0.5px] cursor-pointer select-none transition-colors hover:bg-white/50"
+           style="color: var(--branding-text-secondary); border: 1px solid var(--branding-border);">
+    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+    <span>Фильтры</span>
+    <i data-lucide="chevron-down" class="w-3.5 h-3.5 ml-auto transition-transform" :class="open && 'rotate-180'"></i>
+  </summary>
+  <div class="mt-0 p-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+       style="background-color: var(--branding-surface); border: 1px solid var(--branding-border); border-top: none;">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Группа</label>
+      <select name="group_id"
+              hx-get="/dashboard/billing/" hx-trigger="change"
+              hx-target="#content" hx-include="closest details" hx-push-url="true"
+              class="h-9 px-3 text-[12px] outline-none"
+              style="border: 1px solid var(--branding-border-input);">
+        <option value="">Все</option>
+        {% for s in schedules %}
+        <option value="{{ s.id }}" {% if current_group_id == s.id|stringformat:"d" %}selected{% endif %}>{{ s.group_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Тренер</label>
+      <select name="trainer_id"
+              hx-get="/dashboard/billing/" hx-trigger="change"
+              hx-target="#content" hx-include="closest details" hx-push-url="true"
+              class="h-9 px-3 text-[12px] outline-none"
+              style="border: 1px solid var(--branding-border-input);">
+        <option value="">Все</option>
+        {% for t in trainers %}
+        <option value="{{ t.id }}" {% if current_trainer_id == t.id|stringformat:"d" %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Статус ученика</label>
+      <select name="student_status"
+              hx-get="/dashboard/billing/" hx-trigger="change"
+              hx-target="#content" hx-include="closest details" hx-push-url="true"
+              class="h-9 px-3 text-[12px] outline-none"
+              style="border: 1px solid var(--branding-border-input);">
+        <option value="">Все</option>
+        {% for value, label in statuses %}
+        <option value="{{ value }}" {% if current_student_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">Локация</label>
+      <select name="location_id"
+              hx-get="/dashboard/billing/" hx-trigger="change"
+              hx-target="#content" hx-include="closest details" hx-push-url="true"
+              class="h-9 px-3 text-[12px] outline-none"
+              style="border: 1px solid var(--branding-border-input);">
+        <option value="">Все</option>
+        {% for loc in locations %}
+        <option value="{{ loc.id }}" {% if current_location_id == loc.id|stringformat:"d" %}selected{% endif %}>{{ loc.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">С даты</label>
+      <input type="date" name="date_from" value="{{ current_date_from }}"
+             hx-get="/dashboard/billing/" hx-trigger="change"
+             hx-target="#content" hx-include="closest details" hx-push-url="true"
+             class="h-9 px-3 text-[12px] outline-none"
+             style="border: 1px solid var(--branding-border-input);" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[11px] font-semibold tracking-[0.5px]" style="color: var(--branding-text-secondary);">По дату</label>
+      <input type="date" name="date_to" value="{{ current_date_to }}"
+             hx-get="/dashboard/billing/" hx-trigger="change"
+             hx-target="#content" hx-include="closest details" hx-push-url="true"
+             class="h-9 px-3 text-[12px] outline-none"
+             style="border: 1px solid var(--branding-border-input);" />
+    </div>
+  </div>
+</details>
+
+<!-- Debtor table -->
+<div id="debtor-table">
+  <div class="md:hidden space-y-3 mb-4">
+    {% for debt in page_obj %}
+    <div class="p-4 flex flex-col gap-2 {% with days=debt.created_at|days_ago %}{% if days >= 14 %}bg-[#FFEBEE]{% elif days >= 7 %}bg-[#FFF3E0]{% endif %}{% endwith %}" style="border: 1px solid var(--branding-border);">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <div class="text-[14px] font-semibold truncate" style="color: var(--branding-text);">{{ debt.student }}</div>
+          <div class="text-[11px] truncate" style="color: var(--branding-text-secondary);">{{ debt.student.phone|default:"" }}</div>
+        </div>
+        <span class="px-2.5 py-1 text-[13px] font-bold flex-shrink-0" style="{% if debt.tariff_price >= 5000 %}background-color: #FFCDD2; color: #C62828;{% else %}background-color: #FFF3E0; color: #E65100;{% endif %}">
+          {{ debt.tariff_price|money }}₽
+        </span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 text-[11px]" style="color: var(--branding-text-secondary);">
+        {% if debt.reason == 'no_subscription' %}
+        <span class="inline-flex px-2 py-0.5 text-[11px] font-semibold" style="background-color: #E3F2FD; color: #1565C0;">Нет абонемента</span>
+        {% elif debt.reason == 'subscription_expired' %}
+        <span class="inline-flex px-2 py-0.5 text-[11px] font-semibold" style="background-color: #FFF3E0; color: #E65100;">Абонемент истёк</span>
+        {% endif %}
+        <span style="color: {% with days=debt.created_at|days_ago %}{% if days >= 14 %}#C62828{% elif days >= 7 %}#E65100{% else %}var(--branding-text-secondary){% endif %}{% endwith %};">{{ debt.created_at|timesince }}</span>
+        {% if debt.checkin.trainer %}<span>· {{ debt.checkin.trainer }}</span>{% endif %}
+      </div>
+      <div class="flex gap-2 pt-1">
+        {% if debt.student.phone %}
+        <a href="tel:{{ debt.student.phone }}" class="flex-1 h-9 flex items-center justify-center gap-1.5 text-[12px] font-semibold" style="background-color: #E8F5E9; color: #2E7D32;">
+          <i data-lucide="phone" class="w-3.5 h-3.5"></i>Позвонить
+        </a>
+        {% endif %}
+        <a href="/dashboard/students/{{ debt.student.id }}/card/"
+           hx-get="/dashboard/students/{{ debt.student.id }}/card/"
+           hx-target="#slide-over"
+           onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+           class="flex-1 h-9 flex items-center justify-center gap-1.5 text-[12px] font-semibold" style="background-color: #E3F2FD; color: #1565C0;">
+          <i data-lucide="user" class="w-3.5 h-3.5"></i>Карточка
+        </a>
+      </div>
+      <form hx-post="/dashboard/billing/debts/{{ debt.id }}/write-off/"
+            hx-target="#content"
+            hx-swap="innerHTML"
+            hx-confirm="Списать долг?"
+            class="flex gap-2 pt-1">
+        {% csrf_token %}
+        <input type="hidden" name="filter" value="{{ current_filter|default:'' }}">
+        <input type="hidden" name="group_id" value="{{ current_group_id|default:'' }}">
+        <input type="hidden" name="trainer_id" value="{{ current_trainer_id|default:'' }}">
+        <input type="hidden" name="location_id" value="{{ current_location_id|default:'' }}">
+        <input type="hidden" name="student_status" value="{{ current_student_status|default:'' }}">
+        <input type="hidden" name="date_from" value="{{ current_date_from|default:'' }}">
+        <input type="hidden" name="date_to" value="{{ current_date_to|default:'' }}">
+        <input type="hidden" name="page" value="{{ page_obj.number }}">
+        <input type="text"
+               name="reason"
+               maxlength="240"
+               required
+               placeholder="Комментарий"
+               class="min-w-0 flex-1 h-9 px-3 text-[12px] outline-none"
+               style="border: 1px solid var(--branding-border-input);" />
+        <button type="submit"
+                class="h-9 px-3 flex items-center justify-center gap-1.5 text-[12px] font-semibold"
+                style="background-color: #FFEBEE; color: #C62828;">
+          <i data-lucide="archive-x" class="w-3.5 h-3.5"></i>Списать
+        </button>
+      </form>
+    </div>
+    {% empty %}
+    <div class="py-12 text-center">
+      <i data-lucide="check-circle" class="w-10 h-10 mx-auto mb-2" style="color: #2E7D32; opacity: 0.3;"></i>
+      <div class="text-[14px] font-medium" style="color: var(--branding-text-secondary);">
+        {% if current_filter %}Нет должников по этому фильтру{% else %}Нет должников{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="hidden md:block overflow-x-auto border-2 -mx-4 sm:mx-0" style="border-color: var(--branding-dark);">
+    <table class="w-full min-w-[980px]">
+      <thead>
+        <tr style="background-color: var(--branding-dark); height: 44px;">
+          <th class="w-[200px] px-5 text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">УЧЕНИК</th>
+          <th class="w-[120px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">СУММА</th>
+          <th class="w-[100px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ДНЕЙ</th>
+          <th class="w-[180px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ПРИЧИНА</th>
+          <th class="w-[100px] text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ТРЕНЕР</th>
+          <th class="text-left text-[10px] font-semibold tracking-[1px]" style="color: var(--branding-text-secondary);">ДЕЙСТВИЯ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for debt in page_obj %}
+        <tr style="height: 56px; border-bottom: 1px solid var(--branding-border);
+            {% with days=debt.created_at|days_ago %}{% if days >= 14 %}background-color: #FFEBEE;{% elif days >= 7 %}background-color: #FFF3E0;{% endif %}{% endwith %}">
+          <td class="px-5">
+            <div class="text-[13px] font-medium" style="color: var(--branding-text);">{{ debt.student }}</div>
+            <div class="text-[11px] mt-0.5" style="color: var(--branding-text-secondary);">{{ debt.student.phone|default:"" }}</div>
+          </td>
+          <td>
+            <span class="inline-flex px-2.5 py-1 text-[12px] font-bold"
+                  style="{% if debt.tariff_price >= 5000 %}background-color: #FFCDD2; color: #C62828;{% else %}background-color: #FFF3E0; color: #E65100;{% endif %}">
+              {{ debt.tariff_price|money }}₽
+            </span>
+          </td>
+          <td class="text-[12px]" style="color: {% with days=debt.created_at|days_ago %}{% if days >= 14 %}#C62828{% elif days >= 7 %}#E65100{% else %}var(--branding-text-secondary){% endif %}{% endwith %};">
+            {{ debt.created_at|timesince }}
+          </td>
+          <td>
+            {% if debt.reason == 'no_subscription' %}
+            <span class="inline-flex px-2 py-0.5 text-[11px] font-semibold" style="background-color: #E3F2FD; color: #1565C0;">Нет абонемента</span>
+            {% elif debt.reason == 'subscription_expired' %}
+            <span class="inline-flex px-2 py-0.5 text-[11px] font-semibold" style="background-color: #FFF3E0; color: #E65100;">Абонемент истёк</span>
+            {% else %}
+            <span class="text-[12px]" style="color: var(--branding-text);">{{ debt.reason }}</span>
+            {% endif %}
+          </td>
+          <td class="text-[12px]" style="color: var(--branding-text-secondary);">{{ debt.checkin.trainer|default:"—" }}</td>
+          <td>
+            <div class="flex items-center gap-2">
+              {% if debt.student.phone %}
+              <a href="tel:{{ debt.student.phone }}"
+                 class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-green-50 transition-colors"
+                 title="Позвонить {{ debt.student.phone }}">
+                <i data-lucide="phone" class="w-4 h-4" style="color: #2E7D32;"></i>
+              </a>
+              {% endif %}
+              <a href="/dashboard/students/{{ debt.student.id }}/card/"
+                 hx-get="/dashboard/students/{{ debt.student.id }}/card/"
+                 hx-target="#slide-over"
+                 onclick="document.getElementById('slide-over-backdrop').classList.remove('hidden'); document.getElementById('slide-over').classList.remove('translate-x-full')"
+                 class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-50 transition-colors"
+                 title="Карточка ученика">
+                <i data-lucide="user" class="w-4 h-4" style="color: #1565C0;"></i>
+              </a>
+              <form hx-post="/dashboard/billing/debts/{{ debt.id }}/write-off/"
+                    hx-target="#content"
+                    hx-swap="innerHTML"
+                    hx-confirm="Списать долг?"
+                    class="flex items-center gap-1.5">
+                {% csrf_token %}
+                <input type="hidden" name="filter" value="{{ current_filter|default:'' }}">
+                <input type="hidden" name="group_id" value="{{ current_group_id|default:'' }}">
+                <input type="hidden" name="trainer_id" value="{{ current_trainer_id|default:'' }}">
+                <input type="hidden" name="location_id" value="{{ current_location_id|default:'' }}">
+                <input type="hidden" name="student_status" value="{{ current_student_status|default:'' }}">
+                <input type="hidden" name="date_from" value="{{ current_date_from|default:'' }}">
+                <input type="hidden" name="date_to" value="{{ current_date_to|default:'' }}">
+                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                <input type="text"
+                       name="reason"
+                       maxlength="240"
+                       required
+                       placeholder="Комментарий"
+                       class="h-8 w-[132px] px-2 text-[11px] outline-none"
+                       style="border: 1px solid var(--branding-border-input);" />
+                <button type="submit"
+                        class="h-8 px-2.5 flex items-center justify-center gap-1 text-[11px] font-semibold"
+                        style="background-color: #FFEBEE; color: #C62828;"
+                        title="Списать долг">
+                  <i data-lucide="archive-x" class="w-3.5 h-3.5"></i>Списать
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-5 py-12 text-center">
+            <i data-lucide="check-circle" class="w-10 h-10 mx-auto mb-2" style="color: #2E7D32; opacity: 0.3;"></i>
+            <div class="text-[14px] font-medium mb-1" style="color: var(--branding-text-secondary);">
+              {% if current_filter %}Нет должников по этому фильтру{% else %}Нет должников{% endif %}
+            </div>
+            <div class="text-[12px]" style="color: var(--branding-text-secondary); opacity: 0.7;">Все оплаты в порядке</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <div class="flex items-center justify-between mt-4">
+    <span class="text-[12px]" style="color: var(--branding-text-secondary);">
+      Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+    </span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}
+      <a hx-get="/dashboard/billing/?page={{ page_obj.previous_page_number }}&filter={{ current_filter|default:'' }}&group_id={{ current_group_id|default:'' }}&trainer_id={{ current_trainer_id|default:'' }}&student_status={{ current_student_status|default:'' }}&location_id={{ current_location_id|default:'' }}&date_from={{ current_date_from|default:'' }}&date_to={{ current_date_to|default:'' }}"
+         hx-target="#content" hx-push-url="true"
+         class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+         style="border: 1px solid var(--branding-border); color: var(--branding-text);">Назад</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a hx-get="/dashboard/billing/?page={{ page_obj.next_page_number }}&filter={{ current_filter|default:'' }}&group_id={{ current_group_id|default:'' }}&trainer_id={{ current_trainer_id|default:'' }}&student_status={{ current_student_status|default:'' }}&location_id={{ current_location_id|default:'' }}&date_from={{ current_date_from|default:'' }}&date_to={{ current_date_to|default:'' }}"
+         hx-target="#content" hx-push-url="true"
+         class="px-3 py-1.5 text-[11px] font-medium cursor-pointer"
+         style="border: 1px solid var(--branding-border); color: var(--branding-text);">Далее</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endpartialdef %}
+{% endblock %}

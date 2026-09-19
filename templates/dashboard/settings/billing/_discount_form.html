@@ -1,0 +1,58 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-[18px] font-bold tracking-[1px]" style="color: var(--branding-text);">
+      {% if discount %}РЕДАКТИРОВАТЬ СКИДКУ{% else %}НОВАЯ СКИДКА{% endif %}
+    </h2>
+    <button type="button"
+            onclick="document.getElementById('slide-over-backdrop').classList.add('hidden'); document.getElementById('slide-over').classList.add('translate-x-full');"
+            class="w-8 h-8 flex items-center justify-center rounded"
+            style="color: var(--branding-text-secondary);">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  {% if error %}
+  <div class="mb-4 p-3 text-[13px]" style="background-color: #FEE2E2; color: #991B1B;">{{ error }}</div>
+  {% endif %}
+
+  <form hx-post="{% if discount %}{% url 'discount-edit' discount_id=discount.id %}{% else %}{% url 'discount-form' %}{% endif %}"
+        hx-target="#slide-over" hx-swap="innerHTML">
+    {% csrf_token %}
+
+    <div class="space-y-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">НАЗВАНИЕ *</label>
+        <input type="text" name="name" required
+               value="{{ discount.name|default:'' }}"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">ТИП СКИДКИ *</label>
+        <select name="discount_type" required
+                class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+                style="border-color: var(--branding-border); color: var(--branding-text);">
+          <option value="">-- Выберите --</option>
+          <option value="percent" {% if discount and discount.discount_type == 'percent' %}selected{% endif %}>Процент (%)</option>
+          <option value="fixed" {% if discount and discount.discount_type == 'fixed' %}selected{% endif %}>Фиксированная сумма (&#8381;)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-semibold tracking-[1px] mb-1" style="color: var(--branding-text-secondary);">РАЗМЕР СКИДКИ *</label>
+        <input type="number" name="value" step="0.01" min="0.01" required
+               value="{{ discount.value|default:'' }}"
+               class="w-full h-10 px-3 text-[13px] border-2 bg-transparent outline-none"
+               style="border-color: var(--branding-border); color: var(--branding-text);">
+        <p class="text-[10px] mt-1" style="color: var(--branding-text-secondary);">Для процента: 1-100. Для фиксированной суммы: в рублях.</p>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full h-11 text-[11px] font-semibold tracking-[1px]"
+            style="background-color: var(--branding-primary); color: var(--branding-on-primary);">
+      {% if discount %}СОХРАНИТЬ{% else %}СОЗДАТЬ СКИДКУ{% endif %}
+    </button>
+  </form>
+</div>
