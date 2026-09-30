@@ -2,7 +2,7 @@
 
 CRM для спортивного клуба: desktop-админка, мобильная PWA для тренера, ученика и родителя, планшетный киоск чекина.
 
-**[Презентация двух проектов](https://artemarzi.github.io/portfolio/projects/)** · **[Все скриншоты CRM](https://artemarzi.github.io/portfolio/jaguar-crm/)**
+**[Кейсы, интерфейсы и код](https://artemarzi.github.io/portfolio/projects/)** · **[Все скриншоты CRM](https://artemarzi.github.io/portfolio/jaguar-crm/)**
 
 ## Задача и мой вклад
 
@@ -26,6 +26,31 @@ CRM для спортивного клуба: desktop-админка, мобил
 | `frontend/e2e/` | Playwright-сценарии |
 
 Подробнее: [устройство и границы](docs/architecture.md), [проверки и состав копии](docs/showcase-scope.md).
+
+## Сценарии пользователей
+
+| Роль | Рабочая задача | Где посмотреть |
+| --- | --- | --- |
+| Администратор | Ученики, абонементы, расписание и оплаты | [Desktop-экраны](https://artemarzi.github.io/portfolio/jaguar-crm/) и `templates/` |
+| Тренер | Свои ученики, занятия и рабочий день | `frontend/src/`, [мобильная PWA](https://artemarzi.github.io/portfolio/projects/#crm) |
+| Ученик / родитель | Расписание, абонемент и информация о занятиях | React-интерфейсы и их API |
+| Киоск | Отметка посещения на отдельном устройстве | `frontend/e2e/real-stack-kiosk.spec.ts` |
+| Платёжный сценарий | Ссылка банка и обработка результата | `apps/billing/payment_providers/tochka.py` |
+
+## Решения, которые имеет смысл оценить
+
+- **Права и границы клубов.** Данные связаны с клубом, доступ проверяется backend. Матрица негативных сценариев: [tenant-negative](frontend/e2e/real-stack-tenant-negative-matrix.spec.ts).
+- **Разные правила для разных действий.** Расписание, посещение, абонемент и расчёт выплаты не сведены к одному статусу. Проверки: [check-in lifecycle](frontend/e2e/real-stack-checkin-lifecycle.spec.ts), [self-booking](frontend/e2e/real-stack-student-parent-self-booking.spec.ts).
+- **Внешний банк.** Ссылка и webhook требуют согласования состояния с провайдером. Примеры проверок: [webhooks](apps/billing/tests/test_tochka_webhooks.py), [reconciliation](apps/billing/tests/test_provider_reconciliation.py).
+- **Несколько интерфейсов одного продукта.** Desktop, роли PWA и киоск используют общий backend; проверку прав нельзя заменять скрытием кнопки.
+
+Наличие этих тестов — материал для чтения кода. Их полный повторный запуск 30.09.2026 не выполнялся. Исторические выполненные проверки публичной копии сохранены в [showcase-scope](docs/showcase-scope.md).
+
+## Как я вёл работу
+
+Разбирался в ежедневном процессе, фиксировал сценарии и правила, собирал решение с Codex и Claude Code, проверял интерфейсы и ошибки, внедрял поэтапно. Самостоятельная работа включает продуктовые решения, backend, frontend, интеграции и документацию; это не заявление о senior-уровне или завершении всех модулей.
+
+[Сценарии и карта материалов](docs/scenarios.md) · [Подход к работе](https://github.com/ArtemArzi/portfolio/blob/main/docs/working-method.md)
 
 ## Локальный запуск
 
